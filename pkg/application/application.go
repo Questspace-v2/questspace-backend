@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"questspace/pkg/application/errors"
 	"time"
 
 	ginzap "github.com/gin-contrib/zap"
@@ -22,8 +23,8 @@ type App struct {
 	logger  *zap.Logger
 }
 
-func (a App) Router() gin.RouterGroup {
-	return a.engine.RouterGroup
+func (a App) Router() *gin.RouterGroup {
+	return &a.engine.RouterGroup
 }
 
 func (a App) Logger() *zap.Logger {
@@ -42,6 +43,9 @@ func Run(initFunc func(app App) error, configHolder interface{}) {
 	}
 	app.logger = logger
 	app.engine.Use(ginzap.Ginzap(app.logger, time.RFC3339, false))
+	app.engine.Use(func(c *gin.Context) {
+		errors.ErrorHandler(logger)(c)
+	})
 
 	// liveness check
 	app.engine.GET("/ping", Ping)
@@ -56,6 +60,16 @@ func Run(initFunc func(app App) error, configHolder interface{}) {
 		return
 	}
 	app.engine.Run(GetAddrFromEnvironment(args.Environment))
+}
+
+func AsGinHandler(handler func(c *gin.Context) error) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		err := handler(c)
+		if err != nil {
+			_ = c.Error(err)
+			errors.WriteErrorResponse(c, err)
+		}
+	}
 }
 
 func getCLIArgs() applicationArgs {
