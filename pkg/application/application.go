@@ -13,7 +13,7 @@ import (
 )
 
 type applicationArgs struct {
-	ConfigPath  string
+	ConfigsDir  string
 	Environment Environment
 }
 
@@ -41,17 +41,22 @@ func Run(initFunc func(app App) error, configHolder interface{}) {
 		fmt.Printf("Failed to get logger from environment: %+v", err)
 		return
 	}
+
+	if err := SetEnvMode(args.Environment); err != nil {
+		fmt.Printf("Failed to set environment mode to %s: %+v", args.Environment, err)
+	}
+
 	app.logger = logger
 	app.engine.Use(ginzap.Ginzap(app.logger, time.RFC3339, false))
 	app.engine.Use(func(c *gin.Context) {
 		errors.ErrorHandler(logger)(c)
 	})
-
 	// liveness check
 	app.engine.GET("/ping", Ping)
 
-	if err := UnmarshallConfigFromFile(args.ConfigPath, configHolder); err != nil {
-		fmt.Printf("Failed to get config from path %s: %+v", args.ConfigPath, err)
+	path := GetConfigFromEnvironment(args.ConfigsDir, args.Environment)
+	if err := UnmarshallConfigFromFile(path, configHolder); err != nil {
+		fmt.Printf("Failed to get config from path %s: %+v", args.ConfigsDir, err)
 		return
 	}
 
@@ -59,7 +64,9 @@ func Run(initFunc func(app App) error, configHolder interface{}) {
 		fmt.Printf("Failed to initialize application: %+v", err)
 		return
 	}
-	app.engine.Run(GetAddrFromEnvironment(args.Environment))
+	if err := app.engine.Run(GetAddrFromEnvironment(args.Environment)); err != nil {
+		logger.Error("Server error", zap.Error(err))
+	}
 }
 
 func AsGinHandler(handler func(c *gin.Context) error) gin.HandlerFunc {
@@ -74,7 +81,7 @@ func AsGinHandler(handler func(c *gin.Context) error) gin.HandlerFunc {
 
 func getCLIArgs() applicationArgs {
 	args := applicationArgs{}
-	flag.StringVar(&args.ConfigPath, "config", "", "Path to .yaml file with application config")
+	flag.StringVar(&args.ConfigsDir, "config", "", "Path to .yaml file with application config")
 	flag.Var(&args.Environment, "environment", "Application environment")
 	flag.Parse()
 

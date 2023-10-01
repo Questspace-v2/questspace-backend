@@ -49,6 +49,10 @@ func GetLoggerFromEnvironment(env Environment) (*zap.Logger, error) {
 	}
 }
 
+func GetConfigFromEnvironment(dir string, env Environment) string {
+	return dir + string(env) + ".yaml"
+}
+
 func SetEnvMode(env Environment) error {
 	switch env {
 	case Development:
