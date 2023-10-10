@@ -30,13 +30,13 @@ var (
 func WriteErrorResponse(c *gin.Context, err error) {
 	switch {
 	case errors.Is(err, ErrBadRequest):
-		c.JSON(http.StatusBadRequest, gin.H{"error": ErrBadRequest.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		break
 	case errors.Is(err, ErrNotFound):
-		c.JSON(http.StatusNotFound, gin.H{"error": ErrBadRequest.Error()})
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		break
 	case errors.Is(err, ErrValidation):
-		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": ErrValidation.Error()})
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		break
 	default:
 		c.JSON(http.StatusInternalServerError, gin.H{"error": ErrInternal.Error()})

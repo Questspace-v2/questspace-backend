@@ -77,10 +77,10 @@ type GetUserRequest struct {
 }
 
 type UpdateUserRequest struct {
-	Id        string
-	Username  string
-	Password  string
-	AvatarURL string
+	Id        string `json:"id"`
+	Username  string `json:"username"`
+	Password  string `json:"password,omitempty"`
+	AvatarURL string `json:"avatar_url,omitempty"`
 }
 
 type TaskGroup struct {

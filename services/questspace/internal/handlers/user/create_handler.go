@@ -4,11 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"net/url"
-	"path/filepath"
 	aerrors "questspace/pkg/application/errors"
 	"questspace/pkg/storage"
-	"strings"
+	"questspace/services/questspace/internal/validate"
 
 	"golang.org/x/xerrors"
 
@@ -38,7 +36,7 @@ func (h CreateHandler) Handle(c *gin.Context) error {
 	if err := json.Unmarshal(data, &req); err != nil {
 		return xerrors.Errorf("failed to unmarshall request: %w", err)
 	}
-	if err := h.validateImageUrl(req.AvatarURL); err != nil {
+	if err := validate.ImageURL(h.fetcher, req.AvatarURL); err != nil {
 		return xerrors.Errorf("failed to validate image: %w", err)
 	}
 	if req.AvatarURL == "" {
@@ -52,31 +50,5 @@ func (h CreateHandler) Handle(c *gin.Context) error {
 		return xerrors.Errorf("failed to create user: %w", err)
 	}
 	c.JSON(http.StatusOK, user)
-	return nil
-}
-
-func (h CreateHandler) validateImageUrl(imgUrl string) error {
-	if imgUrl == "" {
-		return nil
-	}
-
-	u, err := url.Parse(imgUrl)
-	if err != nil {
-		return xerrors.Errorf("failed to parse url: %w", err)
-	}
-	ext := strings.ToLower(strings.TrimPrefix(filepath.Ext(u.Path), "."))
-	switch ext {
-	case "jpg", "jpeg", "png", "gif", "bmp", "svg":
-		return nil
-	}
-
-	resp, err := h.fetcher.Head(imgUrl)
-	if err != nil {
-		return xerrors.Errorf("failed to get imgUrl head: %w", err)
-	}
-	contentType := resp.Header.Get("Content-Type")
-	if !strings.HasPrefix(contentType, "image/") {
-		return xerrors.Errorf("non-image Content-Type %s: %w", contentType, aerrors.ErrValidation)
-	}
 	return nil
 }

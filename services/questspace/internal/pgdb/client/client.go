@@ -30,6 +30,7 @@ func (c *Client) CreateUser(ctx context.Context, req *storage.CreateUserRequest)
 	if err := c.conn.WaitUntilReady(ctx); err != nil {
 		return nil, xerrors.Errorf("failed to await db readiness: %w", err)
 	}
+
 	values := []interface{}{req.Username, req.Password}
 	query := sq.
 		Insert("\"user\"").
@@ -44,6 +45,7 @@ func (c *Client) CreateUser(ctx context.Context, req *storage.CreateUserRequest)
 		query = query.Columns("avatar_url")
 		values = append(values, req.AvatarURL)
 	}
+
 	query = query.Values(values...)
 	queryStr, args, err := query.ToSql()
 	if err != nil {
@@ -57,6 +59,7 @@ func (c *Client) CreateUser(ctx context.Context, req *storage.CreateUserRequest)
 	if !row.Next() {
 		return nil, storage.ErrNotFound
 	}
+
 	var id string
 	if err := row.Scan(&id); err != nil {
 		return nil, xerrors.Errorf("failed to scan row: %w", err)
@@ -94,6 +97,7 @@ func (c *Client) GetUser(ctx context.Context, req *storage.GetUserRequest) (*sto
 	if !row.Next() {
 		return nil, storage.ErrNotFound
 	}
+
 	user := &storage.User{}
 	if err := row.Scan(&user.Id, &user.Username, &user.AvatarURL); err != nil {
 		return nil, xerrors.Errorf("failed to scan row: %w", err)
@@ -102,5 +106,44 @@ func (c *Client) GetUser(ctx context.Context, req *storage.GetUserRequest) (*sto
 }
 
 func (c *Client) UpdateUser(ctx context.Context, req *storage.UpdateUserRequest) (*storage.User, error) {
-	panic("implement me")
+	if req.Username == "" && req.Password == "" && req.AvatarURL == "" {
+		return c.GetUser(ctx, &storage.GetUserRequest{Id: req.Id})
+	}
+	if err := c.conn.WaitUntilReady(ctx); err != nil {
+		return nil, xerrors.Errorf("failed to await db readiness: %w", err)
+	}
+
+	query := sq.
+		Update("\"user\"'").
+		Where(sq.Eq{"id": req.Id}).
+		Suffix("RETURNING id, username, avatar_url").
+		PlaceholderFormat(sq.Dollar)
+	if req.Username != "" {
+		query = query.Set("username", req.Username)
+	}
+	if req.Password != "" {
+		query = query.Set("password", req.Password)
+	}
+	if req.AvatarURL != "" {
+		query = query.Set("avatar_url", req.AvatarURL)
+	}
+
+	queryStr, args, err := query.ToSql()
+	if err != nil {
+		return nil, xerrors.Errorf("failed to build query string: %w", err)
+	}
+	row, err := c.conn.QueryEx(ctx, queryStr, nil, args...)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to execute query %s: %w", queryStr, err)
+	}
+	defer row.Close()
+	if !row.Next() {
+		return nil, storage.ErrNotFound
+	}
+
+	user := &storage.User{}
+	if err := row.Scan(&user.Id, &user.Username, &user.AvatarURL); err != nil {
+		return nil, xerrors.Errorf("failed to scan row: %w", err)
+	}
+	return user, nil
 }

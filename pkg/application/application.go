@@ -69,6 +69,10 @@ func Run(initFunc func(app App) error, configHolder interface{}) {
 	}
 }
 
+type AppHandler interface {
+	Handle(c *gin.Context) error
+}
+
 func AsGinHandler(handler func(c *gin.Context) error) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		err := handler(c)

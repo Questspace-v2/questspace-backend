@@ -42,6 +42,7 @@ func Init(app application.App) error {
 	fmt.Printf("Got key: %s", config.Section.Key)
 	app.Router().GET("/hello", application.AsGinHandler(HandleHello))
 
+	// TODO(svayp11): Create type for database config and use env secrets
 	connConfig := pgx.ConnConfig{
 		Host:     config.DB.Host,
 		Port:     config.DB.Port,
@@ -55,12 +56,18 @@ func Init(app application.App) error {
 	}
 	sqlStorage := pgdb.NewClient(conn)
 	client := http.Client{}
+
+	userGroup := app.Router().Group("/user")
+
 	createHandler := user.NewCreateHandler(sqlStorage, client)
-	app.Router().POST("/user", application.AsGinHandler(createHandler.Handle))
+	userGroup.POST("", application.AsGinHandler(createHandler.Handle))
 
 	getHandler := user.NewGetHandler(sqlStorage)
-	app.Router().GET("/user", application.AsGinHandler(getHandler.HandleQS))
-	app.Router().GET("/user/:id", application.AsGinHandler(getHandler.HandlePath))
+	userGroup.GET("", application.AsGinHandler(getHandler.HandleQS))
+	userGroup.GET("/:id", application.AsGinHandler(getHandler.HandlePath))
+
+	updateHandler := user.NewUpdateHandler(sqlStorage, client)
+	userGroup.POST("/:id", application.AsGinHandler(updateHandler.Handle))
 
 	return nil
 }
