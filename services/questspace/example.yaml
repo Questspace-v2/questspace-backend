@@ -1,0 +1,8 @@
+section:
+  key: value
+db:
+  host: host
+  port: 5432
+  database: db
+  user: postgres
+  password: postgres

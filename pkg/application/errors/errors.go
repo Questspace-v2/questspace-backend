@@ -21,15 +21,25 @@ func ErrorHandler(logger *zap.Logger) gin.HandlerFunc {
 }
 
 var (
-	ErrNotFound = xerrors.New("not found")
-	ErrInternal = xerrors.New("internal server error")
+	ErrBadRequest = xerrors.New("bad request")
+	ErrNotFound   = xerrors.New("not found")
+	ErrValidation = xerrors.New("validation error")
+	ErrInternal   = xerrors.New("internal server error")
 )
 
 func WriteErrorResponse(c *gin.Context, err error) {
-	// TODO(svayp11): More errs to write
-	if errors.Is(err, ErrNotFound) {
-		c.JSON(http.StatusNotFound, gin.H{"error": ErrNotFound.Error()})
-	} else {
+	switch {
+	case errors.Is(err, ErrBadRequest):
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		break
+	case errors.Is(err, ErrNotFound):
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		break
+	case errors.Is(err, ErrValidation):
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		break
+	default:
 		c.JSON(http.StatusInternalServerError, gin.H{"error": ErrInternal.Error()})
+		break
 	}
 }

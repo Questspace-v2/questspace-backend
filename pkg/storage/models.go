@@ -1,8 +1,18 @@
 package storage
 
-import "time"
+import (
+	"time"
+
+	"golang.org/x/xerrors"
+)
 
 type AccessType string
+
+var (
+	ErrExists     = xerrors.New("already exists")
+	ErrNotFound   = xerrors.New("not found")
+	ErrValidation = xerrors.New("validation error")
+)
 
 var (
 	Public   AccessType = "public"
@@ -21,7 +31,6 @@ type Quest struct {
 	Name                 string
 	Description          string
 	Access               AccessType
-	CreatorName          string
 	Creator              *User
 	RegistrationDeadline *time.Time
 	StartTime            *time.Time
@@ -41,25 +50,23 @@ type UpdateQuestRequest Quest
 type DeleteQuestRequest GetQuestRequest
 
 type Team struct {
-	Id          string
-	Name        string
-	QuestId     string
-	Quest       *Quest
-	CapitanName string
-	Capitan     *User
-	Score       int
-	InviteLink  string
+	Id         string
+	Name       string
+	Quest      *Quest
+	Capitan    *User
+	Score      int
+	InviteLink string
 }
 
 type CreateTeamRequest Team
 
 type User struct {
-	Id         string
-	Username   string
-	Password   string
-	FirstName  string
-	SecondName string
-	AvatarUrl  string
+	Id        string `json:"id"`
+	Username  string `json:"username"`
+	Password  string `json:"password,omitempty"`
+	FirstName string `json:"first_name,omitempty"`
+	LastName  string `json:"last_name,omitempty"`
+	AvatarURL string `json:"avatar_url,omitempty"`
 }
 
 type CreateUserRequest User
@@ -70,20 +77,14 @@ type GetUserRequest struct {
 }
 
 type UpdateUserRequest struct {
-	Id        string
-	Username  string
-	Password  string
-	AvatarUrl string
-}
-
-type DeleteUserRequest struct {
-	Id       string
-	Username string
+	Id        string `json:"id"`
+	Username  string `json:"username"`
+	Password  string `json:"password,omitempty"`
+	AvatarURL string `json:"avatar_url,omitempty"`
 }
 
 type TaskGroup struct {
 	Id      string
-	QuestId string
 	Quest   *Quest
 	Name    string
 	PubTime *time.Time
@@ -91,7 +92,6 @@ type TaskGroup struct {
 
 type Task struct {
 	Id             string
-	GroupId        string
 	Group          *TaskGroup
 	Name           string
 	Question       string
@@ -104,9 +104,7 @@ type Task struct {
 }
 
 type AnswerTry struct {
-	TaskId string
 	Task   *Task
-	UserId string
 	User   *User
 	Answer string
 }

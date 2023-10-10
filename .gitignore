@@ -21,3 +21,7 @@
 
 # Go workspace file
 go.work
+
+# Configs
+dev.yaml
+prod.yaml
