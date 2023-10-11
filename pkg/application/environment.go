@@ -1,6 +1,8 @@
 package application
 
 import (
+	"path"
+
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"golang.org/x/xerrors"
@@ -14,7 +16,7 @@ func (e *Environment) String() string {
 
 func (e *Environment) Set(s string) error {
 	switch env := Environment(s); env {
-	case Development, Production:
+	case Development, Production, DockerDevelopment:
 		*e = env
 		return nil
 	default:
@@ -23,14 +25,17 @@ func (e *Environment) Set(s string) error {
 }
 
 const (
-	Development Environment = "dev"
-	Production  Environment = "prod"
+	Development       Environment = "dev"
+	Production        Environment = "prod"
+	DockerDevelopment Environment = "docker-dev"
 )
 
 func GetAddrFromEnvironment(env Environment) string {
 	switch env {
 	case Development:
 		return "localhost:8080"
+	case DockerDevelopment:
+		return ":8080"
 	case Production:
 		return ":80"
 	default:
@@ -40,7 +45,7 @@ func GetAddrFromEnvironment(env Environment) string {
 
 func GetLoggerFromEnvironment(env Environment) (*zap.Logger, error) {
 	switch env {
-	case Development:
+	case Development, DockerDevelopment:
 		return zap.NewDevelopment()
 	case Production:
 		return zap.NewProduction()
@@ -50,12 +55,12 @@ func GetLoggerFromEnvironment(env Environment) (*zap.Logger, error) {
 }
 
 func GetConfigFromEnvironment(dir string, env Environment) string {
-	return dir + string(env) + ".yaml"
+	return path.Join(dir, string(env)+".yaml")
 }
 
 func SetEnvMode(env Environment) error {
 	switch env {
-	case Development:
+	case Development, DockerDevelopment:
 		gin.SetMode(gin.DebugMode)
 		return nil
 	case Production:
