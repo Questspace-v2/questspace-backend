@@ -3,13 +3,12 @@ package main
 import (
 	"fmt"
 	"net/http"
+	user "questspace/internal/handlers/user"
+	pgdb "questspace/internal/pgdb/client"
 	"questspace/pkg/application"
-	"questspace/services/questspace/internal/handlers/user"
-	pgdb "questspace/services/questspace/internal/pgdb/client"
-
-	"github.com/jackc/pgx"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx"
 	"golang.org/x/xerrors"
 )
 
@@ -48,7 +47,7 @@ func Init(app application.App) error {
 		Port:     config.DB.Port,
 		Database: config.DB.Database,
 		User:     config.DB.User,
-		Password: config.DB.Password,
+		Password: application.ReadSecret(config.DB.Password),
 	}
 	conn, err := pgx.Connect(connConfig)
 	if err != nil {

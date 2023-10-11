@@ -25,3 +25,4 @@ go.work
 # Configs
 dev.yaml
 prod.yaml
+.env

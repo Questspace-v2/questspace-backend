@@ -1,0 +1,8 @@
+section:
+  key: value
+db:
+  host: postgres
+  port: 5432
+  database: postgres
+  user: postgres
+  password: env:POSTGRES_PASSWORD

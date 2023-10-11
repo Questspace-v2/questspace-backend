@@ -4,8 +4,11 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"os"
 	"questspace/pkg/application/errors"
 	"time"
+
+	"github.com/gofor-little/env"
 
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
@@ -39,11 +42,16 @@ func Run(initFunc func(app App) error, configHolder interface{}) {
 	logger, err := GetLoggerFromEnvironment(args.Environment)
 	if err != nil {
 		fmt.Printf("Failed to get logger from environment: %+v", err)
-		return
+		os.Exit(1)
+	}
+
+	if err := env.Load(".env"); err != nil {
+		logger.Error("Failed to load environment form .env file", zap.Error(err))
+		os.Exit(1)
 	}
 
 	if err := SetEnvMode(args.Environment); err != nil {
-		fmt.Printf("Failed to set environment mode to %s: %+v", args.Environment, err)
+		logger.Error("Failed to set environment mode", zap.Stringer("target_mode", &args.Environment), zap.Error(err))
 	}
 
 	app.logger = logger
@@ -56,16 +64,17 @@ func Run(initFunc func(app App) error, configHolder interface{}) {
 
 	path := GetConfigFromEnvironment(args.ConfigsDir, args.Environment)
 	if err := UnmarshallConfigFromFile(path, configHolder); err != nil {
-		fmt.Printf("Failed to get config from path %s: %+v", args.ConfigsDir, err)
-		return
+		logger.Error("Failed to get config from path", zap.String("config_path", args.ConfigsDir), zap.Error(err))
+		os.Exit(1)
 	}
 
 	if err := initFunc(app); err != nil {
-		fmt.Printf("Failed to initialize application: %+v", err)
-		return
+		logger.Error("Failed to initialize application", zap.Error(err))
+		os.Exit(1)
 	}
 	if err := app.engine.Run(GetAddrFromEnvironment(args.Environment)); err != nil {
 		logger.Error("Server error", zap.Error(err))
+		os.Exit(1)
 	}
 }
 

@@ -5,4 +5,4 @@ db:
   port: 5432
   database: db
   user: postgres
-  password: postgres
+  password: env:POSTGRES_PASSWORD
