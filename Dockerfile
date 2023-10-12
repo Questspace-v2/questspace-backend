@@ -22,7 +22,9 @@ COPY --from=builder --chown=questspace:1000 /go/bin/questspace /questspace
 
 COPY --from=builder /app/conf /conf
 
-USER svayp11
+COPY .env .
+
+USER questspace
 
 EXPOSE 8080
 

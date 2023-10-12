@@ -12,7 +12,8 @@ services:
     volumes:
       - .:/app
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     networks:
       - questspace
 
@@ -30,6 +31,11 @@ services:
       - '1234:5432'
     networks:
       - questspace
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 networks:
   questspace:
