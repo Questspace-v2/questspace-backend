@@ -6,3 +6,5 @@ db:
   database: db
   user: postgres
   password: env:POSTGRES_PASSWORD
+cors:
+  allow-origin: "*"

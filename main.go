@@ -6,6 +6,9 @@ import (
 	user "questspace/internal/handlers/user"
 	pgdb "questspace/internal/pgdb/client"
 	"questspace/pkg/application"
+	"strings"
+
+	"github.com/gin-contrib/cors"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx"
@@ -23,6 +26,9 @@ var config struct {
 		User     string `yaml:"user"`
 		Password string `yaml:"password"`
 	} `yaml:"db"`
+	Cors struct {
+		AllowOrigin string `yaml:"allow-origin"`
+	} `yaml:"cors"`
 }
 
 var reqCount = 0
@@ -40,6 +46,14 @@ func HandleHello(c *gin.Context) error {
 func Init(app application.App) error {
 	fmt.Printf("Got key: %s", config.Section.Key)
 	app.Router().GET("/hello", application.AsGinHandler(HandleHello))
+
+	corsConfig := cors.DefaultConfig()
+	if config.Cors.AllowOrigin == "*" {
+		corsConfig.AllowAllOrigins = true
+	} else {
+		corsConfig.AllowOrigins = strings.Split(config.Cors.AllowOrigin, ",")
+	}
+	app.Router().Use(cors.New(corsConfig))
 
 	// TODO(svayp11): Create type for database config and use env secrets
 	connConfig := pgx.ConnConfig{
