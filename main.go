@@ -45,7 +45,6 @@ func HandleHello(c *gin.Context) error {
 
 func Init(app application.App) error {
 	fmt.Printf("Got key: %s", config.Section.Key)
-	app.Router().GET("/hello", application.AsGinHandler(HandleHello))
 
 	corsConfig := cors.DefaultConfig()
 	if config.Cors.AllowOrigin == "*" {
@@ -54,6 +53,8 @@ func Init(app application.App) error {
 		corsConfig.AllowOrigins = strings.Split(config.Cors.AllowOrigin, ",")
 	}
 	app.Router().Use(cors.New(corsConfig))
+
+	app.Router().GET("/hello", application.AsGinHandler(HandleHello))
 
 	// TODO(svayp11): Create type for database config and use env secrets
 	connConfig := pgx.ConnConfig{
