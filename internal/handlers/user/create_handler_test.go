@@ -2,6 +2,7 @@ package user
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -86,7 +87,8 @@ func TestCreateHandler_CommonCases(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	userStorage := mocks.NewMockUserStorage(ctrl)
 	router := gin.Default()
-	handler := NewCreateHandler(userStorage, http.Client{})
+	hasher := sha256.New()
+	handler := NewCreateHandler(userStorage, http.Client{}, hasher)
 	router.POST("/test", application.AsGinHandler(handler.Handle))
 
 	for _, tc := range testCases {
@@ -105,9 +107,14 @@ func TestCreateHandler_CommonCases(t *testing.T) {
 			require.NoError(t, err)
 			request, err := http.NewRequest(http.MethodPost, "/test", bytes.NewReader(raw))
 			require.NoError(t, err)
+			actualReq := &storage.CreateUserRequest{
+				Username:  tc.req.Username,
+				Password:  string(hasher.Sum([]byte(tc.req.Password))),
+				AvatarURL: tc.req.AvatarURL,
+			}
 
 			if tc.wantStore {
-				userStorage.EXPECT().CreateUser(gomock.Any(), tc.req).Return(nil, tc.storeErr)
+				userStorage.EXPECT().CreateUser(gomock.Any(), actualReq).Return(nil, tc.storeErr)
 			}
 
 			router.ServeHTTP(rr, request)
@@ -120,9 +127,10 @@ func TestCreateHandler_SetsDefaultURL(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	ctrl := gomock.NewController(t)
 	userStorage := mocks.NewMockUserStorage(ctrl)
+	hasher := sha256.New()
 	rr := httptest.NewRecorder()
 	router := gin.Default()
-	handler := NewCreateHandler(userStorage, http.Client{})
+	handler := NewCreateHandler(userStorage, http.Client{}, hasher)
 	router.POST("/test", application.AsGinHandler(handler.Handle))
 
 	req := &storage.CreateUserRequest{
@@ -131,7 +139,7 @@ func TestCreateHandler_SetsDefaultURL(t *testing.T) {
 	}
 	storageReq := &storage.CreateUserRequest{
 		Username:  "user",
-		Password:  "password",
+		Password:  string(hasher.Sum([]byte("password"))),
 		AvatarURL: defaultAvatarURL,
 	}
 
