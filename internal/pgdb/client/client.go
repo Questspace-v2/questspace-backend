@@ -37,10 +37,6 @@ func (c *Client) CreateUser(ctx context.Context, req *storage.CreateUserRequest)
 		Columns("username", "password").
 		Suffix("RETURNING id").
 		PlaceholderFormat(sq.Dollar)
-	if req.FirstName != "" && req.LastName != "" {
-		query = query.Columns("first_name", "last_name")
-		values = append(values, req.FirstName, req.LastName)
-	}
 	if req.AvatarURL != "" {
 		query = query.Columns("avatar_url")
 		values = append(values, req.AvatarURL)
@@ -64,7 +60,12 @@ func (c *Client) CreateUser(ctx context.Context, req *storage.CreateUserRequest)
 	if err := row.Scan(&id); err != nil {
 		return nil, xerrors.Errorf("failed to scan row: %w", err)
 	}
-	user := storage.User(*req)
+	user := storage.User{
+		Id:        id,
+		Username:  req.Username,
+		Password:  req.Password,
+		AvatarURL: req.AvatarURL,
+	}
 	user.Id = id
 	return &user, nil
 }

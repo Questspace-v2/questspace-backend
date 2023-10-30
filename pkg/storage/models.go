@@ -39,16 +39,6 @@ type Quest struct {
 	MaxTeamCap           *int
 }
 
-type CreateQuestRequest Quest
-
-type GetQuestRequest struct {
-	Id string
-}
-
-type UpdateQuestRequest Quest
-
-type DeleteQuestRequest GetQuestRequest
-
 type Team struct {
 	Id         string
 	Name       string
@@ -58,25 +48,7 @@ type Team struct {
 	InviteLink string
 }
 
-type CreateTeamRequest Team
-
 type User struct {
-	Id        string `json:"id"`
-	Username  string `json:"username"`
-	Password  string `json:"password,omitempty"`
-	FirstName string `json:"first_name,omitempty"`
-	LastName  string `json:"last_name,omitempty"`
-	AvatarURL string `json:"avatar_url,omitempty"`
-}
-
-type CreateUserRequest User
-
-type GetUserRequest struct {
-	Id       string
-	Username string
-}
-
-type UpdateUserRequest struct {
 	Id        string `json:"id"`
 	Username  string `json:"username"`
 	Password  string `json:"password,omitempty"`

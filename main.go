@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"net/http"
 	user "questspace/internal/handlers/user"
@@ -70,10 +71,11 @@ func Init(app application.App) error {
 	}
 	sqlStorage := pgdb.NewClient(conn)
 	client := http.Client{}
+	hasher := sha256.New()
 
 	userGroup := app.Router().Group("/user")
 
-	createHandler := user.NewCreateHandler(sqlStorage, client)
+	createHandler := user.NewCreateHandler(sqlStorage, client, hasher)
 	userGroup.POST("", application.AsGinHandler(createHandler.Handle))
 
 	getHandler := user.NewGetHandler(sqlStorage)

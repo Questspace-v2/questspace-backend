@@ -3,6 +3,7 @@ package user
 import (
 	"encoding/json"
 	"errors"
+	"hash"
 	"net/http"
 	"questspace/internal/validate"
 	aerrors "questspace/pkg/application/errors"
@@ -18,15 +19,20 @@ const defaultAvatarURL = "https://api.dicebear.com/7.x/thumbs/svg"
 type CreateHandler struct {
 	storage storage.UserStorage
 	fetcher http.Client
+	hasher  hash.Hash
 }
 
-func NewCreateHandler(s storage.UserStorage, f http.Client) CreateHandler {
+func NewCreateHandler(s storage.UserStorage, f http.Client, h hash.Hash) CreateHandler {
 	return CreateHandler{
 		storage: s,
 		fetcher: f,
+		hasher:  h,
 	}
 }
 
+// @Param request body storage.CreateUserRequest true "query params"
+// @Success 200 {object} storage.User
+// @Router /user [post]
 func (h CreateHandler) Handle(c *gin.Context) error {
 	data, err := c.GetRawData()
 	if err != nil {
@@ -42,6 +48,7 @@ func (h CreateHandler) Handle(c *gin.Context) error {
 	if req.AvatarURL == "" {
 		req.AvatarURL = defaultAvatarURL
 	}
+	req.Password = string(h.hasher.Sum([]byte(req.Password)))
 	user, err := h.storage.CreateUser(c, &req)
 	if err != nil {
 		if errors.Is(err, storage.ErrExists) {
