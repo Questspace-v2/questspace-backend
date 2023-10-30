@@ -135,9 +135,13 @@ const docTemplate = `{
                     "type": "string",
                     "example": "b5ee72a3-54dd-c4b8-551c-4bdc0204cedb"
                 },
-                "password": {
+                "new_password": {
                     "type": "string",
                     "example": "complex_password_here"
+                },
+                "old_password": {
+                    "type": "string",
+                    "example": "12345"
                 },
                 "username": {
                     "type": "string",

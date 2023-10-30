@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"questspace/internal/hasher"
 	"questspace/pkg/application"
 	"questspace/pkg/storage"
 	"questspace/pkg/storage/mocks"
@@ -30,9 +31,9 @@ func TestUpdateHandler(t *testing.T) {
 			name:    "ok",
 			imgType: "image/svg",
 			req: &storage.UpdateUserRequest{
-				Id:       "1",
-				Username: "user",
-				Password: "password",
+				Id:          "1",
+				Username:    "user",
+				OldPassword: "password",
 			},
 			wantUpd:    true,
 			statusCode: http.StatusOK,
@@ -40,10 +41,10 @@ func TestUpdateHandler(t *testing.T) {
 		{
 			name: "ok with custom avatar link",
 			req: &storage.UpdateUserRequest{
-				Id:        "1",
-				Username:  "user",
-				Password:  "password",
-				AvatarURL: "https://some.domain.com/avatar.png",
+				Id:          "1",
+				Username:    "user",
+				OldPassword: "password",
+				AvatarURL:   "https://some.domain.com/avatar.png",
 			},
 			wantUpd:    true,
 			statusCode: http.StatusOK,
@@ -52,9 +53,9 @@ func TestUpdateHandler(t *testing.T) {
 			name:    "not found",
 			imgType: "image/svg",
 			req: &storage.UpdateUserRequest{
-				Id:       "non_existent_id",
-				Username: "user",
-				Password: "password",
+				Id:          "non_existent_id",
+				Username:    "user",
+				OldPassword: "password",
 			},
 			wantUpd:    true,
 			updErr:     storage.ErrNotFound,
@@ -64,9 +65,9 @@ func TestUpdateHandler(t *testing.T) {
 			name:    "not an image",
 			imgType: "application/json",
 			req: &storage.UpdateUserRequest{
-				Id:       "1",
-				Username: "user",
-				Password: "password",
+				Id:          "1",
+				Username:    "user",
+				OldPassword: "password",
 			},
 			wantUpd:    false,
 			statusCode: http.StatusUnprocessableEntity,
@@ -75,9 +76,9 @@ func TestUpdateHandler(t *testing.T) {
 			name:    "internal error",
 			imgType: "image/jpg",
 			req: &storage.UpdateUserRequest{
-				Id:       "1",
-				Username: "user",
-				Password: "password",
+				Id:          "1",
+				Username:    "user",
+				OldPassword: "password",
 			},
 			wantUpd:    true,
 			updErr:     xerrors.New("oops"),
@@ -89,8 +90,8 @@ func TestUpdateHandler(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	userStorage := mocks.NewMockUserStorage(ctrl)
 	router := gin.Default()
-	hasher := sha256.New()
-	handler := NewUpdateHandler(userStorage, http.Client{}, hasher)
+	pwHasher := sha256.New()
+	handler := NewUpdateHandler(userStorage, http.Client{}, pwHasher)
 	router.POST("/test/:id", application.AsGinHandler(handler.Handle))
 
 	for _, tc := range testCases {
@@ -104,19 +105,17 @@ func TestUpdateHandler(t *testing.T) {
 				defer img.Close()
 				tc.req.AvatarURL = img.URL
 			}
-			hasher.Write([]byte(tc.req.Password))
 			raw, err := json.Marshal(tc.req)
 			require.NoError(t, err)
 			request, err := http.NewRequest(http.MethodPost, "/test/"+tc.req.Id, bytes.NewReader(raw))
 			require.NoError(t, err)
 
 			actualReq := &storage.UpdateUserRequest{
-				Id:        tc.req.Id,
-				Username:  tc.req.Username,
-				Password:  string(hasher.Sum(nil)),
-				AvatarURL: tc.req.AvatarURL,
+				Id:          tc.req.Id,
+				Username:    tc.req.Username,
+				OldPassword: hasher.HashString(pwHasher, tc.req.OldPassword),
+				AvatarURL:   tc.req.AvatarURL,
 			}
-			hasher.Reset()
 
 			if tc.wantUpd {
 				userStorage.EXPECT().UpdateUser(gomock.Any(), actualReq).Return(&storage.User{}, tc.updErr)

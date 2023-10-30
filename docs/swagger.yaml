@@ -19,8 +19,11 @@ definitions:
       id:
         example: b5ee72a3-54dd-c4b8-551c-4bdc0204cedb
         type: string
-      password:
+      new_password:
         example: complex_password_here
+        type: string
+      old_password:
+        example: "12345"
         type: string
       username:
         example: svayp11
