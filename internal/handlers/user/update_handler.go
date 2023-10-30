@@ -5,6 +5,7 @@ import (
 	"errors"
 	"hash"
 	"net/http"
+	"questspace/internal/hasher"
 	"questspace/internal/validate"
 	aerrors "questspace/pkg/application/errors"
 	"questspace/pkg/storage"
@@ -46,6 +47,9 @@ func (h UpdateHandler) Handle(c *gin.Context) error {
 	if err := json.Unmarshal(data, &req); err != nil {
 		return xerrors.Errorf("failed to unmarshall request: %w", err)
 	}
+	if req.OldPassword == "" {
+		return aerrors.ErrBadRequest
+	}
 	req.Id = c.Param("id")
 
 	if req.AvatarURL != "" {
@@ -53,9 +57,10 @@ func (h UpdateHandler) Handle(c *gin.Context) error {
 			return xerrors.Errorf("failed to validate an image: %w", err)
 		}
 	}
-	h.hasher.Write([]byte(req.Password))
-	req.Password = string(h.hasher.Sum(nil))
-	h.hasher.Reset()
+	req.OldPassword = hasher.HashString(h.hasher, req.OldPassword)
+	if req.NewPassword != "" {
+		req.NewPassword = hasher.HashString(h.hasher, req.NewPassword)
+	}
 	user, err := h.storage.UpdateUser(c, &req)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {

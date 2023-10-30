@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"questspace/internal/hasher"
 	"questspace/pkg/application"
 	"questspace/pkg/storage"
 	"questspace/pkg/storage/mocks"
@@ -87,8 +88,8 @@ func TestCreateHandler_CommonCases(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	userStorage := mocks.NewMockUserStorage(ctrl)
 	router := gin.Default()
-	hasher := sha256.New()
-	handler := NewCreateHandler(userStorage, http.Client{}, hasher)
+	pwHasher := sha256.New()
+	handler := NewCreateHandler(userStorage, http.Client{}, pwHasher)
 	router.POST("/test", application.AsGinHandler(handler.Handle))
 
 	for _, tc := range testCases {
@@ -102,17 +103,16 @@ func TestCreateHandler_CommonCases(t *testing.T) {
 				defer img.Close()
 				tc.req.AvatarURL = img.URL
 			}
-			hasher.Write([]byte(tc.req.Password))
 			raw, err := json.Marshal(tc.req)
 			require.NoError(t, err)
 			request, err := http.NewRequest(http.MethodPost, "/test", bytes.NewReader(raw))
 			require.NoError(t, err)
 			actualReq := &storage.CreateUserRequest{
 				Username:  tc.req.Username,
-				Password:  string(hasher.Sum(nil)),
+				Password:  hasher.HashString(pwHasher, tc.req.Password),
 				AvatarURL: tc.req.AvatarURL,
 			}
-			hasher.Reset()
+			pwHasher.Reset()
 			if tc.wantStore {
 				userStorage.EXPECT().CreateUser(gomock.Any(), actualReq).Return(nil, tc.storeErr)
 			}
@@ -127,22 +127,20 @@ func TestCreateHandler_SetsDefaultURL(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	ctrl := gomock.NewController(t)
 	userStorage := mocks.NewMockUserStorage(ctrl)
-	hasher := sha256.New()
+	pwHasher := sha256.New()
 	rr := httptest.NewRecorder()
 	router := gin.Default()
-	handler := NewCreateHandler(userStorage, http.Client{}, hasher)
+	handler := NewCreateHandler(userStorage, http.Client{}, pwHasher)
 	router.POST("/test", application.AsGinHandler(handler.Handle))
 	req := &storage.CreateUserRequest{
 		Username: "user",
 		Password: "password",
 	}
-	hasher.Write([]byte(req.Password))
 	storageReq := &storage.CreateUserRequest{
-		Username:  "user",
-		Password:  string(hasher.Sum(nil)),
+		Username:  req.Username,
+		Password:  hasher.HashString(pwHasher, req.Password),
 		AvatarURL: defaultAvatarURL,
 	}
-	hasher.Reset()
 	raw, err := json.Marshal(req)
 	require.NoError(t, err)
 	request, err := http.NewRequest(http.MethodPost, "/test", bytes.NewReader(raw))

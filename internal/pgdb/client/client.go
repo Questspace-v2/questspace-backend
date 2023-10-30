@@ -2,6 +2,7 @@ package pgdb
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"questspace/pkg/storage"
 
@@ -107,11 +108,33 @@ func (c *Client) GetUser(ctx context.Context, req *storage.GetUserRequest) (*sto
 }
 
 func (c *Client) UpdateUser(ctx context.Context, req *storage.UpdateUserRequest) (*storage.User, error) {
-	if req.Username == "" && req.Password == "" && req.AvatarURL == "" {
-		return c.GetUser(ctx, &storage.GetUserRequest{Id: req.Id})
-	}
 	if err := c.conn.WaitUntilReady(ctx); err != nil {
 		return nil, xerrors.Errorf("failed to await db readiness: %w", err)
+	}
+	pwQuery := sq.
+		Select("password").
+		From(`"user"`).
+		Where(sq.Eq{"id": req.Id}).
+		PlaceholderFormat(sq.Dollar)
+	queryStr, args, err := pwQuery.ToSql()
+	if err != nil {
+		return nil, xerrors.Errorf("failed to build query string: %w", err)
+	}
+	row := c.conn.QueryRowEx(ctx, queryStr, nil, args...)
+	var oldPassword []byte
+	if err := row.Scan(&oldPassword); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, storage.ErrNotFound
+		}
+		return nil, xerrors.Errorf("failed to get stored password: %w", err)
+	}
+	// TODO(svayp11): Use more suitable error
+	if string(oldPassword) != req.OldPassword {
+		return nil, storage.ErrExists
+	}
+
+	if req.Username == "" && req.NewPassword == "" && req.AvatarURL == "" {
+		return c.GetUser(ctx, &storage.GetUserRequest{Id: req.Id})
 	}
 
 	query := sq.
@@ -122,28 +145,28 @@ func (c *Client) UpdateUser(ctx context.Context, req *storage.UpdateUserRequest)
 	if req.Username != "" {
 		query = query.Set("username", req.Username)
 	}
-	if req.Password != "" {
-		query = query.Set("password", []byte(req.Password))
+	if req.NewPassword != "" {
+		query = query.Set("password", []byte(req.NewPassword))
 	}
 	if req.AvatarURL != "" {
 		query = query.Set("avatar_url", req.AvatarURL)
 	}
 
-	queryStr, args, err := query.ToSql()
+	queryStr, args, err = query.ToSql()
 	if err != nil {
 		return nil, xerrors.Errorf("failed to build query string: %w", err)
 	}
-	row, err := c.conn.QueryEx(ctx, queryStr, nil, args...)
+	rows, err := c.conn.QueryEx(ctx, queryStr, nil, args...)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to execute query %s: %w", queryStr, err)
 	}
-	defer row.Close()
-	if !row.Next() {
-		return nil, storage.ErrNotFound
+	defer rows.Close()
+	if !rows.Next() {
+		return nil, xerrors.Errorf("failed to insert row: %w", rows.Err())
 	}
 
 	user := &storage.User{}
-	if err := row.Scan(&user.Id, &user.Username, &user.AvatarURL); err != nil {
+	if err := rows.Scan(&user.Id, &user.Username, &user.AvatarURL); err != nil {
 		return nil, xerrors.Errorf("failed to scan row: %w", err)
 	}
 	return user, nil

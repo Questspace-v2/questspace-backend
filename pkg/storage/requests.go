@@ -14,10 +14,11 @@ type GetUserRequest struct {
 }
 
 type UpdateUserRequest struct {
-	Id        string `json:"id" example:"b5ee72a3-54dd-c4b8-551c-4bdc0204cedb"`
-	Username  string `json:"username" example:"svayp11"`
-	Password  string `json:"password,omitempty" example:"complex_password_here"`
-	AvatarURL string `json:"avatar_url,omitempty" example:"https://i.pinimg.com/originals/7a/62/cb/7a62cb80e20da2d68a37b8db26833dc0.jpg"`
+	Id          string `json:"id" example:"b5ee72a3-54dd-c4b8-551c-4bdc0204cedb"`
+	Username    string `json:"username" example:"svayp11"`
+	OldPassword string `json:"old_password" example:"12345"`
+	NewPassword string `json:"new_password,omitempty" example:"complex_password_here"`
+	AvatarURL   string `json:"avatar_url,omitempty" example:"https://i.pinimg.com/originals/7a/62/cb/7a62cb80e20da2d68a37b8db26833dc0.jpg"`
 }
 
 type CreateQuestRequest struct {

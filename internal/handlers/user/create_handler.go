@@ -5,6 +5,7 @@ import (
 	"errors"
 	"hash"
 	"net/http"
+	"questspace/internal/hasher"
 	"questspace/internal/validate"
 	aerrors "questspace/pkg/application/errors"
 	"questspace/pkg/storage"
@@ -53,9 +54,7 @@ func (h CreateHandler) Handle(c *gin.Context) error {
 	if req.AvatarURL == "" {
 		req.AvatarURL = defaultAvatarURL
 	}
-	h.hasher.Write([]byte(req.Password))
-	req.Password = string(h.hasher.Sum(nil))
-	h.hasher.Reset()
+	req.Password = hasher.HashString(h.hasher, req.Password)
 	user, err := h.storage.CreateUser(c, &req)
 	if err != nil {
 		if errors.Is(err, storage.ErrExists) {
