@@ -30,8 +30,13 @@ func NewCreateHandler(s storage.UserStorage, f http.Client, h hash.Hash) CreateH
 	}
 }
 
-// @Param request body storage.CreateUserRequest true "query params"
+// Handle handles POST /user request
+//
+// @Summary Create user
+// @Param request body storage.CreateUserRequest true "Create user request"
 // @Success 200 {object} storage.User
+// @Failure 400
+// @Failure 422
 // @Router /user [post]
 func (h CreateHandler) Handle(c *gin.Context) error {
 	data, err := c.GetRawData()
@@ -48,7 +53,9 @@ func (h CreateHandler) Handle(c *gin.Context) error {
 	if req.AvatarURL == "" {
 		req.AvatarURL = defaultAvatarURL
 	}
-	req.Password = string(h.hasher.Sum([]byte(req.Password)))
+	h.hasher.Write([]byte(req.Password))
+	req.Password = string(h.hasher.Sum(nil))
+	h.hasher.Reset()
 	user, err := h.storage.CreateUser(c, &req)
 	if err != nil {
 		if errors.Is(err, storage.ErrExists) {

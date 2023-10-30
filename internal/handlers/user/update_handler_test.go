@@ -2,6 +2,7 @@ package user
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -88,7 +89,8 @@ func TestUpdateHandler(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	userStorage := mocks.NewMockUserStorage(ctrl)
 	router := gin.Default()
-	handler := NewUpdateHandler(userStorage, http.Client{})
+	hasher := sha256.New()
+	handler := NewUpdateHandler(userStorage, http.Client{}, hasher)
 	router.POST("/test/:id", application.AsGinHandler(handler.Handle))
 
 	for _, tc := range testCases {
@@ -102,14 +104,22 @@ func TestUpdateHandler(t *testing.T) {
 				defer img.Close()
 				tc.req.AvatarURL = img.URL
 			}
-
+			hasher.Write([]byte(tc.req.Password))
 			raw, err := json.Marshal(tc.req)
 			require.NoError(t, err)
 			request, err := http.NewRequest(http.MethodPost, "/test/"+tc.req.Id, bytes.NewReader(raw))
 			require.NoError(t, err)
 
+			actualReq := &storage.UpdateUserRequest{
+				Id:        tc.req.Id,
+				Username:  tc.req.Username,
+				Password:  string(hasher.Sum(nil)),
+				AvatarURL: tc.req.AvatarURL,
+			}
+			hasher.Reset()
+
 			if tc.wantUpd {
-				userStorage.EXPECT().UpdateUser(gomock.Any(), tc.req).Return(&storage.User{}, tc.updErr)
+				userStorage.EXPECT().UpdateUser(gomock.Any(), actualReq).Return(&storage.User{}, tc.updErr)
 			}
 
 			router.ServeHTTP(rr, request)

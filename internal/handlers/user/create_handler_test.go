@@ -102,17 +102,17 @@ func TestCreateHandler_CommonCases(t *testing.T) {
 				defer img.Close()
 				tc.req.AvatarURL = img.URL
 			}
-
+			hasher.Write([]byte(tc.req.Password))
 			raw, err := json.Marshal(tc.req)
 			require.NoError(t, err)
 			request, err := http.NewRequest(http.MethodPost, "/test", bytes.NewReader(raw))
 			require.NoError(t, err)
 			actualReq := &storage.CreateUserRequest{
 				Username:  tc.req.Username,
-				Password:  string(hasher.Sum([]byte(tc.req.Password))),
+				Password:  string(hasher.Sum(nil)),
 				AvatarURL: tc.req.AvatarURL,
 			}
-
+			hasher.Reset()
 			if tc.wantStore {
 				userStorage.EXPECT().CreateUser(gomock.Any(), actualReq).Return(nil, tc.storeErr)
 			}
@@ -132,17 +132,17 @@ func TestCreateHandler_SetsDefaultURL(t *testing.T) {
 	router := gin.Default()
 	handler := NewCreateHandler(userStorage, http.Client{}, hasher)
 	router.POST("/test", application.AsGinHandler(handler.Handle))
-
 	req := &storage.CreateUserRequest{
 		Username: "user",
 		Password: "password",
 	}
+	hasher.Write([]byte(req.Password))
 	storageReq := &storage.CreateUserRequest{
 		Username:  "user",
-		Password:  string(hasher.Sum([]byte("password"))),
+		Password:  string(hasher.Sum(nil)),
 		AvatarURL: defaultAvatarURL,
 	}
-
+	hasher.Reset()
 	raw, err := json.Marshal(req)
 	require.NoError(t, err)
 	request, err := http.NewRequest(http.MethodPost, "/test", bytes.NewReader(raw))

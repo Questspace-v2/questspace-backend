@@ -31,9 +31,9 @@ func (c *Client) CreateUser(ctx context.Context, req *storage.CreateUserRequest)
 		return nil, xerrors.Errorf("failed to await db readiness: %w", err)
 	}
 
-	values := []interface{}{req.Username, req.Password}
+	values := []interface{}{req.Username, []byte(req.Password)}
 	query := sq.
-		Insert("\"user\"").
+		Insert(`"user"`).
 		Columns("username", "password").
 		Suffix("RETURNING id").
 		PlaceholderFormat(sq.Dollar)
@@ -53,7 +53,7 @@ func (c *Client) CreateUser(ctx context.Context, req *storage.CreateUserRequest)
 	}
 	defer row.Close()
 	if !row.Next() {
-		return nil, storage.ErrNotFound
+		return nil, xerrors.Errorf("failed to get user: %w", row.Err())
 	}
 
 	var id string
@@ -76,7 +76,7 @@ func (c *Client) GetUser(ctx context.Context, req *storage.GetUserRequest) (*sto
 	}
 	query := sq.
 		Select("id", "username", "avatar_url").
-		From("\"user\"").
+		From(`"user"`).
 		PlaceholderFormat(sq.Dollar)
 	if req.Id != "" {
 		query = query.Where(sq.Eq{"id": req.Id})
@@ -115,7 +115,7 @@ func (c *Client) UpdateUser(ctx context.Context, req *storage.UpdateUserRequest)
 	}
 
 	query := sq.
-		Update("\"user\"'").
+		Update(`"user"`).
 		Where(sq.Eq{"id": req.Id}).
 		Suffix("RETURNING id, username, avatar_url").
 		PlaceholderFormat(sq.Dollar)
@@ -123,7 +123,7 @@ func (c *Client) UpdateUser(ctx context.Context, req *storage.UpdateUserRequest)
 		query = query.Set("username", req.Username)
 	}
 	if req.Password != "" {
-		query = query.Set("password", req.Password)
+		query = query.Set("password", []byte(req.Password))
 	}
 	if req.AvatarURL != "" {
 		query = query.Set("avatar_url", req.AvatarURL)
