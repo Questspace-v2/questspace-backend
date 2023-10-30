@@ -1,0 +1,99 @@
+definitions:
+  storage.CreateUserRequest:
+    properties:
+      avatar_url:
+        example: https://api.dicebear.com/7.x/thumbs/svg
+        type: string
+      password:
+        example: "12345"
+        type: string
+      username:
+        example: svayp11
+        type: string
+    type: object
+  storage.UpdateUserRequest:
+    properties:
+      avatar_url:
+        example: https://i.pinimg.com/originals/7a/62/cb/7a62cb80e20da2d68a37b8db26833dc0.jpg
+        type: string
+      id:
+        example: b5ee72a3-54dd-c4b8-551c-4bdc0204cedb
+        type: string
+      password:
+        example: complex_password_here
+        type: string
+      username:
+        example: svayp11
+        type: string
+    type: object
+  storage.User:
+    properties:
+      avatar_url:
+        type: string
+      id:
+        type: string
+      username:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /user:
+    post:
+      parameters:
+      - description: Create user request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/storage.CreateUserRequest'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/storage.User'
+        "400":
+          description: Bad Request
+        "422":
+          description: Unprocessable Entity
+      summary: Create user
+  /user/{user_id}:
+    get:
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/storage.User'
+        "404":
+          description: Not Found
+      summary: Get user by id
+    post:
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      - description: Update user request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/storage.UpdateUserRequest'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/storage.User'
+        "404":
+          description: Not Found
+        "422":
+          description: Unprocessable Entity
+      summary: Update user
+swagger: "2.0"

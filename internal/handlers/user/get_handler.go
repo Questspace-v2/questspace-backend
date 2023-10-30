@@ -20,23 +20,16 @@ func NewGetHandler(s storage.UserStorage) GetHandler {
 	}
 }
 
-func (h GetHandler) HandleQS(c *gin.Context) error {
-	userId := c.Query("id")
-	userName := c.Query("username")
-	if userId == "" && userName == "" {
-		return xerrors.Errorf("either id or username must be set: %w", aerrors.ErrBadRequest)
-	}
-	req := &storage.GetUserRequest{Id: userId, Username: userName}
-	return h.handle(c, req)
-}
-
-func (h GetHandler) HandlePath(c *gin.Context) error {
+// Handle handles GET /user/:id request
+//
+// @Summary Get user by id
+// @Param user_id path string true "User ID"
+// @Success 200 {object} storage.User
+// @Failure 404
+// @Router /user/{user_id} [get]
+func (h GetHandler) Handle(c *gin.Context) error {
 	userId := c.Param("id")
 	req := &storage.GetUserRequest{Id: userId}
-	return h.handle(c, req)
-}
-
-func (h GetHandler) handle(c *gin.Context, req *storage.GetUserRequest) error {
 	user, err := h.storage.GetUser(c, req)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {

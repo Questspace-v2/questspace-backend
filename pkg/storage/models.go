@@ -51,7 +51,7 @@ type Team struct {
 type User struct {
 	Id        string `json:"id"`
 	Username  string `json:"username"`
-	Password  string `json:"password,omitempty"`
+	Password  string `json:"-"`
 	AvatarURL string `json:"avatar_url,omitempty"`
 }
 

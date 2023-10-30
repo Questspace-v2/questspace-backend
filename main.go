@@ -4,10 +4,14 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"net/http"
-	user "questspace/internal/handlers/user"
+	"questspace/docs"
+	"questspace/internal/handlers/user"
 	pgdb "questspace/internal/pgdb/client"
 	"questspace/pkg/application"
 	"strings"
+
+	swaggerfiles "github.com/swaggo/files"
+	ginswagger "github.com/swaggo/gin-swagger"
 
 	"github.com/gin-contrib/cors"
 
@@ -73,17 +77,20 @@ func Init(app application.App) error {
 	client := http.Client{}
 	hasher := sha256.New()
 
+	docs.SwaggerInfo.BasePath = "/"
+
 	userGroup := app.Router().Group("/user")
 
 	createHandler := user.NewCreateHandler(sqlStorage, client, hasher)
 	userGroup.POST("", application.AsGinHandler(createHandler.Handle))
 
 	getHandler := user.NewGetHandler(sqlStorage)
-	userGroup.GET("", application.AsGinHandler(getHandler.HandleQS))
-	userGroup.GET("/:id", application.AsGinHandler(getHandler.HandlePath))
+	userGroup.GET("/:id", application.AsGinHandler(getHandler.Handle))
 
-	updateHandler := user.NewUpdateHandler(sqlStorage, client)
+	updateHandler := user.NewUpdateHandler(sqlStorage, client, hasher)
 	userGroup.POST("/:id", application.AsGinHandler(updateHandler.Handle))
+
+	app.Router().GET("/swagger/*any", ginswagger.WrapHandler(swaggerfiles.Handler))
 
 	return nil
 }
