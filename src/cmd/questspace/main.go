@@ -4,19 +4,18 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"net/http"
+	"strings"
+
 	"questspace/docs"
 	"questspace/internal/handlers/user"
 	pgdb "questspace/internal/pgdb/client"
 	"questspace/pkg/application"
-	"strings"
-
-	swaggerfiles "github.com/swaggo/files"
-	ginswagger "github.com/swaggo/gin-swagger"
 
 	"github.com/gin-contrib/cors"
-
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx"
+	swaggerfiles "github.com/swaggo/files"
+	ginswagger "github.com/swaggo/gin-swagger"
 	"golang.org/x/xerrors"
 )
 

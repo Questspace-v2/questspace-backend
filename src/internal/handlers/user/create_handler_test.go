@@ -6,19 +6,17 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"testing"
+
 	"questspace/internal/hasher"
 	"questspace/pkg/application"
 	"questspace/pkg/storage"
 	"questspace/pkg/storage/mocks"
-	"testing"
-
-	"golang.org/x/xerrors"
-
-	"github.com/stretchr/testify/require"
-
-	"github.com/golang/mock/gomock"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/require"
+	"golang.org/x/xerrors"
 )
 
 func TestCreateHandler_CommonCases(t *testing.T) {
