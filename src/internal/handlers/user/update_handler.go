@@ -5,14 +5,14 @@ import (
 	"errors"
 	"hash"
 	"net/http"
+
 	"questspace/internal/hasher"
 	"questspace/internal/validate"
 	aerrors "questspace/pkg/application/errors"
 	"questspace/pkg/storage"
 
-	"golang.org/x/xerrors"
-
 	"github.com/gin-gonic/gin"
+	"golang.org/x/xerrors"
 )
 
 type UpdateHandler struct {

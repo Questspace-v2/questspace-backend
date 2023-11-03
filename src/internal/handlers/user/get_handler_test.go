@@ -3,17 +3,16 @@ package user
 import (
 	"net/http"
 	"net/http/httptest"
+	"testing"
+
 	"questspace/pkg/application"
 	"questspace/pkg/storage"
 	"questspace/pkg/storage/mocks"
-	"testing"
-
-	"golang.org/x/xerrors"
-
-	"github.com/stretchr/testify/require"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/require"
+	"golang.org/x/xerrors"
 )
 
 func TestGetHandler_CommonCases(t *testing.T) {
