@@ -1,4 +1,4 @@
-FROM golang:1.20.10-alpine AS builder
+FROM golang:1.20.10-alpine3.18 AS builder
 
 RUN adduser -D -g '' questspace
 

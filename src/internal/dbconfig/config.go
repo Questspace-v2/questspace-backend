@@ -14,7 +14,7 @@ type Config struct {
 	Database string `yaml:"database"`
 	User     string `yaml:"user"`
 	Password string `yaml:"password"`
-	SSLMode  string `yaml:"ssl_mode,omitempty"`
+	SSLMode  string `yaml:"sslmode,omitempty"`
 }
 
 func (c *Config) GetDSN() string {
