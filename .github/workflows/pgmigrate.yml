@@ -4,11 +4,10 @@ on: workflow_dispatch
 jobs:
   pgmigrate:
     runs-on: ubuntu-22.04
+    container:
+      image: python:3.11.6-alpine3.18
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
-        with:
-          python-version: 3.11
       - run: mkdir -p ~/.postgresql/ && echo -n '${{ vars.CA_CERTS }}' > ~/.postgresql/root.crt
       - name: Install pgmigrate
         run: pip install yandex-pgmigrate
