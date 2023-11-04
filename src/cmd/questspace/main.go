@@ -2,34 +2,26 @@ package main
 
 import (
 	"crypto/sha256"
-	"fmt"
+	"database/sql"
 	"net/http"
 	"strings"
 
 	"questspace/docs"
+	"questspace/internal/dbconfig"
 	"questspace/internal/handlers/user"
 	pgdb "questspace/internal/pgdb/client"
 	"questspace/pkg/application"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx"
+	_ "github.com/jackc/pgx/stdlib"
 	swaggerfiles "github.com/swaggo/files"
 	ginswagger "github.com/swaggo/gin-swagger"
 	"golang.org/x/xerrors"
 )
 
 var config struct {
-	Section struct {
-		Key string `yaml:"key"`
-	} `yaml:"section"`
-	DB struct {
-		Host     string `yaml:"host"`
-		Port     uint16 `yaml:"port"`
-		Database string `yaml:"database"`
-		User     string `yaml:"user"`
-		Password string `yaml:"password"`
-	} `yaml:"db"`
+	DB   dbconfig.Config `yaml:"db"`
 	Cors struct {
 		AllowOrigin string `yaml:"allow-origin"`
 	} `yaml:"cors"`
@@ -48,8 +40,6 @@ func HandleHello(c *gin.Context) error {
 }
 
 func Init(app application.App) error {
-	fmt.Printf("Got key: %s", config.Section.Key)
-
 	corsConfig := cors.DefaultConfig()
 	if config.Cors.AllowOrigin == "*" {
 		corsConfig.AllowAllOrigins = true
@@ -60,20 +50,15 @@ func Init(app application.App) error {
 
 	app.Router().GET("/hello", application.AsGinHandler(HandleHello))
 
-	// TODO(svayp11): Create type for database config and use env secrets
-	connConfig := pgx.ConnConfig{
-		Host:     config.DB.Host,
-		Port:     config.DB.Port,
-		Database: config.DB.Database,
-		User:     config.DB.User,
-		Password: application.ReadSecret(config.DB.Password),
-	}
-	conn, err := pgx.Connect(connConfig)
+	conn, err := sql.Open("pgx", config.DB.GetDSN())
 	if err != nil {
 		return xerrors.Errorf("failed to connect to database: %w", err)
 	}
+
 	sqlStorage := pgdb.NewClient(conn)
+	// TODO(svayp11): configure client
 	client := http.Client{}
+	// TODO(svayp11): Create custom hasher interface
 	hasher := sha256.New()
 
 	docs.SwaggerInfo.BasePath = "/"

@@ -1,5 +1,3 @@
-section:
-  key: value
 db:
   host: host
   port: 5432
