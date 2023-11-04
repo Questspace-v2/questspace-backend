@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: questspace-backend
+  template:
+    metadata:
+      labels:
+        app: questspace-backend
+    spec:
+      containers:
+        - name: backend-container
+          image: docker.io/questspace/backend:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ENVIRONMENT
+              value: prod
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: questspace-db-secret
+                  key: questspace-postgres-user
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: questspace-db-secret
+                  key: questspace-postgres-password
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+spec:
+  selector:
+    app: questspace-backend
+  type: LoadBalancer
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+      nodePort: 31337
