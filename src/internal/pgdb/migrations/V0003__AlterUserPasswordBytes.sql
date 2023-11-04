@@ -1,1 +1,1 @@
-ALTER TABLE "user" ALTER COLUMN password TYPE bytea USING password::bytea;
+ALTER TABLE questspace.user ALTER COLUMN password TYPE bytea USING password::bytea;

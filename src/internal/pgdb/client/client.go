@@ -34,7 +34,7 @@ func (c *Client) CreateUser(ctx context.Context, req *storage.CreateUserRequest)
 	}
 	values := []interface{}{req.Username, []byte(req.Password)}
 	query := sq.
-		Insert(`"user"`).
+		Insert("questspace.user").
 		Columns("username", "password").
 		Suffix("RETURNING id").
 		PlaceholderFormat(sq.Dollar)
@@ -78,7 +78,7 @@ func (c *Client) GetUser(ctx context.Context, req *storage.GetUserRequest) (*sto
 	}
 	query := sq.
 		Select("id", "username", "avatar_url").
-		From(`"user"`).
+		From("questspace.user").
 		PlaceholderFormat(sq.Dollar)
 	if req.Id != "" {
 		query = query.Where(sq.Eq{"id": req.Id})
@@ -115,7 +115,7 @@ func (c *Client) UpdateUser(ctx context.Context, req *storage.UpdateUserRequest)
 	}
 	pwQuery := sq.
 		Select("password").
-		From(`"user"`).
+		From("questspace.user").
 		Where(sq.Eq{"id": req.Id}).
 		PlaceholderFormat(sq.Dollar)
 	queryStr, args, err := pwQuery.ToSql()
@@ -140,7 +140,7 @@ func (c *Client) UpdateUser(ctx context.Context, req *storage.UpdateUserRequest)
 	}
 
 	query := sq.
-		Update(`"user"`).
+		Update("questspace.user").
 		Where(sq.Eq{"id": req.Id}).
 		Suffix("RETURNING id, username, avatar_url").
 		PlaceholderFormat(sq.Dollar)
