@@ -11,13 +11,12 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: 3.11
+      - run: mkdir -p ~/.postgresql
       - name: Download certificate
-        run: apt-get update && \ 
-             DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends wget && \ 
-             mkdir -p ~/.postgresql && \
-             wget "https://storage.yandexcloud.net/cloud-certs/CA.pem" \
-             --output-document ~/.postgresql/root.crt && \
-             chmod 0600 ~/.postgresql/root.crt
+        uses: wei/wget@v1
+        with:
+          args: "https://storage.yandexcloud.net/cloud-certs/CA.pem" --output-document ~/.postgresql/root.crt
+      - run: chmod 0600 ~/.postgresql/root.crt
       - name: Install pgmigrate
         run: pip install yandex-pgmigrate
       - name: Apply migrations to database
