@@ -12,7 +12,9 @@ jobs:
         with:
           python-version: 3.11
       - name: Download certificate
-        run: mkdir -p ~/.postgresql && \
+        run: apt-get update && \ 
+             DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends wget && \ 
+             mkdir -p ~/.postgresql && \
              wget "https://storage.yandexcloud.net/cloud-certs/CA.pem" \
              --output-document ~/.postgresql/root.crt && \
              chmod 0600 ~/.postgresql/root.crt
