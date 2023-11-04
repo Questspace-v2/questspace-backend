@@ -2,6 +2,9 @@ FROM golang:1.20.10-alpine AS builder
 
 RUN adduser -D -g '' questspace
 
+RUN wget "https://storage.yandexcloud.net/cloud-certs/CA.pem" \
+         --output-document /root.crt
+
 WORKDIR /app/
 
 COPY src/go.mod src/go.sum ./
@@ -19,6 +22,10 @@ LABEL language="golang"
 COPY --from=builder /etc/passwd /etc/passwd
 
 COPY --from=builder --chown=questspace:1000 /go/bin/questspace /questspace
+
+RUN mkdir -p /home/questspace/.postgresql
+
+COPY --from=builder --chown=questspace:1000 --chmod=0600 /root.crt /home/questspace/.postgresql/root.crt
 
 COPY conf /conf
 
