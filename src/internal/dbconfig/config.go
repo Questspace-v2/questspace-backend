@@ -34,12 +34,18 @@ func (c *Config) UnmarshalYAML(value *yaml.Node) error {
 		return err
 	}
 
-	secret, err := application.ReadSecret(temp.Password)
+	unSec, err := application.ReadSecret(temp.User)
 	if err != nil {
 		return err
 	}
+	temp.User = unSec
 
-	temp.Password = secret
+	pwSec, err := application.ReadSecret(temp.Password)
+	if err != nil {
+		return err
+	}
+	temp.Password = pwSec
+
 	*c = Config(*temp)
 	return nil
 }

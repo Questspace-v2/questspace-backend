@@ -1,6 +1,7 @@
 package application
 
 import (
+	"os"
 	"path"
 
 	"github.com/gin-gonic/gin"
@@ -41,6 +42,18 @@ func GetAddrFromEnvironment(env Environment) string {
 	default:
 		return ":80"
 	}
+}
+
+func GetEnvironmentFromSystem() (Environment, error) {
+	env, ok := os.LookupEnv("ENVIRONMENT")
+	if !ok {
+		return Development, nil
+	}
+	appEnv := new(Environment)
+	if err := appEnv.Set(env); err != nil {
+		return "", xerrors.Errorf("failed to read app env from environment: %w", err)
+	}
+	return *appEnv, nil
 }
 
 func GetLoggerFromEnvironment(env Environment) (*zap.Logger, error) {

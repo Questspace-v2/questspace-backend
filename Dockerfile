@@ -28,4 +28,4 @@ USER questspace
 
 EXPOSE 8080
 
-ENTRYPOINT ["./questspace", "--environment=docker-dev", "--config=/conf/"]
+ENTRYPOINT ["./questspace", "--config=/conf/"]

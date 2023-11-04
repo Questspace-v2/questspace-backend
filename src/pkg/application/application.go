@@ -2,12 +2,13 @@ package application
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
 	"time"
 
-	"questspace/pkg/application/errors"
+	aerrors "questspace/pkg/application/errors"
 
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
@@ -37,7 +38,11 @@ func (a App) Logger() *zap.Logger {
 func Run(initFunc func(app App) error, configHolder interface{}) {
 	// TODO(svayp11): configure settings for gin engine
 	app := App{context: context.Background(), engine: gin.New()}
-	args := getCLIArgs()
+	args, err := getCLIArgs()
+	if err != nil {
+		fmt.Printf("failed to read environment: %+v", err)
+		os.Exit(1)
+	}
 
 	logger, err := GetLoggerFromEnvironment(args.Environment)
 	if err != nil {
@@ -45,9 +50,18 @@ func Run(initFunc func(app App) error, configHolder interface{}) {
 		os.Exit(1)
 	}
 
-	if err := env.Load(".env"); err != nil {
-		logger.Error("Failed to load environment form .env file", zap.Error(err))
+	_, err = os.Stat(".env")
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		logger.Error("Failed to check .env file")
 		os.Exit(1)
+	}
+	if err == nil {
+		if err := env.Load(".env"); err != nil {
+			logger.Error("Failed to load environment form .env file", zap.Error(err))
+			os.Exit(1)
+		}
+	} else {
+		logger.Warn("Not found .env file")
 	}
 
 	if err := SetEnvMode(args.Environment); err != nil {
@@ -57,7 +71,7 @@ func Run(initFunc func(app App) error, configHolder interface{}) {
 	app.logger = logger
 	app.engine.Use(ginzap.Ginzap(app.logger, time.RFC3339, false))
 	app.engine.Use(func(c *gin.Context) {
-		errors.ErrorHandler(logger)(c)
+		aerrors.ErrorHandler(logger)(c)
 	})
 	// liveness check
 	app.engine.GET("/ping", Ping)
@@ -87,20 +101,24 @@ func AsGinHandler(handler func(c *gin.Context) error) gin.HandlerFunc {
 		err := handler(c)
 		if err != nil {
 			_ = c.Error(err)
-			errors.WriteErrorResponse(c, err)
+			aerrors.WriteErrorResponse(c, err)
 		}
 	}
 }
 
-func getCLIArgs() applicationArgs {
+func getCLIArgs() (applicationArgs, error) {
 	args := applicationArgs{}
 	flag.StringVar(&args.ConfigsDir, "config", "", "Path to .yaml file with application config")
 	flag.Var(&args.Environment, "environment", "Application environment")
 	flag.Parse()
 
-	// TODO(svayp11): check env variables
-	if args.Environment == "" {
-		args.Environment = Development
+	if args.Environment != "" {
+		return args, nil
 	}
-	return args
+	environ, err := GetEnvironmentFromSystem()
+	if err != nil {
+		return applicationArgs{}, err
+	}
+	args.Environment = environ
+	return args, nil
 }

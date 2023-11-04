@@ -2,7 +2,7 @@ db:
   host: host
   port: 5432
   database: db
-  user: postgres
+  user: env:POSTGRES_USER
   password: env:POSTGRES_PASSWORD
 cors:
   allow-origin: "*"

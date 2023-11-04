@@ -1,0 +1,4 @@
+conf/dev.yaml
+conf/example.yaml
+*_test.go
+*.out
