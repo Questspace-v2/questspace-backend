@@ -22,7 +22,7 @@ func (c *Config) GetDSN() string {
 	if c.SSLMode == "" {
 		sslMode = "disable"
 	}
-	return fmt.Sprintf("host=%s port=%d dbname=%s user=%s password=%s sslmode=%s",
+	return fmt.Sprintf("host=%s port=%d dbname=%s user=%s password=%s sslmode=%s target_session_attrs=write",
 		c.Host, c.Port, c.Database, c.User, c.Password, sslMode)
 }
 

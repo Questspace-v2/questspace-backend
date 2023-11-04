@@ -1,1 +1,1 @@
-ALTER TABLE "user" DROP COLUMN first_name, DROP COLUMN last_name;
+ALTER TABLE questspace.user DROP COLUMN first_name, DROP COLUMN last_name;

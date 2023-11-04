@@ -1,0 +1,29 @@
+name: pgmigrate
+
+on:
+  workflow_dispatch:
+    branches:
+jobs:
+  pgmigrate:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+      - name: Download certificate
+        run: mkdir -p ~/.postgresql && \
+             wget "https://storage.yandexcloud.net/cloud-certs/CA.pem" \
+             --output-document ~/.postgresql/root.crt && \
+             chmod 0600 ~/.postgresql/root.crt
+      - name: Install pgmigrate
+        run: pip install yandex-pgmigrate
+      - name: Apply migrations to database
+        working-directory: ./src/internal/pgdb
+        env:
+          PGHOST: ${{ vars.POSTGRES_HOST }}
+          PGPORT: ${{ vars.POSTGRES_PORT }}
+          PGDATABASE: ${{ vars.POSTGRES_DATABASE }}
+          PGUSER: ${{ secrets.POSTGRES_USER }}
+          PGPASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+        run: pgmigrate -c "sslmode=verify-full target_session_attrs=write" -v -t latest migrate
