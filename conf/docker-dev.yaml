@@ -1,5 +1,3 @@
-section:
-  key: value
 db:
   host: postgres
   port: 5432

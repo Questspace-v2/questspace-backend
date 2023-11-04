@@ -20,12 +20,16 @@ func UnmarshallConfigFromFile(path string, config interface{}) error {
 	return nil
 }
 
-func ReadSecret(value string) string {
+func ReadSecret(value string) (string, error) {
 	if strings.HasPrefix(value, "env:") {
 		val, ok := os.LookupEnv(strings.SplitN(value, ":", 2)[1])
 		if ok {
-			return val
+			return val, nil
 		}
 	}
-	return value
+	secret, err := os.ReadFile(value)
+	if err != nil {
+		return "", xerrors.Errorf("failed to read secret file: %w", err)
+	}
+	return string(secret), nil
 }

@@ -10,15 +10,14 @@ import (
 	"golang.org/x/xerrors"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/jackc/pgx"
 )
 
 type Client struct {
-	conn *pgx.Conn
+	db *sql.DB
 }
 
-func NewClient(conn *pgx.Conn) *Client {
-	return &Client{conn: conn}
+func NewClient(conn *sql.DB) *Client {
+	return &Client{db: conn}
 }
 
 func (c *Client) CreateUser(ctx context.Context, req *storage.CreateUserRequest) (*storage.User, error) {
@@ -29,10 +28,10 @@ func (c *Client) CreateUser(ctx context.Context, req *storage.CreateUserRequest)
 	if err != nil && !errors.Is(err, storage.ErrNotFound) {
 		return nil, xerrors.Errorf("failed to get user: %w", err)
 	}
-	if err := c.conn.WaitUntilReady(ctx); err != nil {
+	node, err := c.db.Conn(ctx)
+	if err != nil {
 		return nil, xerrors.Errorf("failed to await db readiness: %w", err)
 	}
-
 	values := []interface{}{req.Username, []byte(req.Password)}
 	query := sq.
 		Insert(`"user"`).
@@ -49,11 +48,11 @@ func (c *Client) CreateUser(ctx context.Context, req *storage.CreateUserRequest)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to build query string: %w", err)
 	}
-	row, err := c.conn.QueryEx(ctx, queryStr, nil, args...)
+	row, err := node.QueryContext(ctx, queryStr, args...)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to execute query %s: %w", queryStr, err)
 	}
-	defer row.Close()
+	defer func() { _ = row.Close() }()
 	if !row.Next() {
 		return nil, xerrors.Errorf("failed to get user: %w", row.Err())
 	}
@@ -73,7 +72,8 @@ func (c *Client) CreateUser(ctx context.Context, req *storage.CreateUserRequest)
 }
 
 func (c *Client) GetUser(ctx context.Context, req *storage.GetUserRequest) (*storage.User, error) {
-	if err := c.conn.WaitUntilReady(ctx); err != nil {
+	node, err := c.db.Conn(ctx)
+	if err != nil {
 		return nil, xerrors.Errorf("failed to await db readiness: %w", err)
 	}
 	query := sq.
@@ -92,11 +92,11 @@ func (c *Client) GetUser(ctx context.Context, req *storage.GetUserRequest) (*sto
 	if err != nil {
 		return nil, xerrors.Errorf("failed to build query string: %w", err)
 	}
-	row, err := c.conn.QueryEx(ctx, queryStr, nil, args...)
+	row, err := node.QueryContext(ctx, queryStr, args...)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to execute query %s: %w", queryStr, err)
 	}
-	defer row.Close()
+	defer func() { _ = row.Close() }()
 	if !row.Next() {
 		return nil, storage.ErrNotFound
 	}
@@ -109,7 +109,8 @@ func (c *Client) GetUser(ctx context.Context, req *storage.GetUserRequest) (*sto
 }
 
 func (c *Client) UpdateUser(ctx context.Context, req *storage.UpdateUserRequest) (*storage.User, error) {
-	if err := c.conn.WaitUntilReady(ctx); err != nil {
+	node, err := c.db.Conn(ctx)
+	if err != nil {
 		return nil, xerrors.Errorf("failed to await db readiness: %w", err)
 	}
 	pwQuery := sq.
@@ -121,7 +122,7 @@ func (c *Client) UpdateUser(ctx context.Context, req *storage.UpdateUserRequest)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to build query string: %w", err)
 	}
-	row := c.conn.QueryRowEx(ctx, queryStr, nil, args...)
+	row := node.QueryRowContext(ctx, queryStr, args...)
 	var oldPassword []byte
 	if err := row.Scan(&oldPassword); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -157,11 +158,11 @@ func (c *Client) UpdateUser(ctx context.Context, req *storage.UpdateUserRequest)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to build query string: %w", err)
 	}
-	rows, err := c.conn.QueryEx(ctx, queryStr, nil, args...)
+	rows, err := node.QueryContext(ctx, queryStr, args...)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to execute query %s: %w", queryStr, err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	if !rows.Next() {
 		return nil, xerrors.Errorf("failed to insert row: %w", rows.Err())
 	}
