@@ -10,7 +10,7 @@ type AccessType string
 
 var (
 	ErrExists     = xerrors.New("already exists")
-	ErrNotFound   = xerrors.New("not found")
+	ErrNotFound = xerrors.New("not found")
 	ErrValidation = xerrors.New("validation error")
 )
 
