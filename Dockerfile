@@ -16,7 +16,7 @@ COPY src .
 
 RUN GOOS=linux go build -o /go/bin/questspace ./cmd/questspace/main.go
 
-FROM alpine:3.17.3
+FROM alpine:3.18.4
 LABEL language="golang"
 
 COPY --from=builder /etc/passwd /etc/passwd
