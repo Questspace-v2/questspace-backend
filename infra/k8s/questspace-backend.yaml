@@ -12,12 +12,14 @@ spec:
       labels:
         app: questspace-backend
     spec:
+      imagePullSecrets:
+        - name: docker-registry-secret
       containers:
         - name: backend-container
-          image: docker.io/questspace/backend:latest
-          imagePullPolicy: Never
+          image: cr.yandex/crpl9s9mvc8h74r32rk4/backend:0.1.0
+          imagePullPolicy: Always
           ports:
-            - containerPort: 8080
+            - containerPort: 80
           env:
             - name: ENVIRONMENT
               value: prod
@@ -43,5 +45,5 @@ spec:
   ports:
     - protocol: TCP
       port: 8080
-      targetPort: 8080
+      targetPort: 80
       nodePort: 31337

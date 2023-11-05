@@ -35,10 +35,6 @@ func GetAddrFromEnvironment(env Environment) string {
 	switch env {
 	case Development:
 		return "localhost:8080"
-	case DockerDevelopment:
-		return ":8080"
-	case Production:
-		return ":80"
 	default:
 		return ":80"
 	}

@@ -3,12 +3,13 @@ services:
   app:
     container_name: golang_container
     environment:
+      - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - ENVIRONMENT=docker-dev
     tty: true
     build: .
     ports:
-      - '8080:8080'
+      - '8080:80'
     restart: on-failure
     volumes:
       - .:/app

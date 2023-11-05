@@ -29,10 +29,8 @@ COPY --from=builder --chown=questspace:1000 --chmod=0600 /root.crt /home/questsp
 
 COPY conf /conf
 
-COPY .env .
-
 USER questspace
 
-EXPOSE 8080
+EXPOSE 80
 
 ENTRYPOINT ["./questspace", "--config=/conf/"]
