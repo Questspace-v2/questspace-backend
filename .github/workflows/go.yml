@@ -3,8 +3,14 @@ name: Go
 on:
   push:
     branches: [ "main" ]
+    paths-ignore:
+      - .github/**
+      - infra/**
   pull_request:
     branches: [ "main" ]
+    paths-ignore:
+      - .github/**
+      - infra/**
   workflow_dispatch:
 
 jobs:
