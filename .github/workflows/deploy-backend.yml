@@ -23,6 +23,9 @@ jobs:
         with:
           yc-sa-json-credentials: ${{ secrets.CI_REGISTRY_KEY }}
 
+      - name: Set production settings
+        run: touch ./conf/prod.yaml && echo '${{ secrets.PRODUCTION_SETTINGS }}' > ./conf/prod.yaml
+
       - name: Build, tag, and push image to Yandex Cloud Container Registry
         run: |
           docker build -t ${{ secrets.CI_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ inputs.tag }} .
