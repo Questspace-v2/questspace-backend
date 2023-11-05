@@ -37,18 +37,21 @@ func (a App) Logger() *zap.Logger {
 
 func Run(initFunc func(app App) error, configHolder interface{}) {
 	// TODO(svayp11): configure settings for gin engine
-	app := App{context: context.Background(), engine: gin.New()}
 	args, err := getCLIArgs()
 	if err != nil {
 		fmt.Printf("failed to read environment: %+v", err)
 		os.Exit(1)
 	}
-
 	logger, err := GetLoggerFromEnvironment(args.Environment)
 	if err != nil {
 		fmt.Printf("Failed to get logger from environment: %+v", err)
 		os.Exit(1)
 	}
+	if err := SetEnvMode(args.Environment); err != nil {
+		logger.Error("Failed to set environment mode", zap.Stringer("target_mode", &args.Environment), zap.Error(err))
+	}
+
+	app := App{context: context.Background(), engine: gin.New()}
 
 	_, err = os.Stat(".env")
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
@@ -62,10 +65,6 @@ func Run(initFunc func(app App) error, configHolder interface{}) {
 		}
 	} else {
 		logger.Warn("Not found .env file")
-	}
-
-	if err := SetEnvMode(args.Environment); err != nil {
-		logger.Error("Failed to set environment mode", zap.Stringer("target_mode", &args.Environment), zap.Error(err))
 	}
 
 	app.logger = logger
