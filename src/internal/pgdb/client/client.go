@@ -32,6 +32,8 @@ func (c *Client) CreateUser(ctx context.Context, req *storage.CreateUserRequest)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to await db readiness: %w", err)
 	}
+	defer func() { _ = node.Close() }()
+
 	values := []interface{}{req.Username, []byte(req.Password)}
 	query := sq.
 		Insert("questspace.user").
@@ -76,6 +78,8 @@ func (c *Client) GetUser(ctx context.Context, req *storage.GetUserRequest) (*sto
 	if err != nil {
 		return nil, xerrors.Errorf("failed to await db readiness: %w", err)
 	}
+	defer func() { _ = node.Close() }()
+
 	query := sq.
 		Select("id", "username", "avatar_url").
 		From("questspace.user").
@@ -113,6 +117,8 @@ func (c *Client) UpdateUser(ctx context.Context, req *storage.UpdateUserRequest)
 	if err != nil {
 		return nil, xerrors.Errorf("failed to await db readiness: %w", err)
 	}
+	defer func() { _ = node.Close() }()
+
 	pwQuery := sq.
 		Select("password").
 		From("questspace.user").

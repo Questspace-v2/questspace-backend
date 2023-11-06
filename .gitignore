@@ -28,5 +28,5 @@ prod.yaml
 .env
 
 # infra
-infra/k8s/*-secret.yaml
+infra/k8s/**/*-secret.yaml
 infra/k8s/*-configmap.yaml
