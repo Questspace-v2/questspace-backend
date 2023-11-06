@@ -99,7 +99,6 @@ func AsGinHandler(handler func(c *gin.Context) error) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		err := handler(c)
 		if err != nil {
-			_ = c.Error(err)
 			aerrors.WriteErrorResponse(c, err)
 		}
 	}

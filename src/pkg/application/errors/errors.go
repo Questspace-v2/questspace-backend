@@ -16,7 +16,7 @@ func ErrorHandler(logger *zap.Logger) gin.HandlerFunc {
 		if len(c.Errors) == 0 {
 			return
 		}
-		logger.Error("error during handling response", zap.String("errors", c.Errors.String()))
+		logger.Error("error during handling request", zap.String("errors", c.Errors.String()))
 	}
 }
 
@@ -40,6 +40,7 @@ func WriteErrorResponse(c *gin.Context, err error) {
 		break
 	default:
 		c.JSON(http.StatusInternalServerError, gin.H{"error": ErrInternal.Error()})
+		_ = c.Error(err)
 		break
 	}
 }
