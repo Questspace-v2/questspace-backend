@@ -27,16 +27,16 @@ var (
 )
 
 type Quest struct {
-	Id                   string
-	Name                 string
-	Description          string
-	Access               AccessType
-	Creator              *User
-	RegistrationDeadline *time.Time
-	StartTime            *time.Time
-	FinishTime           *time.Time
-	MediaLink            string
-	MaxTeamCap           *int
+	Id                   string     `json:"id"`
+	Name                 string     `json:"name"`
+	Description          string     `json:"description,omitempty"`
+	Access               AccessType `json:"access"`
+	Creator              *User      `json:"-"`
+	RegistrationDeadline *time.Time `json:"registration_deadline"`
+	StartTime            *time.Time `json:"start_time"`
+	FinishTime           *time.Time `json:"finish_time"`
+	MediaLink            string     `json:"media_link"`
+	MaxTeamCap           *int       `json:"max_team_cap"`
 }
 
 type Team struct {
