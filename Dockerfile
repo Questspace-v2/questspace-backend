@@ -14,7 +14,7 @@ RUN go mod download && \
 
 COPY src .
 
-RUN GOOS=linux go build -o /go/bin/questspace ./cmd/questspace/main.go
+RUN GOOS=linux go build -o /go/bin/questspace -ldflags "-s -w" ./cmd/questspace/main.go
 
 FROM alpine:3.18.4
 LABEL language="golang"
