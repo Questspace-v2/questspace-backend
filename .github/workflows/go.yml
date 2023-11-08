@@ -41,14 +41,14 @@ jobs:
       uses: actions/github-script@v6
       with:
         script: |
-          const { execSync } = require("child_process");
+          const { execSync } = require('child_process');
           try {
-            const goimportsOutput = execSync("goimports -local 'questspace/' -d -e ./src", { encoding: "utf-8" });
+            const goimportsOutput = execSync("goimports -local 'questspace/' -d -e ./src", { encoding: 'utf-8' });
             if (goimportsOutput) {
               console.error(goimportsOutput);
               core.setFailed('Found style issues');
             }
           } catch (err) {
-            console.error("Error executing goimports:", err);
+            console.error('Error executing goimports: ', err);
             core.setFailed('Command "goimports" failed')
           }
