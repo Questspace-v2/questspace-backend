@@ -50,5 +50,5 @@ jobs:
             }
           } catch (err) {
             console.error("Error executing goimports:", err);
-            core.setFailed('Process foimports failed')
+            core.setFailed('Command "goimports" failed')
           }
