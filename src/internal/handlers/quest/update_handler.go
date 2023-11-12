@@ -39,7 +39,7 @@ func NewUpdateHandler(s storage.QuestStorage, f http.Client, h hash.Hash) Update
 func (h UpdateHandler) Handle(c *gin.Context) error {
 	data, err := c.GetRawData()
 	if err != nil {
-		return xerrors.Errorf("failed to ")
+		return xerrors.Errorf("failed to get raw data: %w", err)
 	}
 	req := storage.UpdateQuestRequest{}
 	if err := json.Unmarshal(data, &req); err != nil {

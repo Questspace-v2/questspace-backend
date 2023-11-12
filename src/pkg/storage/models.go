@@ -31,12 +31,12 @@ type Quest struct {
 	Name                 string     `json:"name"`
 	Description          string     `json:"description,omitempty"`
 	Access               AccessType `json:"access"`
-	Creator              *User      `json:"-"`
+	Creator              *User      `json:"creator"`
 	RegistrationDeadline *time.Time `json:"registration_deadline"`
 	StartTime            *time.Time `json:"start_time"`
-	FinishTime           *time.Time `json:"finish_time"`
+	FinishTime           *time.Time `json:"finish_time,omitempty"`
 	MediaLink            string     `json:"media_link"`
-	MaxTeamCap           *int       `json:"max_team_cap"`
+	MaxTeamCap           *int       `json:"max_team_cap,omitempty"`
 }
 
 type Team struct {
