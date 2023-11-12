@@ -27,7 +27,7 @@ func NewCreateHandler(s storage.QuestStorage, f http.Client, h hash.Hash) Create
 
 // Handle handles POST /quest request
 //
-// @Summary Create user
+// @Summary Create quest
 // @Param request body storage.CreateQuestRequest true "Create quest request"
 // @Success 200 {object} storage.Quest
 // @Failure 400
