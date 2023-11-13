@@ -179,3 +179,138 @@ func (c *Client) UpdateUser(ctx context.Context, req *storage.UpdateUserRequest)
 	}
 	return user, nil
 }
+
+func (c *Client) CreateQuest(ctx context.Context, req *storage.CreateQuestRequest) (*storage.Quest, error) {
+	node, err := c.db.Conn(ctx)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to await db readiness: %w", err)
+	}
+	defer func() { _ = node.Close() }()
+
+	query := sq.
+		Insert("questspace.quest").
+		Columns("name", "description", "access", "creator_name", "registration_deadline", "start_time", "finish_time", "media_link", "max_team_cap").
+		Suffix("RETURNING id").
+		PlaceholderFormat(sq.Dollar)
+	values := []interface{}{req.Name, req.Description, req.Access, req.CreatorName, req.RegistrationDeadline, req.StartTime, req.FinishTime, req.MediaLink, req.MaxTeamCap}
+	query = query.Values(values...)
+
+	queryStr, args, err := query.ToSql()
+	if err != nil {
+		return nil, xerrors.Errorf("failed to build query string: %w", err)
+	}
+	row := node.QueryRowContext(ctx, queryStr, args...)
+
+	var id string
+	if err := row.Scan(&id); err != nil {
+		return nil, xerrors.Errorf("failed to scan row: %w", err)
+	}
+	quest := storage.Quest{
+		Id:                   id,
+		Name:                 req.Name,
+		Description:          req.Description,
+		Access:               req.Access,
+		RegistrationDeadline: req.RegistrationDeadline,
+		StartTime:            req.StartTime,
+		FinishTime:           req.FinishTime,
+		MediaLink:            req.MediaLink,
+		MaxTeamCap:           req.MaxTeamCap,
+	}
+	quest.Creator, err = c.GetUser(ctx, &storage.GetUserRequest{Username: req.CreatorName})
+	return &quest, nil
+}
+
+func (c *Client) GetQuest(ctx context.Context, req *storage.GetQuestRequest) (*storage.Quest, error) {
+	node, err := c.db.Conn(ctx)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to await db readiness: %w", err)
+	}
+	defer func() { _ = node.Close() }()
+
+	query := sq.
+		Select("q.id", "name", "description", "access", "u.id", "creator_name", "avatar_url", "registration_deadline", "start_time", "finish_time", "media_link", "max_team_cap").
+		From("questspace.quest as q").
+		Where(sq.Eq{"id": req.Id}).
+		LeftJoin("questspace.user as u on u.username = q.creator_name").
+		PlaceholderFormat(sq.Dollar)
+
+	queryStr, args, err := query.ToSql()
+	if err != nil {
+		return nil, xerrors.Errorf("failed to build query string: %w", err)
+	}
+	row := node.QueryRowContext(ctx, queryStr, args...)
+
+	quest := &storage.Quest{Creator: &storage.User{}}
+	var (
+		finishTime sql.NullTime
+		maxTeamCap sql.NullInt32
+	)
+	if err := row.Scan(&quest.Id, &quest.Name, &quest.Description, &quest.Creator.Id, &quest.Creator.Username, &quest.Creator.AvatarURL, &quest.RegistrationDeadline, &quest.StartTime, &finishTime, &quest.MediaLink, &maxTeamCap); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, storage.ErrNotFound
+		}
+		return nil, xerrors.Errorf("failed to scan row: %w", err)
+	}
+	if finishTime.Valid {
+		*quest.FinishTime = finishTime.Time
+	}
+	if maxTeamCap.Valid {
+		*quest.MaxTeamCap = int(maxTeamCap.Int32)
+	}
+	return quest, nil
+}
+
+func (c *Client) UpdateQuest(ctx context.Context, req *storage.UpdateQuestRequest) (*storage.Quest, error) {
+	node, err := c.db.Conn(ctx)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to await db readiness: %w", err)
+	}
+	defer func() { _ = node.Close() }()
+
+	query := sq.
+		Update("questspace.quest").
+		Where(sq.Eq{"id": req.Id}).
+		Suffix("RETURNING id, name, description, access, creator_name, registration_deadline, start_time, finish_time, media_link, max_team_cap").
+		PlaceholderFormat(sq.Dollar)
+	if req.Name != "" {
+		query = query.Set("name", req.Name)
+	}
+	if req.Description != "" {
+		query = query.Set("description", req.Description)
+	}
+	if req.Access != "" {
+		query = query.Set("access", req.Access)
+	}
+	if req.CreatorName != "" {
+		query = query.Set("creator_name", req.CreatorName)
+	}
+	if req.RegistrationDeadline != nil {
+		query = query.Set("registration_deadline", req.RegistrationDeadline)
+	}
+	if req.StartTime != nil {
+		query = query.Set("start_time", req.StartTime)
+	}
+	if req.FinishTime != nil {
+		query = query.Set("finish_time", req.FinishTime)
+	}
+	if req.MaxTeamCap != nil {
+		query = query.Set("max_team_cap", req.MaxTeamCap)
+	}
+
+	queryStr, args, err := query.ToSql()
+	if err != nil {
+		return nil, xerrors.Errorf("failed to build query string: %w", err)
+	}
+	row := node.QueryRowContext(ctx, queryStr, args...)
+
+	quest := &storage.Quest{}
+	var creatorName string
+	if err := row.Scan(&quest.Id, &quest.Name, &quest.Description, &creatorName, &quest.RegistrationDeadline, &quest.StartTime, &quest.FinishTime, &quest.MediaLink, &quest.MaxTeamCap); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, storage.ErrNotFound
+		}
+		return nil, xerrors.Errorf("failed to scan row: %w", err)
+	}
+	quest.Creator, err = c.GetUser(ctx, &storage.GetUserRequest{Username: creatorName})
+	return quest, nil
+}
