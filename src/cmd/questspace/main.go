@@ -1,16 +1,17 @@
 package main
 
 import (
-	"crypto/sha256"
-	"database/sql"
+	"errors"
 	"net/http"
 	"strings"
 
-	"questspace/docs"
-	"questspace/internal/dbconfig"
-	"questspace/internal/handlers/user"
-	pgdb "questspace/internal/pgdb/client"
-	"questspace/pkg/application"
+	"questspace/internal/handlers/quest"
+
+	"questspace/internal/hasher"
+
+	"golang.yandex/hasql/checkers"
+
+	"golang.yandex/hasql"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -18,11 +19,18 @@ import (
 	swaggerfiles "github.com/swaggo/files"
 	ginswagger "github.com/swaggo/gin-swagger"
 	"golang.org/x/xerrors"
+
+	"questspace/docs"
+	"questspace/internal/handlers/user"
+	pgdb "questspace/internal/pgdb/client"
+	"questspace/internal/pgdb/pgconfig"
+	"questspace/pkg/application"
 )
 
 var config struct {
-	DB   dbconfig.Config `yaml:"db"`
-	Cors struct {
+	DB       pgconfig.Config `yaml:"db"`
+	HashCost int             `yaml:"hash-cost"`
+	Cors     struct {
 		AllowOrigin string `yaml:"allow-origin"`
 	} `yaml:"cors"`
 }
@@ -50,29 +58,44 @@ func Init(app application.App) error {
 
 	app.Router().GET("/hello", application.AsGinHandler(HandleHello))
 
-	conn, err := sql.Open("pgx", config.DB.GetDSN())
-	if err != nil {
-		return xerrors.Errorf("failed to connect to database: %w", err)
+	nodes, errs := config.DB.GetNodes()
+	if len(errs) > 0 {
+		return xerrors.Errorf("failed to connect to db nodes: %w", errors.Join(errs...))
 	}
+	cl, err := hasql.NewCluster(nodes, checkers.PostgreSQL, hasql.WithNodePicker(hasql.PickNodeClosest()))
+	if err != nil {
+		return xerrors.Errorf("failed to create cluster: %w", err)
+	}
+	sqlStorage := pgdb.NewClient(cl)
 
-	sqlStorage := pgdb.NewClient(conn)
 	// TODO(svayp11): configure client
 	client := http.Client{}
-	// TODO(svayp11): Create custom hasher interface
-	hasher := sha256.New()
+
+	pwHasher := hasher.NewBCryptHasher(config.HashCost)
 
 	docs.SwaggerInfo.BasePath = "/"
 
 	userGroup := app.Router().Group("/user")
 
-	createHandler := user.NewCreateHandler(sqlStorage, client, hasher)
-	userGroup.POST("", application.AsGinHandler(createHandler.Handle))
+	createUserHandler := user.NewCreateHandler(sqlStorage, client, pwHasher)
+	userGroup.POST("", application.AsGinHandler(createUserHandler.Handle))
 
-	getHandler := user.NewGetHandler(sqlStorage)
-	userGroup.GET("/:id", application.AsGinHandler(getHandler.Handle))
+	getUserHandler := user.NewGetHandler(sqlStorage)
+	userGroup.GET("/:id", application.AsGinHandler(getUserHandler.Handle))
 
-	updateHandler := user.NewUpdateHandler(sqlStorage, client, hasher)
-	userGroup.POST("/:id", application.AsGinHandler(updateHandler.Handle))
+	updateUserHandler := user.NewUpdateHandler(sqlStorage, client, pwHasher)
+	userGroup.POST("/:id", application.AsGinHandler(updateUserHandler.Handle))
+
+	questGroup := app.Router().Group("/quest")
+
+	createQuestHandler := quest.NewCreateHandler(sqlStorage)
+	questGroup.POST("", application.AsGinHandler(createQuestHandler.Handle))
+
+	getQuestHandler := quest.NewGetHandler(sqlStorage)
+	questGroup.GET("/:id", application.AsGinHandler(getQuestHandler.Handle))
+
+	updateQuestHandler := quest.NewUpdateHandler(sqlStorage)
+	questGroup.POST("/:id", application.AsGinHandler(updateQuestHandler.Handle))
 
 	app.Router().GET("/swagger/*any", ginswagger.WrapHandler(swaggerfiles.Handler))
 

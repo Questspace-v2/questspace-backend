@@ -1,4 +1,25 @@
 definitions:
+  storage.CreateQuestRequest:
+    properties:
+      access:
+        type: string
+      creator_name:
+        type: string
+      description:
+        type: string
+      finish_time:
+        type: string
+      max_team_cap:
+        type: integer
+      media_link:
+        type: string
+      name:
+        type: string
+      registration_deadline:
+        type: string
+      start_time:
+        type: string
+    type: object
   storage.CreateUserRequest:
     properties:
       avatar_url:
@@ -11,13 +32,54 @@ definitions:
         example: svayp11
         type: string
     type: object
+  storage.Quest:
+    properties:
+      access:
+        type: string
+      creator:
+        $ref: '#/definitions/storage.User'
+      description:
+        type: string
+      finish_time:
+        type: string
+      id:
+        type: string
+      max_team_cap:
+        type: integer
+      media_link:
+        type: string
+      name:
+        type: string
+      registration_deadline:
+        type: string
+      start_time:
+        type: string
+    type: object
+  storage.UpdateQuestRequest:
+    properties:
+      access:
+        type: string
+      creator_name:
+        type: string
+      description:
+        type: string
+      finish_time:
+        type: string
+      max_team_cap:
+        type: integer
+      media_link:
+        type: string
+      name:
+        type: string
+      registration_deadline:
+        type: string
+      start_time:
+        type: string
+    type: object
   storage.UpdateUserRequest:
     properties:
       avatar_url:
         example: https://i.pinimg.com/originals/7a/62/cb/7a62cb80e20da2d68a37b8db26833dc0.jpg
-        type: string
-      id:
-        example: b5ee72a3-54dd-c4b8-551c-4bdc0204cedb
         type: string
       new_password:
         example: complex_password_here
@@ -41,6 +103,64 @@ definitions:
 info:
   contact: {}
 paths:
+  /quest:
+    post:
+      parameters:
+      - description: Create quest request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/storage.CreateQuestRequest'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/storage.Quest'
+        "400":
+          description: Bad Request
+        "422":
+          description: Unprocessable Entity
+      summary: Create quest
+  /quest/{quest_id}:
+    get:
+      parameters:
+      - description: Quest ID
+        in: path
+        name: quest_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/storage.Quest'
+        "404":
+          description: Not Found
+      summary: Get quest by id
+    post:
+      parameters:
+      - description: Quest ID
+        in: path
+        name: quest_id
+        required: true
+        type: string
+      - description: Update quest request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/storage.UpdateQuestRequest'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/storage.Quest'
+        "404":
+          description: Not Found
+        "422":
+          description: Unprocessable Entity
+      summary: Update quest
   /user:
     post:
       parameters:
@@ -57,8 +177,8 @@ paths:
             $ref: '#/definitions/storage.User'
         "400":
           description: Bad Request
-        "422":
-          description: Unprocessable Entity
+        "415":
+          description: Unsupported Media Type
       summary: Create user
   /user/{user_id}:
     get:

@@ -1,8 +1,10 @@
 db:
-  host: postgres
+  hosts:
+    - postgres
   port: 5432
   database: postgres
   user: env:POSTGRES_USER
   password: env:POSTGRES_PASSWORD
 cors:
   allow-origin: "*"
+hash-cost: 11

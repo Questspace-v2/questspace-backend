@@ -6,8 +6,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	aerrors "questspace/pkg/application/errors"
-
 	"golang.org/x/xerrors"
 )
 
@@ -32,7 +30,7 @@ func ImageURL(client http.Client, imgUrl string) error {
 	}
 	contentType := resp.Header.Get("Content-Type")
 	if !strings.HasPrefix(contentType, "image/") {
-		return xerrors.Errorf("non-image Content-Type %s: %w", contentType, aerrors.ErrValidation)
+		return xerrors.Errorf("non-image Content-Type %s", contentType)
 	}
 	return nil
 }

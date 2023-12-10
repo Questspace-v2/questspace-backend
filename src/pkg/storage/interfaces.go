@@ -12,6 +12,7 @@ type UserStorage interface {
 	CreateUser(ctx context.Context, req *CreateUserRequest) (*User, error)
 	GetUser(ctx context.Context, req *GetUserRequest) (*User, error)
 	UpdateUser(ctx context.Context, req *UpdateUserRequest) (*User, error)
+	GetUserPasswordHash(ctx context.Context, req *GetUserRequest) (string, error)
 }
 
 type QuestStorage interface {
