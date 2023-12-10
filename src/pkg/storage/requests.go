@@ -14,7 +14,7 @@ type GetUserRequest struct {
 }
 
 type UpdateUserRequest struct {
-	Id          string `json:"id" example:"b5ee72a3-54dd-c4b8-551c-4bdc0204cedb"`
+	Id          string `json:"-"`
 	Username    string `json:"username" example:"svayp11"`
 	OldPassword string `json:"old_password" example:"12345"`
 	NewPassword string `json:"new_password,omitempty" example:"complex_password_here"`
@@ -39,7 +39,7 @@ type GetQuestRequest struct {
 }
 
 type UpdateQuestRequest struct {
-	Id                   string     `json:"id"`
+	Id                   string     `json:"-"`
 	Name                 string     `json:"name"`
 	Description          string     `json:"description,omitempty"`
 	Access               AccessType `json:"access"`

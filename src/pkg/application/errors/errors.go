@@ -20,27 +20,30 @@ func ErrorHandler(logger *zap.Logger) gin.HandlerFunc {
 	}
 }
 
-var (
-	ErrBadRequest = xerrors.New("bad request")
-	ErrNotFound   = xerrors.New("not found")
-	ErrValidation = xerrors.New("validation error")
-	ErrInternal   = xerrors.New("internal server error")
-)
+var _ error = &httpError{}
+
+type httpError struct {
+	httpCode int
+	error
+}
+
+func NewHttpError(httpCode int, tmpl string, args ...interface{}) error {
+	return &httpError{httpCode: httpCode, error: xerrors.Errorf(tmpl, args...)}
+}
+
+func WrapHTTP(httpCode int, err error) error {
+	return &httpError{httpCode: httpCode, error: err}
+}
+
+func (e *httpError) Error() string {
+	return e.error.Error()
+}
 
 func WriteErrorResponse(c *gin.Context, err error) {
-	switch {
-	case errors.Is(err, ErrBadRequest):
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		break
-	case errors.Is(err, ErrNotFound):
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-		break
-	case errors.Is(err, ErrValidation):
-		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
-		break
-	default:
-		c.JSON(http.StatusInternalServerError, gin.H{"error": ErrInternal.Error()})
-		_ = c.Error(err)
-		break
+	httpErr := &httpError{}
+	if errors.As(err, &httpErr) {
+		c.JSON(httpErr.httpCode, gin.H{"error": httpErr.Error()})
+		return
 	}
+	c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 }
