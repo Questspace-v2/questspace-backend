@@ -15,6 +15,96 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/quest": {
+            "post": {
+                "summary": "Create quest",
+                "parameters": [
+                    {
+                        "description": "Create quest request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/storage.CreateQuestRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/storage.Quest"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity"
+                    }
+                }
+            }
+        },
+        "/quest/{quest_id}": {
+            "get": {
+                "summary": "Get quest by id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Quest ID",
+                        "name": "quest_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/storage.Quest"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                }
+            },
+            "post": {
+                "summary": "Update quest",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Quest ID",
+                        "name": "quest_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update quest request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/storage.UpdateQuestRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/storage.Quest"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity"
+                    }
+                }
+            }
+        },
         "/user": {
             "post": {
                 "summary": "Create user",
@@ -39,8 +129,8 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request"
                     },
-                    "422": {
-                        "description": "Unprocessable Entity"
+                    "415": {
+                        "description": "Unsupported Media Type"
                     }
                 }
             }
@@ -107,6 +197,38 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "storage.CreateQuestRequest": {
+            "type": "object",
+            "properties": {
+                "access": {
+                    "type": "string"
+                },
+                "creator_name": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "finish_time": {
+                    "type": "string"
+                },
+                "max_team_cap": {
+                    "type": "integer"
+                },
+                "media_link": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "registration_deadline": {
+                    "type": "string"
+                },
+                "start_time": {
+                    "type": "string"
+                }
+            }
+        },
         "storage.CreateUserRequest": {
             "type": "object",
             "properties": {
@@ -124,16 +246,79 @@ const docTemplate = `{
                 }
             }
         },
+        "storage.Quest": {
+            "type": "object",
+            "properties": {
+                "access": {
+                    "type": "string"
+                },
+                "creator": {
+                    "$ref": "#/definitions/storage.User"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "finish_time": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "max_team_cap": {
+                    "type": "integer"
+                },
+                "media_link": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "registration_deadline": {
+                    "type": "string"
+                },
+                "start_time": {
+                    "type": "string"
+                }
+            }
+        },
+        "storage.UpdateQuestRequest": {
+            "type": "object",
+            "properties": {
+                "access": {
+                    "type": "string"
+                },
+                "creator_name": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "finish_time": {
+                    "type": "string"
+                },
+                "max_team_cap": {
+                    "type": "integer"
+                },
+                "media_link": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "registration_deadline": {
+                    "type": "string"
+                },
+                "start_time": {
+                    "type": "string"
+                }
+            }
+        },
         "storage.UpdateUserRequest": {
             "type": "object",
             "properties": {
                 "avatar_url": {
                     "type": "string",
                     "example": "https://i.pinimg.com/originals/7a/62/cb/7a62cb80e20da2d68a37b8db26833dc0.jpg"
-                },
-                "id": {
-                    "type": "string",
-                    "example": "b5ee72a3-54dd-c4b8-551c-4bdc0204cedb"
                 },
                 "new_password": {
                     "type": "string",

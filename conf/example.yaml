@@ -1,8 +1,11 @@
 db:
-  host: host
+  hosts:
+    - host1
+    - host2
   port: 5432
   database: db
   user: env:POSTGRES_USER
   password: env:POSTGRES_PASSWORD
 cors:
   allow-origin: "*"
+hash-cost: 10 # default
