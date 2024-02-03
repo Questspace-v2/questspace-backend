@@ -8,3 +8,5 @@ db:
 cors:
   allow-origin: "*"
 hash-cost: 11
+jwt:
+  secret: env:JWT_SECRET_KEY

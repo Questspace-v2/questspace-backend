@@ -60,6 +60,11 @@ spec:
                 secretKeyRef:
                   name: questspace-db-secret
                   key: questspace-postgres-password
+            - name: JWT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: questspace-jwt-secret
+                  key: jwt-secret-key
 ---
 apiVersion: v1
 kind: Service

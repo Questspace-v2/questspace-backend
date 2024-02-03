@@ -91,6 +91,8 @@ func Run(initFunc func(app App) error, configHolder interface{}) {
 	}
 }
 
+type AppHandlerFunc func(c *gin.Context) error
+
 type AppHandler interface {
 	Handle(c *gin.Context) error
 }
