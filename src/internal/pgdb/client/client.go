@@ -5,17 +5,13 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/spkg/ptr"
-
+	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx"
-
+	"github.com/spkg/ptr"
+	"golang.org/x/xerrors"
 	"golang.yandex/hasql"
 
 	"questspace/pkg/storage"
-
-	"golang.org/x/xerrors"
-
-	sq "github.com/Masterminds/squirrel"
 )
 
 const uniqueViolationCode = "23505"

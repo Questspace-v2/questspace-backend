@@ -4,19 +4,21 @@ import (
 	"errors"
 	"net/http"
 
+	"questspace/pkg/application/logging"
+
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"golang.org/x/xerrors"
 )
 
-func ErrorHandler(logger *zap.Logger) gin.HandlerFunc {
+func ErrorHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Next()
 
 		if len(c.Errors) == 0 {
 			return
 		}
-		logger.Error("error during handling request", zap.String("errors", c.Errors.String()))
+		logging.Error(c, "error during handling request", zap.String("errors", c.Errors.String()))
 	}
 }
 

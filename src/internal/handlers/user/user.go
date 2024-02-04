@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gofrs/uuid"
 	"golang.org/x/xerrors"
 
 	"questspace/internal/hasher"
@@ -14,7 +15,7 @@ import (
 	"questspace/pkg/storage"
 )
 
-const defaultAvatarURL = "https://api.dicebear.com/7.x/thumbs/svg"
+const defaultAvatarURLTmpl = "https://api.dicebear.com/7.x/thumbs/svg?seed="
 
 type CreateHandler struct {
 	storage  storage.UserStorage
@@ -47,11 +48,15 @@ func (h CreateHandler) Handle(c *gin.Context) error {
 	if err := json.Unmarshal(data, &req); err != nil {
 		return xerrors.Errorf("failed to unmarshall request: %w", err)
 	}
-	if err := validate.ImageURL(h.fetcher, req.AvatarURL); err != nil {
+	if err := validate.ImageURL(c, h.fetcher, req.AvatarURL); err != nil {
 		return aerrors.WrapHTTP(http.StatusUnsupportedMediaType, err)
 	}
 	if req.AvatarURL == "" {
-		req.AvatarURL = defaultAvatarURL
+		seed, err := uuid.NewV4()
+		if err != nil {
+			return xerrors.Errorf("failed to generate avatar rand seed: %w", err)
+		}
+		req.AvatarURL = defaultAvatarURLTmpl + seed.String()
 	}
 
 	req.Password, err = h.pwHasher.HashString(req.Password)
@@ -140,7 +145,7 @@ func (h UpdateHandler) Handle(c *gin.Context) error {
 	req.Id = c.Param("id")
 
 	if req.AvatarURL != "" {
-		if err := validate.ImageURL(h.fetcher, req.AvatarURL); err != nil {
+		if err := validate.ImageURL(c, h.fetcher, req.AvatarURL); err != nil {
 			return aerrors.WrapHTTP(http.StatusUnsupportedMediaType, err)
 		}
 	}

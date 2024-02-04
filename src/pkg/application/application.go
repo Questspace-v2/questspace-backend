@@ -8,12 +8,13 @@ import (
 	"os"
 	"time"
 
-	aerrors "questspace/pkg/application/errors"
-
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
 	"github.com/gofor-little/env"
 	"go.uber.org/zap"
+
+	aerrors "questspace/pkg/application/errors"
+	"questspace/pkg/application/logging"
 )
 
 type applicationArgs struct {
@@ -69,9 +70,9 @@ func Run(initFunc func(app App) error, configHolder interface{}) {
 
 	app.logger = logger
 	app.engine.Use(ginzap.Ginzap(app.logger, time.RFC3339, false))
-	app.engine.Use(func(c *gin.Context) {
-		aerrors.ErrorHandler(logger)(c)
-	})
+	app.engine.Use(logging.Middleware(logger))
+	app.engine.Use(aerrors.ErrorHandler())
+
 	// liveness check
 	app.engine.GET("/ping", Ping)
 

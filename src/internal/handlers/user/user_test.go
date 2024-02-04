@@ -2,9 +2,11 @@ package user
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"questspace/internal/hasher"
@@ -42,7 +44,7 @@ func TestCreateHandler_CommonCases(t *testing.T) {
 			req: &storage.CreateUserRequest{
 				Username:  "user",
 				Password:  "password",
-				AvatarURL: "https://some.domain.com/avatar.png",
+				AvatarURL: "https://image.winudf.com/v2/image/Y29tLmtub3dpbmdhbmltYWxzLmFwcF9zY3JlZW5fMTNfMTUzMDQ4MzkzOV8wODY/screen-13.jpg?fakeurl=1&type=.jpg",
 			},
 			wantStore:  true,
 			statusCode: http.StatusOK,
@@ -128,16 +130,21 @@ func TestCreateHandler_SetsDefaultURL(t *testing.T) {
 		Password: "password",
 	}
 	storageReq := &storage.CreateUserRequest{
-		Username:  req.Username,
-		Password:  req.Password,
-		AvatarURL: defaultAvatarURL,
+		Username: req.Username,
+		Password: req.Password,
 	}
 	raw, err := json.Marshal(req)
 	require.NoError(t, err)
 	request, err := http.NewRequest(http.MethodPost, "/test", bytes.NewReader(raw))
 	require.NoError(t, err)
 
-	userStorage.EXPECT().CreateUser(gomock.Any(), storageReq).Return(nil, nil)
+	userStorage.EXPECT().CreateUser(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, req *storage.CreateUserRequest) (*storage.User, error) {
+		require.Equal(t, storageReq.Username, req.Username)
+		require.Equal(t, storageReq.Password, req.Password)
+		require.True(t, strings.HasPrefix(req.AvatarURL, defaultAvatarURLTmpl))
+
+		return nil, nil
+	})
 
 	router.ServeHTTP(rr, request)
 	require.Equal(t, http.StatusOK, rr.Code)
@@ -220,7 +227,7 @@ func TestUpdateHandler(t *testing.T) {
 				Id:          "1",
 				Username:    "user",
 				OldPassword: "password",
-				AvatarURL:   "https://some.domain.com/avatar.png",
+				AvatarURL:   "https://image.winudf.com/v2/image/Y29tLmtub3dpbmdhbmltYWxzLmFwcF9zY3JlZW5fMTNfMTUzMDQ4MzkzOV8wODY/screen-13.jpg?fakeurl=1&type=.jpg",
 			},
 			wantUpd:    true,
 			statusCode: http.StatusOK,
