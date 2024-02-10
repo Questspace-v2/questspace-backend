@@ -176,7 +176,7 @@ paths:
   /quest:
     post:
       parameters:
-      - description: Create quest request
+      - description: Main quest information
         in: body
         name: request
         required: true
@@ -189,10 +189,29 @@ paths:
             $ref: '#/definitions/storage.Quest'
         "400":
           description: Bad Request
-        "422":
-          description: Unprocessable Entity
-      summary: Create quest
+        "401":
+          description: Unauthorized
+        "415":
+          description: Unsupported Media Type
+      summary: Create new quest
   /quest/{quest_id}:
+    delete:
+      parameters:
+      - description: Quest ID
+        in: path
+        name: quest_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      summary: Delete quest
     get:
       parameters:
       - description: Quest ID
@@ -215,7 +234,7 @@ paths:
         name: quest_id
         required: true
         type: string
-      - description: Update quest request
+      - description: Quest information to update
         in: body
         name: request
         required: true
@@ -226,12 +245,33 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/storage.Quest'
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
         "404":
           description: Not Found
-        "422":
-          description: Unprocessable Entity
-      summary: Update quest
+        "415":
+          description: Unsupported Media Type
+      summary: Update main quest information
   /user/{user_id}:
+    delete:
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      summary: Delete user account
     get:
       parameters:
       - description: User ID
@@ -267,11 +307,14 @@ paths:
             $ref: '#/definitions/storage.User'
         "401":
           description: Unauthorized
+        "403":
+          description: Forbidden
         "404":
           description: Not Found
         "422":
           description: Unprocessable Entity
-      summary: Update user public data such as username or avatar
+      summary: Update user public data such as username or avatar and returns new
+        auth data
   /user/{user_id}/password:
     post:
       parameters:
@@ -295,7 +338,5 @@ paths:
           description: Unauthorized
         "403":
           description: Forbidden
-        "404":
-          description: Not Found
       summary: Update user password
 swagger: "2.0"

@@ -88,6 +88,7 @@ CREATE TABLE questspace.answer_try
     FOREIGN KEY (user_id) REFERENCES questspace.user (id) ON DELETE CASCADE
 );
 
+-- TODO(svayp11): why username instead of id tho
 ALTER TABLE questspace.quest ADD FOREIGN KEY (creator) REFERENCES questspace.user (username);
 
 ALTER TABLE questspace.team ADD FOREIGN KEY (capitan) REFERENCES questspace.user (username);

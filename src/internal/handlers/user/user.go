@@ -22,8 +22,8 @@ type GetHandler struct {
 	clientFactory pgdb.QuestspaceClientFactory
 }
 
-func NewGetHandler(cf pgdb.QuestspaceClientFactory) GetHandler {
-	return GetHandler{
+func NewGetHandler(cf pgdb.QuestspaceClientFactory) *GetHandler {
+	return &GetHandler{
 		clientFactory: cf,
 	}
 }
@@ -35,7 +35,7 @@ func NewGetHandler(cf pgdb.QuestspaceClientFactory) GetHandler {
 //	@Success	200		{object}	storage.User
 //	@Failure	404
 //	@Router		/user/{user_id} [get]
-func (h GetHandler) Handle(c *gin.Context) error {
+func (h *GetHandler) Handle(c *gin.Context) error {
 	userId := c.Param("id")
 	req := &storage.GetUserRequest{ID: userId}
 	s, err := h.clientFactory.NewStorage(c, dbnode.Alive)
@@ -61,8 +61,8 @@ type UpdateHandler struct {
 	tokenGenerator jwt.Parser
 }
 
-func NewUpdateHandler(cf pgdb.QuestspaceClientFactory, f http.Client, h hasher.Hasher, g jwt.Parser) UpdateHandler {
-	return UpdateHandler{
+func NewUpdateHandler(cf pgdb.QuestspaceClientFactory, f http.Client, h hasher.Hasher, g jwt.Parser) *UpdateHandler {
+	return &UpdateHandler{
 		clientFactory:  cf,
 		fetcher:        f,
 		pwHasher:       h,
@@ -85,10 +85,11 @@ type UpdatePublicDataRequest struct {
 //	@name									Authorization
 //	@Success								200	{object}	storage.User
 //	@Failure								401
+//	@Failure								403
 //	@Failure								404
 //	@Failure								422
 //	@Router									/user/{user_id} [post]
-func (h UpdateHandler) HandleUser(c *gin.Context) error {
+func (h *UpdateHandler) HandleUser(c *gin.Context) error {
 	data, err := c.GetRawData()
 	if err != nil {
 		return xerrors.Errorf("failed to ")
@@ -99,7 +100,7 @@ func (h UpdateHandler) HandleUser(c *gin.Context) error {
 	}
 	uauth, err := jwt.GetUserFromContext(c)
 	if err != nil {
-		return err
+		return aerrors.WrapHTTP(http.StatusUnauthorized, err)
 	}
 	id := c.Param("id")
 	if uauth.ID != id {
@@ -152,9 +153,8 @@ type UpdatePasswordRequest struct {
 //	@Success								200	{object}	storage.User
 //	@Failure								401
 //	@Failure								403
-//	@Failure								404
 //	@Router									/user/{user_id}/password [post]
-func (h UpdateHandler) HandlePassword(c *gin.Context) error {
+func (h *UpdateHandler) HandlePassword(c *gin.Context) error {
 	data, err := c.GetRawData()
 	if err != nil {
 		return xerrors.Errorf("failed to ")
@@ -165,7 +165,7 @@ func (h UpdateHandler) HandlePassword(c *gin.Context) error {
 	}
 	uauth, err := jwt.GetUserFromContext(c)
 	if err != nil {
-		return err
+		return aerrors.WrapHTTP(http.StatusUnauthorized, err)
 	}
 	id := c.Param("id")
 	if uauth.ID != id {
@@ -193,5 +193,38 @@ func (h UpdateHandler) HandlePassword(c *gin.Context) error {
 	}
 
 	c.JSON(http.StatusOK, user)
+	return nil
+}
+
+// HandleDelete handles DELETE /user/:id request
+//
+//	@Summary								Delete user account
+//	@Param									user_id	path	string						true	"User ID"
+//	@securitydefinitions.oauth2.application	JWT user token
+//	@in										header
+//	@name									Authorization
+//	@Success								200
+//	@Failure								401
+//	@Failure								403
+//	@Failure								404
+//	@Router									/user/{user_id} [delete]
+func (h *UpdateHandler) HandleDelete(c *gin.Context) error {
+	id := c.Param("id")
+	uauth, err := jwt.GetUserFromContext(c)
+	if err != nil {
+		return aerrors.WrapHTTP(http.StatusUnauthorized, err)
+	}
+	if uauth.ID != id {
+		return aerrors.NewHttpError(http.StatusForbidden, "cannot delete other users")
+	}
+
+	req := storage.DeleteUserRequest{ID: id}
+	s, err := h.clientFactory.NewStorage(c, dbnode.Master)
+	if err != nil {
+		return xerrors.Errorf("failed to get storage: %w", err)
+	}
+	if err := s.DeleteUser(c, &req); err != nil {
+		return xerrors.Errorf("cannot delete %s: %w", uauth.Username, err)
+	}
 	return nil
 }

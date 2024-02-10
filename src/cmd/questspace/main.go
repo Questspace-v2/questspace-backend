@@ -1,12 +1,13 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
 	_ "github.com/jackc/pgx/stdlib"
 	swaggerfiles "github.com/swaggo/files"
 	ginswagger "github.com/swaggo/gin-swagger"
@@ -35,18 +36,6 @@ var config struct {
 	JWT jwt.Config `yaml:"jwt"`
 }
 
-var reqCount = 0
-
-// HandleHello is test handler to check OK and err responses
-func HandleHello(c *gin.Context) error {
-	if reqCount == 2 {
-		return xerrors.New("Too many requests")
-	}
-	reqCount++
-	c.JSON(http.StatusOK, gin.H{"message": "hello"})
-	return nil
-}
-
 func Init(app application.App) error {
 	corsConfig := cors.DefaultConfig()
 	if config.Cors.AllowOrigin == "*" {
@@ -56,8 +45,6 @@ func Init(app application.App) error {
 	}
 	app.Router().Use(cors.New(corsConfig))
 
-	app.Router().GET("/hello", application.AsGinHandler(HandleHello))
-
 	nodes, errs := config.DB.GetNodes()
 	if len(errs) > 0 {
 		return xerrors.Errorf("failed to connect to db nodes: %w", errors.Join(errs...))
@@ -66,15 +53,17 @@ func Init(app application.App) error {
 	if err != nil {
 		return xerrors.Errorf("failed to create cluster: %w", err)
 	}
-	sqlStorage := pgdb.NewClient(cl)
+	timeoutCtx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+	if _, err := cl.WaitForAlive(timeoutCtx); err != nil {
+		return xerrors.Errorf("cannot connect to database cluster: %w", err)
+	}
 	nodePicker := dbnode.NewBasicPicker(cl)
 	clientFactory := pgdb.NewQuestspaceClientFactory(nodePicker)
-
-	// TODO(svayp11): configure client
-	client := http.Client{}
-
+	client := http.Client{
+		Timeout: time.Minute,
+	}
 	pwHasher := hasher.NewBCryptHasher(config.HashCost)
-
 	jwtParser := jwt.NewParser(config.JWT.GetEncryptionKey())
 
 	docs.SwaggerInfo.BasePath = "/"
@@ -92,17 +81,14 @@ func Init(app application.App) error {
 	updateUserHandler := user.NewUpdateHandler(clientFactory, client, pwHasher, jwtParser)
 	userGroup.POST("/:id", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, updateUserHandler.HandleUser)))
 	userGroup.POST("/:id/password", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, updateUserHandler.HandlePassword)))
+	userGroup.DELETE("/:id", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, updateUserHandler.HandleDelete)))
 
 	questGroup := app.Router().Group("/quest")
-
-	createQuestHandler := quest.NewCreateHandler(sqlStorage)
-	questGroup.POST("", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, createQuestHandler.Handle)))
-
-	getQuestHandler := quest.NewGetHandler(sqlStorage)
-	questGroup.GET("/:id", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, getQuestHandler.Handle)))
-
-	updateQuestHandler := quest.NewUpdateHandler(sqlStorage)
-	questGroup.POST("/:id", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, updateQuestHandler.Handle)))
+	questHandler := quest.NewHandler(clientFactory, client)
+	questGroup.POST("", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, questHandler.HandleCreate)))
+	questGroup.GET("/:id", application.AsGinHandler(questHandler.HandleGet))
+	questGroup.POST("/:id", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, questHandler.HandleUpdate)))
+	questGroup.DELETE("/:id", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, questHandler.HandleDelete)))
 
 	app.Router().GET("/swagger/*any", ginswagger.WrapHandler(swaggerfiles.Handler))
 

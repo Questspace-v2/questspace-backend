@@ -110,10 +110,10 @@ const docTemplate = `{
         },
         "/quest": {
             "post": {
-                "summary": "Create quest",
+                "summary": "Create new quest",
                 "parameters": [
                     {
-                        "description": "Create quest request",
+                        "description": "Main quest information",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -132,8 +132,11 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request"
                     },
-                    "422": {
-                        "description": "Unprocessable Entity"
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "415": {
+                        "description": "Unsupported Media Type"
                     }
                 }
             }
@@ -163,7 +166,7 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "summary": "Update quest",
+                "summary": "Update main quest information",
                 "parameters": [
                     {
                         "type": "string",
@@ -173,7 +176,7 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "Update quest request",
+                        "description": "Quest information to update",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -189,11 +192,43 @@ const docTemplate = `{
                             "$ref": "#/definitions/storage.Quest"
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
                     "404": {
                         "description": "Not Found"
                     },
-                    "422": {
-                        "description": "Unprocessable Entity"
+                    "415": {
+                        "description": "Unsupported Media Type"
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete quest",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Quest ID",
+                        "name": "quest_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
                     }
                 }
             }
@@ -223,7 +258,7 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "summary": "Update user public data such as username or avatar",
+                "summary": "Update user public data such as username or avatar and returns new auth data",
                 "parameters": [
                     {
                         "type": "string",
@@ -252,11 +287,40 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized"
                     },
+                    "403": {
+                        "description": "Forbidden"
+                    },
                     "404": {
                         "description": "Not Found"
                     },
                     "422": {
                         "description": "Unprocessable Entity"
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Delete user account",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
                     }
                 }
             }
@@ -294,9 +358,6 @@ const docTemplate = `{
                     },
                     "403": {
                         "description": "Forbidden"
-                    },
-                    "404": {
-                        "description": "Not Found"
                     }
                 }
             }

@@ -41,7 +41,7 @@ func (m *mainFactory) NewStorage(ctx context.Context, cr dbnode.PickCriteria) (s
 		return nil, err
 	}
 
-	return NewClientM(sq.WrapStdSqlCtx(db)), err
+	return NewClient(sq.WrapStdSqlCtx(db)), err
 }
 
 func (m *mainFactory) NewStorageTx(ctx context.Context, options *sql.TxOptions) (storage.QuestSpaceStorage, driver.Tx, error) {
@@ -49,7 +49,7 @@ func (m *mainFactory) NewStorageTx(ctx context.Context, options *sql.TxOptions) 
 	if err != nil {
 		return nil, nil, err
 	}
-	return NewClientM(sq.WrapStdSqlCtx(tx)), tx, nil
+	return NewClient(sq.WrapStdSqlCtx(tx)), tx, nil
 }
 
 var _ QuestspaceClientFactory = &FakeClientFactory{}

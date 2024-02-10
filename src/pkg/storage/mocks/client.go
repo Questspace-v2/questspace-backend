@@ -6,11 +6,10 @@ package mocks
 
 import (
 	context "context"
+	storage "questspace/pkg/storage"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-
-	storage "questspace/pkg/storage"
 )
 
 // MockQuestSpaceStorage is a mock of QuestSpaceStorage interface.
@@ -64,6 +63,34 @@ func (m *MockQuestSpaceStorage) CreateUser(ctx context.Context, req *storage.Cre
 func (mr *MockQuestSpaceStorageMockRecorder) CreateUser(ctx, req interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockQuestSpaceStorage)(nil).CreateUser), ctx, req)
+}
+
+// DeleteQuest mocks base method.
+func (m *MockQuestSpaceStorage) DeleteQuest(ctx context.Context, req *storage.DeleteQuestRequest) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteQuest", ctx, req)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteQuest indicates an expected call of DeleteQuest.
+func (mr *MockQuestSpaceStorageMockRecorder) DeleteQuest(ctx, req interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteQuest", reflect.TypeOf((*MockQuestSpaceStorage)(nil).DeleteQuest), ctx, req)
+}
+
+// DeleteUser mocks base method.
+func (m *MockQuestSpaceStorage) DeleteUser(ctx context.Context, req *storage.DeleteUserRequest) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteUser", ctx, req)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteUser indicates an expected call of DeleteUser.
+func (mr *MockQuestSpaceStorageMockRecorder) DeleteUser(ctx, req interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUser", reflect.TypeOf((*MockQuestSpaceStorage)(nil).DeleteUser), ctx, req)
 }
 
 // GetQuest mocks base method.
@@ -179,6 +206,20 @@ func (mr *MockUserStorageMockRecorder) CreateUser(ctx, req interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockUserStorage)(nil).CreateUser), ctx, req)
 }
 
+// DeleteUser mocks base method.
+func (m *MockUserStorage) DeleteUser(ctx context.Context, req *storage.DeleteUserRequest) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteUser", ctx, req)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteUser indicates an expected call of DeleteUser.
+func (mr *MockUserStorageMockRecorder) DeleteUser(ctx, req interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUser", reflect.TypeOf((*MockUserStorage)(nil).DeleteUser), ctx, req)
+}
+
 // GetUser mocks base method.
 func (m *MockUserStorage) GetUser(ctx context.Context, req *storage.GetUserRequest) (*storage.User, error) {
 	m.ctrl.T.Helper()
@@ -260,6 +301,20 @@ func (m *MockQuestStorage) CreateQuest(ctx context.Context, req *storage.CreateQ
 func (mr *MockQuestStorageMockRecorder) CreateQuest(ctx, req interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateQuest", reflect.TypeOf((*MockQuestStorage)(nil).CreateQuest), ctx, req)
+}
+
+// DeleteQuest mocks base method.
+func (m *MockQuestStorage) DeleteQuest(ctx context.Context, req *storage.DeleteQuestRequest) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteQuest", ctx, req)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteQuest indicates an expected call of DeleteQuest.
+func (mr *MockQuestStorageMockRecorder) DeleteQuest(ctx, req interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteQuest", reflect.TypeOf((*MockQuestStorage)(nil).DeleteQuest), ctx, req)
 }
 
 // GetQuest mocks base method.
