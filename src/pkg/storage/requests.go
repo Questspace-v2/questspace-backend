@@ -9,16 +9,15 @@ type CreateUserRequest struct {
 }
 
 type GetUserRequest struct {
-	Id       string
+	ID       string
 	Username string
 }
 
 type UpdateUserRequest struct {
-	Id          string `json:"-"`
-	Username    string `json:"username" example:"svayp11"`
-	OldPassword string `json:"old_password" example:"12345"`
-	NewPassword string `json:"new_password,omitempty" example:"complex_password_here"`
-	AvatarURL   string `json:"avatar_url,omitempty" example:"https://i.pinimg.com/originals/7a/62/cb/7a62cb80e20da2d68a37b8db26833dc0.jpg"`
+	ID        string
+	Username  string
+	Password  string
+	AvatarURL string
 }
 
 type CreateQuestRequest struct {
@@ -35,11 +34,11 @@ type CreateQuestRequest struct {
 }
 
 type GetQuestRequest struct {
-	Id string
+	ID string
 }
 
 type UpdateQuestRequest struct {
-	Id                   string     `json:"-"`
+	ID                   string     `json:"-"`
 	Name                 string     `json:"name"`
 	Description          string     `json:"description,omitempty"`
 	Access               AccessType `json:"access"`
@@ -53,5 +52,5 @@ type UpdateQuestRequest struct {
 }
 
 type DeleteQuestRequest struct {
-	Id string
+	ID string
 }

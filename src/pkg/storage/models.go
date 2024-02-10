@@ -27,7 +27,7 @@ var (
 )
 
 type Quest struct {
-	Id                   string     `json:"id"`
+	ID                   string     `json:"id"`
 	Name                 string     `json:"name"`
 	Description          string     `json:"description,omitempty"`
 	Access               AccessType `json:"access"`
@@ -40,7 +40,7 @@ type Quest struct {
 }
 
 type Team struct {
-	Id         string
+	ID         string
 	Name       string
 	Quest      *Quest
 	Capitan    *User
@@ -49,21 +49,21 @@ type Team struct {
 }
 
 type User struct {
-	Id        string `json:"id"`
+	ID        string `json:"id"`
 	Username  string `json:"username"`
 	Password  string `json:"-"`
 	AvatarURL string `json:"avatar_url,omitempty"`
 }
 
 type TaskGroup struct {
-	Id      string
+	ID      string
 	Quest   *Quest
 	Name    string
 	PubTime *time.Time
 }
 
 type Task struct {
-	Id             string
+	ID             string
 	Group          *TaskGroup
 	Name           string
 	Question       string

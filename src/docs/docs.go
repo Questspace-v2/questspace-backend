@@ -15,6 +15,99 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/auth/google": {
+            "post": {
+                "summary": "Register new or sign in old user using Google OAuth2.0",
+                "parameters": [
+                    {
+                        "description": "Google OAuth request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/auth.GoogleOAuthRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/storage.User"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "415": {
+                        "description": "Unsupported Media Type"
+                    }
+                }
+            }
+        },
+        "/auth/register": {
+            "post": {
+                "summary": "Register new user and return auth data",
+                "parameters": [
+                    {
+                        "description": "Create user request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/storage.CreateUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/storage.User"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "415": {
+                        "description": "Unsupported Media Type"
+                    }
+                }
+            }
+        },
+        "/auth/sign-in": {
+            "post": {
+                "summary": "Sign in to user account and return auth data",
+                "parameters": [
+                    {
+                        "description": "Sign in request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/auth.SignInRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/storage.User"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "415": {
+                        "description": "Unsupported Media Type"
+                    }
+                }
+            }
+        },
         "/quest": {
             "post": {
                 "summary": "Create quest",
@@ -105,36 +198,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/user": {
-            "post": {
-                "summary": "Create user",
-                "parameters": [
-                    {
-                        "description": "Create user request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/storage.CreateUserRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/storage.User"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request"
-                    },
-                    "415": {
-                        "description": "Unsupported Media Type"
-                    }
-                }
-            }
-        },
         "/user/{user_id}": {
             "get": {
                 "summary": "Get user by id",
@@ -160,7 +223,7 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "summary": "Update user",
+                "summary": "Update user public data such as username or avatar",
                 "parameters": [
                     {
                         "type": "string",
@@ -170,12 +233,12 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "Update user request",
+                        "description": "Public data to set for user",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/storage.UpdateUserRequest"
+                            "$ref": "#/definitions/user.UpdatePublicDataRequest"
                         }
                     }
                 ],
@@ -186,6 +249,9 @@ const docTemplate = `{
                             "$ref": "#/definitions/storage.User"
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
                     "404": {
                         "description": "Not Found"
                     },
@@ -194,9 +260,68 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/user/{user_id}/password": {
+            "post": {
+                "summary": "Update user password",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Old and new password",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/user.UpdatePasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/storage.User"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "auth.GoogleOAuthRequest": {
+            "type": "object",
+            "properties": {
+                "id_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "auth.SignInRequest": {
+            "type": "object",
+            "properties": {
+                "password": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
         "storage.CreateQuestRequest": {
             "type": "object",
             "properties": {
@@ -313,27 +438,6 @@ const docTemplate = `{
                 }
             }
         },
-        "storage.UpdateUserRequest": {
-            "type": "object",
-            "properties": {
-                "avatar_url": {
-                    "type": "string",
-                    "example": "https://i.pinimg.com/originals/7a/62/cb/7a62cb80e20da2d68a37b8db26833dc0.jpg"
-                },
-                "new_password": {
-                    "type": "string",
-                    "example": "complex_password_here"
-                },
-                "old_password": {
-                    "type": "string",
-                    "example": "12345"
-                },
-                "username": {
-                    "type": "string",
-                    "example": "svayp11"
-                }
-            }
-        },
         "storage.User": {
             "type": "object",
             "properties": {
@@ -341,6 +445,28 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "user.UpdatePasswordRequest": {
+            "type": "object",
+            "properties": {
+                "new_password": {
+                    "type": "string"
+                },
+                "old_password": {
+                    "type": "string"
+                }
+            }
+        },
+        "user.UpdatePublicDataRequest": {
+            "type": "object",
+            "properties": {
+                "avatar_url": {
                     "type": "string"
                 },
                 "username": {

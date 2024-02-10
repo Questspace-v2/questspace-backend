@@ -1,4 +1,16 @@
 definitions:
+  auth.GoogleOAuthRequest:
+    properties:
+      id_token:
+        type: string
+    type: object
+  auth.SignInRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
   storage.CreateQuestRequest:
     properties:
       access:
@@ -76,21 +88,6 @@ definitions:
       start_time:
         type: string
     type: object
-  storage.UpdateUserRequest:
-    properties:
-      avatar_url:
-        example: https://i.pinimg.com/originals/7a/62/cb/7a62cb80e20da2d68a37b8db26833dc0.jpg
-        type: string
-      new_password:
-        example: complex_password_here
-        type: string
-      old_password:
-        example: "12345"
-        type: string
-      username:
-        example: svayp11
-        type: string
-    type: object
   storage.User:
     properties:
       avatar_url:
@@ -100,9 +97,82 @@ definitions:
       username:
         type: string
     type: object
+  user.UpdatePasswordRequest:
+    properties:
+      new_password:
+        type: string
+      old_password:
+        type: string
+    type: object
+  user.UpdatePublicDataRequest:
+    properties:
+      avatar_url:
+        type: string
+      username:
+        type: string
+    type: object
 info:
   contact: {}
 paths:
+  /auth/google:
+    post:
+      parameters:
+      - description: Google OAuth request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.GoogleOAuthRequest'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/storage.User'
+        "400":
+          description: Bad Request
+        "415":
+          description: Unsupported Media Type
+      summary: Register new or sign in old user using Google OAuth2.0
+  /auth/register:
+    post:
+      parameters:
+      - description: Create user request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/storage.CreateUserRequest'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/storage.User'
+        "400":
+          description: Bad Request
+        "415":
+          description: Unsupported Media Type
+      summary: Register new user and return auth data
+  /auth/sign-in:
+    post:
+      parameters:
+      - description: Sign in request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.SignInRequest'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/storage.User'
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "415":
+          description: Unsupported Media Type
+      summary: Sign in to user account and return auth data
   /quest:
     post:
       parameters:
@@ -161,25 +231,6 @@ paths:
         "422":
           description: Unprocessable Entity
       summary: Update quest
-  /user:
-    post:
-      parameters:
-      - description: Create user request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/storage.CreateUserRequest'
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/storage.User'
-        "400":
-          description: Bad Request
-        "415":
-          description: Unsupported Media Type
-      summary: Create user
   /user/{user_id}:
     get:
       parameters:
@@ -203,20 +254,48 @@ paths:
         name: user_id
         required: true
         type: string
-      - description: Update user request
+      - description: Public data to set for user
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/storage.UpdateUserRequest'
+          $ref: '#/definitions/user.UpdatePublicDataRequest'
       responses:
         "200":
           description: OK
           schema:
             $ref: '#/definitions/storage.User'
+        "401":
+          description: Unauthorized
         "404":
           description: Not Found
         "422":
           description: Unprocessable Entity
-      summary: Update user
+      summary: Update user public data such as username or avatar
+  /user/{user_id}/password:
+    post:
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      - description: Old and new password
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/user.UpdatePasswordRequest'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/storage.User'
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      summary: Update user password
 swagger: "2.0"

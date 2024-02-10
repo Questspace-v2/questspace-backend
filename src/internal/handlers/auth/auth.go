@@ -1,37 +1,55 @@
 package auth
 
 import (
+	"database/sql/driver"
 	"encoding/json"
 	"errors"
 	"net/http"
 
-	"google.golang.org/api/idtoken"
-
-	"go.uber.org/zap"
-
 	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
+	"go.uber.org/zap"
 	"golang.org/x/xerrors"
+	"google.golang.org/api/idtoken"
 
 	"questspace/internal/hasher"
+	pgdb "questspace/internal/pgdb/client"
 	"questspace/internal/validate"
 	aerrors "questspace/pkg/application/errors"
 	"questspace/pkg/application/logging"
 	"questspace/pkg/auth/jwt"
+	"questspace/pkg/dbnode"
 	"questspace/pkg/storage"
 )
 
 const defaultAvatarURLTmpl = "https://api.dicebear.com/7.x/thumbs/svg?seed="
 
 type Handler struct {
-	storage        storage.UserStorage
+	clientFactory  pgdb.QuestspaceClientFactory
 	fetcher        http.Client
 	pwHasher       hasher.Hasher
 	tokenGenerator jwt.Parser
 	externalClient idtoken.Validator
 }
 
-func (h *Handler) HandleBasic(c *gin.Context) error {
+func NewHandler(cf pgdb.QuestspaceClientFactory, f http.Client, h hasher.Hasher, tg jwt.Parser) *Handler {
+	return &Handler{
+		clientFactory:  cf,
+		fetcher:        f,
+		pwHasher:       h,
+		tokenGenerator: tg,
+	}
+}
+
+// HandleBasicSignUp handles POST /auth/register request
+//
+//	@Summary	Register new user and return auth data
+//	@Param		request	body		storage.CreateUserRequest	true	"Create user request"
+//	@Success	200		{object}	storage.User
+//	@Failure	400
+//	@Failure	415
+//	@Router		/auth/register [post]
+func (h *Handler) HandleBasicSignUp(c *gin.Context) error {
 	data, err := c.GetRawData()
 	if err != nil {
 		return xerrors.Errorf("failed to get raw data: %w", err)
@@ -44,97 +62,165 @@ func (h *Handler) HandleBasic(c *gin.Context) error {
 		return aerrors.WrapHTTP(http.StatusUnsupportedMediaType, err)
 	}
 	if req.AvatarURL == "" {
-		seed, err := uuid.NewV4()
-		if err != nil {
-			return xerrors.Errorf("failed to generate avatar rand seed: %w", err)
-		}
+		seed, _ := uuid.NewV4()
 		req.AvatarURL = defaultAvatarURLTmpl + seed.String()
 	}
-
 	if req.Password == "" {
 		return aerrors.NewHttpError(http.StatusBadRequest, "unexpected empty password")
 	}
-
 	req.Password, err = h.pwHasher.HashString(req.Password)
 	if err != nil {
 		return xerrors.Errorf("failed to calculate password hash: %w", err)
 	}
-	user, err := h.storage.CreateUser(c, &req)
+
+	s, tx, err := h.clientFactory.NewStorageTx(c, nil)
+	if err != nil {
+		return xerrors.Errorf("failed to get storage: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+	user, err := s.CreateUser(c, &req)
 	if err != nil {
 		if errors.Is(err, storage.ErrExists) {
 			return aerrors.NewHttpError(http.StatusBadRequest, "user %q already exits", req.Username)
 		}
 		return xerrors.Errorf("failed to create user: %w", err)
 	}
-	token, err := h.tokenGenerator.CreateToken(user)
-	if err != nil {
-		// TODO(svayp11): make this code work and uncomment
-		//if deleteErr := h.storage.DeleteUser(c, &storage.DeleteUserRequest{ID: user.ID}); err != nil {
-		//	return xerrors.Errorf("failed to rollback user after failed token issue: %w", deleteErr)
-		//}
-		return xerrors.Errorf("failed to issue token: %w", err)
-	}
 
-	// TODO(svayp11): set http-only
-	c.SetCookie("access_token", token, 60*60, "/", "questspace.app", true, false)
-	c.JSON(http.StatusOK, user)
+	if err := h.sendAuthDataAndCommit(c, user, tx); err != nil {
+		return err
+	}
 
 	logging.Info(c, "basic registration done",
 		zap.String("username", user.Username),
-		zap.String("user_id", user.Id),
+		zap.String("user_id", user.ID),
 	)
 	return nil
 }
 
-type googleOAuthRequest struct {
-	idToken string `json:"id_token"`
+type SignInRequest struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 
+// HandleBasicSignIn handles POST /auth/sign-in request
+//
+//	@Summary	Sign in to user account and return auth data
+//	@Param		request	body		auth.SignInRequest	true	"Sign in request"
+//	@Success	200		{object}	storage.User
+//	@Failure	400
+//	@Failure	403
+//	@Failure	415
+//	@Router		/auth/sign-in [post]
+func (h *Handler) HandleBasicSignIn(c *gin.Context) error {
+	data, err := c.GetRawData()
+	if err != nil {
+		return xerrors.Errorf("failed to get raw data: %w", err)
+	}
+	req := SignInRequest{}
+	if err := json.Unmarshal(data, &req); err != nil {
+		return xerrors.Errorf("failed to unmarshall request: %w", err)
+	}
+
+	s, err := h.clientFactory.NewStorage(c, dbnode.Alive)
+	if err != nil {
+		return xerrors.Errorf("failed to get storage: %w", err)
+	}
+	pwHash, err := s.GetUserPasswordHash(c, &storage.GetUserRequest{Username: req.Username})
+	if err != nil {
+		if errors.Is(err, storage.ErrNotFound) {
+			return aerrors.NewHttpError(http.StatusNotFound, "user %s not exists", req.Username)
+		}
+		return xerrors.Errorf("failed to lookup user password: %w", err)
+	}
+	if !h.pwHasher.HasSameHash(req.Password, pwHash) {
+		return aerrors.NewHttpError(http.StatusForbidden, "invalid password")
+	}
+	user, err := s.GetUser(c, &storage.GetUserRequest{Username: req.Username})
+	if err != nil {
+		return xerrors.Errorf("failed to get user: %w", err)
+	}
+	token, err := h.tokenGenerator.CreateToken(user)
+	if err != nil {
+		return xerrors.Errorf("failed to issue token: %w", err)
+	}
+
+	c.SetCookie("access_token", token, 60*60, "/", "questspace.app", true, false)
+	c.JSON(http.StatusOK, user)
+	return nil
+}
+
+type GoogleOAuthRequest struct {
+	IdToken string `json:"id_token"`
+}
+
+// HandleGoogle handles POST /auth/google request
+//
+//	@Summary	Register new or sign in old user using Google OAuth2.0
+//	@Param		request	body		auth.GoogleOAuthRequest	true	"Google OAuth request"
+//	@Success	200		{object}	storage.User
+//	@Failure	400
+//	@Failure	415
+//	@Router		/auth/google [post]
+//
+// TODO(svayp11): WIP endpoint
 func (h *Handler) HandleGoogle(c *gin.Context) error {
 	data, err := c.GetRawData()
 	if err != nil {
 		return xerrors.Errorf("failed to get raw data: %w", err)
 	}
-	req := googleOAuthRequest{}
+	req := GoogleOAuthRequest{}
 	if err := json.Unmarshal(data, &req); err != nil {
 		return xerrors.Errorf("failed to unmarshall request: %w", err)
 	}
-
 	// TODO(svayp11): INSERT CLIENT_ID
-	pld, err := h.externalClient.Validate(c, req.idToken, "CLIENT_ID")
+	pld, err := h.externalClient.Validate(c, req.IdToken, "CLIENT_ID")
 	if err != nil {
 		return aerrors.NewHttpError(http.StatusBadRequest, "invalid google token: %w", err)
 	}
 
+	s, tx, err := h.clientFactory.NewStorageTx(c, nil)
+	if err != nil {
+		return xerrors.Errorf("failed to get storage: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
 	createUserReq := storage.CreateUserRequest{
 		Username:  pld.Claims["name"].(string),
 		AvatarURL: pld.Claims["picture"].(string),
 	}
-	user, err := h.storage.CreateUser(c, &createUserReq)
+	user, err := s.CreateUser(c, &createUserReq)
 	if err != nil {
 		if errors.Is(err, storage.ErrExists) {
-			// TODO(svayp11): issue new token
-			return aerrors.NewHttpError(http.StatusNotImplemented, "yet to login user")
+			user, err = s.GetUser(c, &storage.GetUserRequest{Username: createUserReq.Username})
+			if err != nil {
+				return xerrors.Errorf("cannot get and insert user: %w", err)
+			}
+			return h.sendAuthDataAndCommit(c, user, tx)
 		}
 		return xerrors.Errorf("failed to create user: %w", err)
 	}
 
+	if err := h.sendAuthDataAndCommit(c, user, tx); err != nil {
+		return err
+	}
+
+	logging.Info(c, "google registration done",
+		zap.String("username", user.Username),
+		zap.String("user_id", user.ID),
+	)
+	return nil
+}
+
+func (h *Handler) sendAuthDataAndCommit(c *gin.Context, user *storage.User, tx driver.Tx) error {
 	token, err := h.tokenGenerator.CreateToken(user)
 	if err != nil {
-		// TODO(svayp11): make this code work and uncomment
-		//if deleteErr := h.storage.DeleteUser(c, &storage.DeleteUserRequest{ID: user.ID}); err != nil {
-		//	return xerrors.Errorf("failed to rollback user after failed token issue: %w", deleteErr)
-		//}
 		return xerrors.Errorf("failed to issue token: %w", err)
+	}
+	if err := tx.Commit(); err != nil {
+		return xerrors.Errorf("failed to commit tx: %w", err)
 	}
 
 	// TODO(svayp11): set http-only
 	c.SetCookie("access_token", token, 60*60, "/", "questspace.app", true, false)
 	c.JSON(http.StatusOK, user)
-
-	logging.Info(c, "google registration done",
-		zap.String("username", user.Username),
-		zap.String("user_id", user.Id),
-	)
 	return nil
 }

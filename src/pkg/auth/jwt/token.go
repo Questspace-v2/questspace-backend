@@ -9,6 +9,7 @@ import (
 
 const usedAlg = "HS256"
 
+//go:generate mockgen -source=token.go -destination mocks/token.go -package mocks
 type Parser interface {
 	ParseToken(tokenStr string) (*storage.User, error)
 	CreateToken(user *storage.User) (string, error)
@@ -44,7 +45,7 @@ func (p parser) ParseToken(tokenStr string) (*storage.User, error) {
 
 	if claims, ok := token.Claims.(questspaceClaims); ok {
 		return &storage.User{
-			Id:        claims.ID,
+			ID:        claims.ID,
 			Username:  claims.Issuer,
 			AvatarURL: claims.Avatar,
 		}, nil
@@ -57,7 +58,7 @@ func (p parser) CreateToken(user *storage.User) (string, error) {
 		Admin:  false, // TODO(svayp11): Implement admin role
 		Avatar: user.AvatarURL,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ID:     user.Id,
+			ID:     user.ID,
 			Issuer: user.Username,
 		},
 	}

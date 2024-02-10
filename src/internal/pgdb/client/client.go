@@ -16,6 +16,135 @@ import (
 
 const uniqueViolationCode = "23505"
 
+type ClientM struct {
+	runner sq.RunnerContext
+}
+
+var _ storage.QuestSpaceStorage = &ClientM{}
+
+func NewClientM(r sq.RunnerContext) *ClientM {
+	return &ClientM{runner: r}
+}
+
+func (c *ClientM) CreateUser(ctx context.Context, req *storage.CreateUserRequest) (*storage.User, error) {
+	values := []interface{}{req.Username, []byte(req.Password)}
+	query := sq.
+		Insert("questspace.user").
+		Columns("username", "password").
+		Suffix("RETURNING id").
+		PlaceholderFormat(sq.Dollar)
+	if req.AvatarURL != "" {
+		query = query.Columns("avatar_url")
+		values = append(values, req.AvatarURL)
+	}
+	row := query.Values(values...).RunWith(c.runner).QueryRowContext(ctx)
+
+	var id string
+	if err := row.Scan(&id); err != nil {
+		pgErr := &pgx.PgError{}
+		if errors.As(err, pgErr) && pgErr.Code == uniqueViolationCode {
+			return nil, storage.ErrExists
+		}
+		return nil, xerrors.Errorf("failed to scan row: %w", err)
+	}
+	user := storage.User{
+		ID:        id,
+		Username:  req.Username,
+		AvatarURL: req.AvatarURL,
+	}
+	return &user, nil
+}
+
+func (c *ClientM) GetUser(ctx context.Context, req *storage.GetUserRequest) (*storage.User, error) {
+	query := sq.
+		Select("id", "username", "avatar_url").
+		From("questspace.user").
+		PlaceholderFormat(sq.Dollar)
+	if req.ID != "" {
+		query = query.Where(sq.Eq{"id": req.ID})
+	} else if req.Username != "" {
+		query = query.Where(sq.Eq{"username": req.Username})
+	} else {
+		return nil, xerrors.New("at least one of request fields must not be empty")
+	}
+	row := query.RunWith(c.runner).QueryRowContext(ctx)
+
+	user := storage.User{}
+	if err := row.Scan(&user.ID, &user.Username, &user.AvatarURL); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, storage.ErrNotFound
+		}
+		return nil, xerrors.Errorf("failed to scan row: %w", err)
+	}
+	return &user, nil
+}
+
+func (c *ClientM) UpdateUser(ctx context.Context, req *storage.UpdateUserRequest) (*storage.User, error) {
+	if req.Username == "" && req.Password == "" && req.AvatarURL == "" {
+		return nil, xerrors.New("nothing to change!")
+	}
+
+	query := sq.
+		Update("questspace.user").
+		Where(sq.Eq{"id": req.ID}).
+		Suffix("RETURNING id, username, avatar_url").
+		PlaceholderFormat(sq.Dollar)
+	if req.Username != "" {
+		query = query.Set("username", req.Username)
+	}
+	if req.Password != "" {
+		query = query.Set("password", []byte(req.Password))
+	}
+	if req.AvatarURL != "" {
+		query = query.Set("avatar_url", req.AvatarURL)
+	}
+	row := query.RunWith(c.runner).QueryRowContext(ctx)
+
+	user := storage.User{}
+	if err := row.Scan(&user.ID, &user.Username, &user.AvatarURL); err != nil {
+		return nil, xerrors.Errorf("failed to scan row: %w", err)
+	}
+	return &user, nil
+}
+
+func (c *ClientM) GetUserPasswordHash(ctx context.Context, req *storage.GetUserRequest) (string, error) {
+	query := sq.Select("password").
+		From("questspace.user").
+		PlaceholderFormat(sq.Dollar)
+	if req.ID != "" {
+		query = query.Where(sq.Eq{"id": req.ID})
+	} else if req.Username != "" {
+		query = query.Where(sq.Eq{"username": req.Username})
+	} else {
+		return "", xerrors.New("either user id or username should be present")
+	}
+	row := query.RunWith(c.runner).QueryRowContext(ctx)
+
+	var pw []byte
+	if err := row.Scan(&pw); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return "", storage.ErrNotFound
+		}
+		return "", xerrors.Errorf("failed to scan row: %w", err)
+	}
+	return string(pw), nil
+}
+
+func (c *ClientM) CreateQuest(ctx context.Context, req *storage.CreateQuestRequest) (*storage.Quest, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (c *ClientM) GetQuest(ctx context.Context, req *storage.GetQuestRequest) (*storage.Quest, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (c *ClientM) UpdateQuest(ctx context.Context, req *storage.UpdateQuestRequest) (*storage.Quest, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 type Client struct {
 	conn *hasql.Cluster
 }
@@ -57,12 +186,12 @@ func (c *Client) CreateUser(ctx context.Context, req *storage.CreateUserRequest)
 		return nil, xerrors.Errorf("failed to scan row: %w", err)
 	}
 	user := storage.User{
-		Id:        id,
+		ID:        id,
 		Username:  req.Username,
 		Password:  req.Password,
 		AvatarURL: req.AvatarURL,
 	}
-	user.Id = id
+	user.ID = id
 	return &user, nil
 }
 
@@ -76,8 +205,8 @@ func (c *Client) GetUser(ctx context.Context, req *storage.GetUserRequest) (*sto
 		Select("id", "username", "avatar_url").
 		From("questspace.user").
 		PlaceholderFormat(sq.Dollar)
-	if req.Id != "" {
-		query = query.Where(sq.Eq{"id": req.Id})
+	if req.ID != "" {
+		query = query.Where(sq.Eq{"id": req.ID})
 	} else if req.Username != "" {
 		query = query.Where(sq.Eq{"username": req.Username})
 	} else {
@@ -91,7 +220,7 @@ func (c *Client) GetUser(ctx context.Context, req *storage.GetUserRequest) (*sto
 	row := node.DB().QueryRowContext(ctx, queryStr, args...)
 
 	user := &storage.User{}
-	if err := row.Scan(&user.Id, &user.Username, &user.AvatarURL); err != nil {
+	if err := row.Scan(&user.ID, &user.Username, &user.AvatarURL); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, storage.ErrNotFound
 		}
@@ -106,20 +235,20 @@ func (c *Client) UpdateUser(ctx context.Context, req *storage.UpdateUserRequest)
 		return nil, xerrors.Errorf("failed to await primary node: %w", err)
 	}
 
-	if req.Username == "" && req.NewPassword == "" && req.AvatarURL == "" {
-		return c.GetUser(ctx, &storage.GetUserRequest{Id: req.Id})
+	if req.Username == "" && req.Password == "" && req.AvatarURL == "" {
+		return c.GetUser(ctx, &storage.GetUserRequest{ID: req.ID})
 	}
 
 	query := sq.
 		Update("questspace.user").
-		Where(sq.Eq{"id": req.Id}).
+		Where(sq.Eq{"id": req.ID}).
 		Suffix("RETURNING id, username, avatar_url").
 		PlaceholderFormat(sq.Dollar)
 	if req.Username != "" {
 		query = query.Set("username", req.Username)
 	}
-	if req.NewPassword != "" {
-		query = query.Set("password", []byte(req.NewPassword))
+	if req.Password != "" {
+		query = query.Set("password", []byte(req.Password))
 	}
 	if req.AvatarURL != "" {
 		query = query.Set("avatar_url", req.AvatarURL)
@@ -132,7 +261,7 @@ func (c *Client) UpdateUser(ctx context.Context, req *storage.UpdateUserRequest)
 	rows := node.DB().QueryRowContext(ctx, queryStr, args...)
 
 	user := &storage.User{}
-	if err := rows.Scan(&user.Id, &user.Username, &user.AvatarURL); err != nil {
+	if err := rows.Scan(&user.ID, &user.Username, &user.AvatarURL); err != nil {
 		return nil, xerrors.Errorf("failed to scan row: %w", err)
 	}
 
@@ -148,8 +277,8 @@ func (c *Client) GetUserPasswordHash(ctx context.Context, req *storage.GetUserRe
 	query := sq.Select("password").
 		From("questspace.user").
 		PlaceholderFormat(sq.Dollar)
-	if req.Id != "" {
-		query = query.Where(sq.Eq{"id": req.Id})
+	if req.ID != "" {
+		query = query.Where(sq.Eq{"id": req.ID})
 	} else if req.Username != "" {
 		query = query.Where(sq.Eq{"username": req.Username})
 	} else {
@@ -199,7 +328,7 @@ func (c *Client) CreateQuest(ctx context.Context, req *storage.CreateQuestReques
 		return nil, xerrors.Errorf("failed to scan row: %w", err)
 	}
 	quest := storage.Quest{
-		Id:                   id,
+		ID:                   id,
 		Name:                 req.Name,
 		Description:          req.Description,
 		Access:               req.Access,
@@ -226,7 +355,7 @@ func (c *Client) GetQuest(ctx context.Context, req *storage.GetQuestRequest) (*s
 		Select("q.id", "q.name", "q.description", "q.access", "q.avatar_url", "q.registration_deadline",
 			"q.start_time", "q.finish_time", "q.media_link", "q.max_team_cap", "u.id", "u.username", "u.avatar_url").
 		From("questspace.q q").
-		Where(sq.Eq{"id": req.Id}).
+		Where(sq.Eq{"id": req.ID}).
 		LeftJoin("questspace.user u on u.username = q.creator_name").
 		PlaceholderFormat(sq.Dollar)
 
@@ -241,8 +370,8 @@ func (c *Client) GetQuest(ctx context.Context, req *storage.GetQuestRequest) (*s
 		finishTime sql.NullTime
 		maxTeamCap sql.NullInt32
 	)
-	if err := row.Scan(&q.Id, &q.Name, &q.Description, &q.Creator.AvatarURL, &q.RegistrationDeadline,
-		&q.StartTime, &finishTime, &q.MediaLink, &maxTeamCap, &q.Creator.Id, &q.Creator.Username, &q.Creator.AvatarURL); err != nil {
+	if err := row.Scan(&q.ID, &q.Name, &q.Description, &q.Creator.AvatarURL, &q.RegistrationDeadline,
+		&q.StartTime, &finishTime, &q.MediaLink, &maxTeamCap, &q.Creator.ID, &q.Creator.Username, &q.Creator.AvatarURL); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, storage.ErrNotFound
 		}
@@ -265,7 +394,7 @@ func (c *Client) UpdateQuest(ctx context.Context, req *storage.UpdateQuestReques
 
 	query := sq.
 		Update("questspace.quest").
-		Where(sq.Eq{"id": req.Id}).
+		Where(sq.Eq{"id": req.ID}).
 		Suffix("RETURNING id, name, description, access, creator_name, " +
 			"registration_deadline, start_time, finish_time, media_link, max_team_cap").
 		PlaceholderFormat(sq.Dollar)
@@ -306,7 +435,7 @@ func (c *Client) UpdateQuest(ctx context.Context, req *storage.UpdateQuestReques
 		maxTeamCap sql.NullInt32
 	)
 	var creatorName string
-	if err := row.Scan(&quest.Id, &quest.Name, &quest.Description, &creatorName, &quest.RegistrationDeadline,
+	if err := row.Scan(&quest.ID, &quest.Name, &quest.Description, &creatorName, &quest.RegistrationDeadline,
 		&quest.StartTime, &finishTime, &quest.MediaLink, &maxTeamCap); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, storage.ErrNotFound

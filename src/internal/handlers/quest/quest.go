@@ -24,12 +24,12 @@ func NewCreateHandler(s storage.QuestStorage) CreateHandler {
 
 // Handle handles POST /quest request
 //
-// @Summary Create quest
-// @Param request body storage.CreateQuestRequest true "Create quest request"
-// @Success 200 {object} storage.Quest
-// @Failure 400
-// @Failure 422
-// @Router /quest [post]
+//	@Summary	Create quest
+//	@Param		request	body		storage.CreateQuestRequest	true	"Create quest request"
+//	@Success	200		{object}	storage.Quest
+//	@Failure	400
+//	@Failure	422
+//	@Router		/quest [post]
 func (h CreateHandler) Handle(c *gin.Context) error {
 	data, err := c.GetRawData()
 	if err != nil {
@@ -60,18 +60,18 @@ func NewGetHandler(s storage.QuestStorage) GetHandler {
 
 // Handle handles GET /quest/:id request
 //
-// @Summary Get quest by id
-// @Param quest_id path string true "Quest ID"
-// @Success 200 {object} storage.Quest
-// @Failure 404
-// @Router /quest/{quest_id} [get]
+//	@Summary	Get quest by id
+//	@Param		quest_id	path		string	true	"Quest ID"
+//	@Success	200			{object}	storage.Quest
+//	@Failure	404
+//	@Router		/quest/{quest_id} [get]
 func (h GetHandler) Handle(c *gin.Context) error {
 	questId := c.Param("id")
-	req := &storage.GetQuestRequest{Id: questId}
+	req := &storage.GetQuestRequest{ID: questId}
 	user, err := h.storage.GetQuest(c, req)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
-			return aerrors.NewHttpError(http.StatusNotFound, "quest with id %q not found", req.Id)
+			return aerrors.NewHttpError(http.StatusNotFound, "quest with id %q not found", req.ID)
 		}
 		return xerrors.Errorf("failed to get quest: %w", err)
 	}
@@ -91,13 +91,13 @@ func NewUpdateHandler(s storage.QuestStorage) UpdateHandler {
 
 // Handle handles POST /quest/:id request
 //
-// @Summary Update quest
-// @Param quest_id path string true "Quest ID"
-// @Param request body storage.UpdateQuestRequest true "Update quest request"
-// @Success 200 {object} storage.Quest
-// @Failure 404
-// @Failure 422
-// @Router /quest/{quest_id} [post]
+//	@Summary	Update quest
+//	@Param		quest_id	path		string						true	"Quest ID"
+//	@Param		request		body		storage.UpdateQuestRequest	true	"Update quest request"
+//	@Success	200			{object}	storage.Quest
+//	@Failure	404
+//	@Failure	422
+//	@Router		/quest/{quest_id} [post]
 func (h UpdateHandler) Handle(c *gin.Context) error {
 	data, err := c.GetRawData()
 	if err != nil {
@@ -107,12 +107,12 @@ func (h UpdateHandler) Handle(c *gin.Context) error {
 	if err := json.Unmarshal(data, &req); err != nil {
 		return xerrors.Errorf("failed to unmarshall request: %w", err)
 	}
-	req.Id = c.Param("id")
+	req.ID = c.Param("id")
 
 	quest, err := h.storage.UpdateQuest(c, &req)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
-			return aerrors.NewHttpError(http.StatusNotFound, "quest with id %q not found", req.Id)
+			return aerrors.NewHttpError(http.StatusNotFound, "quest with id %q not found", req.ID)
 		}
 		return xerrors.Errorf("failed to update quest: %w", err)
 	}

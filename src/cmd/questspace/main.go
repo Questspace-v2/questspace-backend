@@ -15,6 +15,7 @@ import (
 	"golang.yandex/hasql/checkers"
 
 	"questspace/docs"
+	"questspace/internal/handlers/auth"
 	"questspace/internal/handlers/quest"
 	"questspace/internal/handlers/user"
 	"questspace/internal/hasher"
@@ -22,6 +23,7 @@ import (
 	"questspace/internal/pgdb/pgconfig"
 	"questspace/pkg/application"
 	"questspace/pkg/auth/jwt"
+	"questspace/pkg/dbnode"
 )
 
 var config struct {
@@ -65,6 +67,8 @@ func Init(app application.App) error {
 		return xerrors.Errorf("failed to create cluster: %w", err)
 	}
 	sqlStorage := pgdb.NewClient(cl)
+	nodePicker := dbnode.NewBasicPicker(cl)
+	clientFactory := pgdb.NewQuestspaceClientFactory(nodePicker)
 
 	// TODO(svayp11): configure client
 	client := http.Client{}
@@ -75,16 +79,19 @@ func Init(app application.App) error {
 
 	docs.SwaggerInfo.BasePath = "/"
 
+	authGroup := app.Router().Group("/auth")
+	authHandler := auth.NewHandler(clientFactory, client, pwHasher, jwtParser)
+	authGroup.POST("/register", application.AsGinHandler(authHandler.HandleBasicSignUp))
+	authGroup.POST("/sign-in", application.AsGinHandler(authHandler.HandleBasicSignIn))
+
 	userGroup := app.Router().Group("/user")
 
-	createUserHandler := user.NewCreateHandler(sqlStorage, client, pwHasher)
-	userGroup.POST("", application.AsGinHandler(createUserHandler.Handle))
-
-	getUserHandler := user.NewGetHandler(sqlStorage)
+	getUserHandler := user.NewGetHandler(clientFactory)
 	userGroup.GET("/:id", application.AsGinHandler(getUserHandler.Handle))
 
-	updateUserHandler := user.NewUpdateHandler(sqlStorage, client, pwHasher)
-	userGroup.POST("/:id", application.AsGinHandler(updateUserHandler.Handle))
+	updateUserHandler := user.NewUpdateHandler(clientFactory, client, pwHasher, jwtParser)
+	userGroup.POST("/:id", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, updateUserHandler.HandleUser)))
+	userGroup.POST("/:id/password", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, updateUserHandler.HandlePassword)))
 
 	questGroup := app.Router().Group("/quest")
 
