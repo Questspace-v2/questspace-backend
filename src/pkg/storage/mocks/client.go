@@ -6,10 +6,11 @@ package mocks
 
 import (
 	context "context"
-	storage "questspace/pkg/storage"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+
+	storage "questspace/pkg/storage"
 )
 
 // MockQuestSpaceStorage is a mock of QuestSpaceStorage interface.

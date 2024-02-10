@@ -5,10 +5,11 @@
 package mocks
 
 import (
-	storage "questspace/pkg/storage"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+
+	storage "questspace/pkg/storage"
 )
 
 // MockParser is a mock of Parser interface.

@@ -2,6 +2,7 @@ package quest
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -38,6 +39,7 @@ func TestHandleCreate(t *testing.T) {
 	router.POST("/quest", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, handler.HandleCreate)))
 
 	now := ptr.Time(time.Unix(time.Now().Unix(), 0))
+	now = ptr.Time(now.In(time.UTC))
 	userCreator := storage.User{
 		Username: "username",
 		Password: "password",
@@ -68,8 +70,15 @@ func TestHandleCreate(t *testing.T) {
 
 	req.Creator = &userCreator
 	jwtParser.EXPECT().ParseToken("token").Return(&userCreator, nil)
-	userStorage.EXPECT().CreateQuest(gomock.Any(), &req).Return(&newQuest, nil)
-
+	userStorage.EXPECT().CreateQuest(gomock.Any(), gomock.Any()).DoAndReturn(func(_ context.Context, treq *storage.CreateQuestRequest) (*storage.Quest, error) {
+		require.Equal(t, req.Name, treq.Name)
+		require.Equal(t, req.Description, treq.Description)
+		require.Equal(t, req.Access, treq.Access)
+		require.Equal(t, *req.Creator, *treq.Creator)
+		require.Equal(t, *req.StartTime, *treq.StartTime)
+		require.Equal(t, *req.MaxTeamCap, *treq.MaxTeamCap)
+		return &newQuest, nil
+	})
 	router.ServeHTTP(rr, httpReq)
 	require.Equal(t, http.StatusOK, rr.Code)
 }
