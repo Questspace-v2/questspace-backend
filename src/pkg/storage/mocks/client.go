@@ -6,8 +6,9 @@ package mocks
 
 import (
 	context "context"
-	storage "questspace/pkg/storage"
 	reflect "reflect"
+
+	storage "questspace/pkg/storage"
 
 	gomock "github.com/golang/mock/gomock"
 )

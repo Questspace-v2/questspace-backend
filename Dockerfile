@@ -1,4 +1,4 @@
-FROM golang:1.20.10-alpine3.18 AS builder
+FROM golang:1.22.1-alpine3.19 AS builder
 
 RUN adduser -D -g '' questspace
 
@@ -16,7 +16,7 @@ COPY src .
 
 RUN GOOS=linux go build -o /go/bin/questspace -ldflags "-s -w" ./cmd/questspace/main.go
 
-FROM alpine:3.18.4
+FROM alpine:3.19.1
 LABEL language="golang"
 
 COPY --from=builder /etc/passwd /etc/passwd
