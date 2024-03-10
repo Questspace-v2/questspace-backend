@@ -22,6 +22,16 @@ spec:
                 name: backend-service
                 port:
                   number: 8080
+    - host: api-new.questspace.app
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: backend-service
+                port:
+                  number: 8080
 ---
 
 apiVersion: apps/v1
