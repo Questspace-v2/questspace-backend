@@ -11,7 +11,7 @@ import (
 
 	pgdb "questspace/internal/pgdb/client"
 	"questspace/internal/validate"
-	aerrors "questspace/pkg/application/errors"
+	"questspace/pkg/application/httperrors"
 	"questspace/pkg/application/logging"
 	"questspace/pkg/auth/jwt"
 	"questspace/pkg/dbnode"
@@ -42,28 +42,28 @@ func NewHandler(cf pgdb.QuestspaceClientFactory, f http.Client) *Handler {
 func (h *Handler) HandleCreate(c *gin.Context) error {
 	data, err := c.GetRawData()
 	if err != nil {
-		return xerrors.Errorf("failed to get raw data: %w", err)
+		return xerrors.Errorf("get raw data: %w", err)
 	}
 	req := storage.CreateQuestRequest{}
 	if err := json.Unmarshal(data, &req); err != nil {
-		return xerrors.Errorf("failed to unmarshall request: %w", err)
+		return xerrors.Errorf("unmarshall request: %w", err)
 	}
 	if err := validate.ImageURL(c, h.fetcher, req.MediaLink); err != nil {
-		return aerrors.WrapHTTP(http.StatusUnsupportedMediaType, err)
+		return xerrors.Errorf("%w", err)
 	}
 	uauth, err := jwt.GetUserFromContext(c)
 	if err != nil {
-		return aerrors.WrapHTTP(http.StatusUnauthorized, err)
+		return xerrors.Errorf("%w", err)
 	}
 	req.Creator = uauth
 
 	s, err := h.clientFactory.NewStorage(c, dbnode.Master)
 	if err != nil {
-		return xerrors.Errorf("failed to get storage: %w", err)
+		return xerrors.Errorf("get storage client: %w", err)
 	}
 	quest, err := s.CreateQuest(c, &req)
 	if err != nil {
-		return xerrors.Errorf("failed to create quest: %w", err)
+		return xerrors.Errorf("create quest: %w", err)
 	}
 	c.JSON(http.StatusOK, quest)
 
@@ -88,14 +88,14 @@ func (h *Handler) HandleGet(c *gin.Context) error {
 	req := storage.GetQuestRequest{ID: questId}
 	s, err := h.clientFactory.NewStorage(c, dbnode.Alive)
 	if err != nil {
-		return xerrors.Errorf("failed to get storage: %w", err)
+		return xerrors.Errorf("get storage client: %w", err)
 	}
 	user, err := s.GetQuest(c, &req)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
-			return aerrors.NewHttpError(http.StatusNotFound, "quest with id %q not found", req.ID)
+			return httperrors.Errorf(http.StatusNotFound, "not found quest with id %q", req.ID)
 		}
-		return xerrors.Errorf("failed to get quest: %w", err)
+		return xerrors.Errorf("get quest: %w", err)
 	}
 	c.JSON(http.StatusOK, user)
 	return nil
@@ -115,38 +115,38 @@ func (h *Handler) HandleGet(c *gin.Context) error {
 func (h *Handler) HandleUpdate(c *gin.Context) error {
 	data, err := c.GetRawData()
 	if err != nil {
-		return xerrors.Errorf("failed to get raw data: %w", err)
+		return xerrors.Errorf("get raw data: %w", err)
 	}
 	req := storage.UpdateQuestRequest{}
 	if err := json.Unmarshal(data, &req); err != nil {
-		return xerrors.Errorf("failed to unmarshall request: %w", err)
+		return xerrors.Errorf("unmarshall request: %w", err)
 	}
 	req.ID = c.Param("id")
 	if err := validate.ImageURL(c, h.fetcher, req.MediaLink); err != nil {
-		return aerrors.WrapHTTP(http.StatusUnsupportedMediaType, err)
+		return xerrors.Errorf("%w", err)
 	}
 	uauth, err := jwt.GetUserFromContext(c)
 	if err != nil {
-		return aerrors.WrapHTTP(http.StatusUnauthorized, err)
+		return xerrors.Errorf("%w", err)
 	}
 
 	s, tx, err := h.clientFactory.NewStorageTx(c, nil)
 	if err != nil {
-		return xerrors.Errorf("failed to get storage: %w", err)
+		return xerrors.Errorf("get storage: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
 	quest, err := s.UpdateQuest(c, &req)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
-			return aerrors.NewHttpError(http.StatusNotFound, "quest with id %q not found", req.ID)
+			return httperrors.Errorf(http.StatusNotFound, "not found quest with id %q", req.ID)
 		}
 		return xerrors.Errorf("failed to update quest: %w", err)
 	}
 	if quest.Creator == nil || quest.Creator.Username != uauth.Username {
-		return aerrors.NewHttpError(http.StatusForbidden, "only creator can update their quest")
+		return httperrors.New(http.StatusForbidden, "only creator can update their quest")
 	}
 	if err := tx.Commit(); err != nil {
-		return xerrors.Errorf("failed to commit: %w", err)
+		return xerrors.Errorf("commit transaction: %w", err)
 	}
 
 	c.JSON(http.StatusOK, quest)
@@ -166,22 +166,22 @@ func (h *Handler) HandleDelete(c *gin.Context) error {
 	id := c.Param("id")
 	uauth, err := jwt.GetUserFromContext(c)
 	if err != nil {
-		return aerrors.WrapHTTP(http.StatusUnauthorized, err)
+		return xerrors.Errorf("%w", err)
 	}
 	s, err := h.clientFactory.NewStorage(c, dbnode.Master)
 	if err != nil {
-		return xerrors.Errorf("failed to get storage: %w", err)
+		return xerrors.Errorf("get storage client: %w", err)
 	}
 
 	q, err := s.GetQuest(c, &storage.GetQuestRequest{ID: id})
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
-			return aerrors.NewHttpError(http.StatusNotFound, "quest not found")
+			return httperrors.Errorf(http.StatusNotFound, "quest not found")
 		}
-		return xerrors.Errorf("failed to get quest: %w", err)
+		return xerrors.Errorf("get quest: %w", err)
 	}
 	if q.Creator == nil || q.Creator.ID != uauth.ID {
-		return aerrors.NewHttpError(http.StatusForbidden, "cannot delete others' quests")
+		return httperrors.New(http.StatusForbidden, "cannot delete others' quests")
 	}
 
 	if err := s.DeleteQuest(c, &storage.DeleteQuestRequest{ID: id}); err != nil {

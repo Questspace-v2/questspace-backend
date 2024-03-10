@@ -15,7 +15,7 @@ func UnmarshallConfigFromFile(path string, config interface{}) error {
 	}
 
 	if err := yaml.Unmarshal(content, config); err != nil {
-		return xerrors.Errorf("failed to unmarshall config: %w", err)
+		return xerrors.Errorf("unmarshall config: %w", err)
 	}
 	return nil
 }
@@ -29,7 +29,7 @@ func ReadSecret(value string) (string, error) {
 	}
 	secret, err := os.ReadFile(value)
 	if err != nil {
-		return "", xerrors.Errorf("failed to read secret file: %w", err)
+		return "", xerrors.Errorf("read secret file: %w", err)
 	}
 	return string(secret), nil
 }

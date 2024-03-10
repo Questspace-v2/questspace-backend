@@ -26,7 +26,7 @@ func (h BCryptHasher) HashString(s string) (string, error) {
 	inBytes := []byte(s)
 	passwordHash, err := bcrypt.GenerateFromPassword(inBytes, h.cost)
 	if err != nil {
-		return "", xerrors.Errorf("failed to hash password: %w", err)
+		return "", xerrors.Errorf("hash password: %w", err)
 	}
 	return string(passwordHash), nil
 }

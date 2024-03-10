@@ -3,6 +3,8 @@ package logging
 import (
 	"fmt"
 
+	"github.com/gofrs/uuid"
+
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -12,6 +14,7 @@ const loggerKey = "app-logger"
 
 func Middleware(logger *zap.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		logger = logger.With(zap.String("response_id", uuid.Must(uuid.NewV4()).String()))
 		c.Set(loggerKey, logger)
 		c.Next()
 	}

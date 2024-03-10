@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"questspace/internal/handlers/taskgroups"
+
 	"github.com/gin-contrib/cors"
 	_ "github.com/jackc/pgx/stdlib"
 	swaggerfiles "github.com/swaggo/files"
@@ -64,7 +66,7 @@ func Init(app application.App) error {
 		Timeout: time.Minute,
 	}
 	pwHasher := hasher.NewBCryptHasher(config.HashCost)
-	jwtParser := jwt.NewParser(config.JWT.GetEncryptionKey())
+	jwtParser := jwt.NewTokenParser(config.JWT.GetEncryptionKey())
 
 	docs.SwaggerInfo.BasePath = "/"
 
@@ -89,6 +91,9 @@ func Init(app application.App) error {
 	questGroup.GET("/:id", application.AsGinHandler(questHandler.HandleGet))
 	questGroup.POST("/:id", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, questHandler.HandleUpdate)))
 	questGroup.DELETE("/:id", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, questHandler.HandleDelete)))
+
+	taskGroupHandler := taskgroups.NewHandler(clientFactory)
+	questGroup.PATCH("/:id/task-groups/bulk", application.AsGinHandler(taskGroupHandler.HandleBulkUpdate))
 
 	app.Router().GET("/swagger/*any", ginswagger.WrapHandler(swaggerfiles.Handler))
 

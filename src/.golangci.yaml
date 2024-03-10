@@ -1,0 +1,39 @@
+run:
+  skip-dirs:
+    - '.*/mocks/.*'
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - gosec
+        - noctx
+linters:
+  disable-all: true
+  enable:
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - typecheck
+    - unused
+    - bodyclose
+    - contextcheck
+    - errname
+    - exportloopref
+    - gocheckcompilerdirectives
+    - goconst
+    - goprintffuncname
+    - gosec
+    - musttag
+    - nilnil
+    - nilerr
+    - noctx
+    - nolintlint
+    - prealloc
+    - predeclared
+    - rowserrcheck
+    - sqlclosecheck
+    - tenv
+    - unconvert
+    - usestdlibvars

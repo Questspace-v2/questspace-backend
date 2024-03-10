@@ -4,45 +4,74 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/gofrs/uuid"
+
 	"github.com/gin-gonic/gin"
 
 	"questspace/pkg/application"
-	aerrors "questspace/pkg/application/errors"
+	"questspace/pkg/application/httperrors"
 	"questspace/pkg/storage"
 )
 
+const AuthCookieName = "qs_user_acc"
+
+var userCredsKey = ""
+
+func init() {
+	userCredsKey = "user-creds" + uuid.Must(uuid.NewV4()).String()
+}
+
 func WithJWTMiddleware(parser Parser, handler application.AppHandlerFunc) application.AppHandlerFunc {
 	return func(c *gin.Context) error {
-		jwtHeader := c.GetHeader("Authorization")
-		if jwtHeader == "" {
-			return aerrors.NewHttpError(http.StatusForbidden, "no token was provided")
+		var token string
+		if htk := getFromHeader(c); htk != "" {
+			token = htk
+		} else if ctk := getFromCookies(c); ctk != "" {
+			token = ctk
+		} else {
+			return httperrors.Errorf(http.StatusForbidden, "no auth token was provided")
 		}
-		if !strings.HasPrefix(jwtHeader, "Bearer ") && !strings.HasPrefix(jwtHeader, "bearer ") {
-			return aerrors.NewHttpError(http.StatusForbidden, "invalid auth")
-		}
-		tokenStrParts := strings.Split(jwtHeader, " ")
-		if len(tokenStrParts) != 2 {
-			return aerrors.NewHttpError(http.StatusForbidden, "invalid header format")
-		}
-		tokenStr := tokenStrParts[1]
-		user, err := parser.ParseToken(tokenStr)
+		user, err := parser.ParseToken(token)
 		if err != nil {
-			return aerrors.WrapHTTP(http.StatusForbidden, err)
+			return httperrors.WrapWithCode(http.StatusForbidden, err)
 		}
 
-		c.Set("user-creds", user)
+		c.Set(userCredsKey, user)
 		return handler(c)
 	}
 }
 
+func getFromHeader(c *gin.Context) string {
+	jwtHeader := c.GetHeader("Authorization")
+	if jwtHeader == "" {
+		return ""
+	}
+	if !strings.HasPrefix(jwtHeader, "Bearer ") && !strings.HasPrefix(jwtHeader, "bearer ") {
+		return ""
+	}
+	tokenStrParts := strings.Split(jwtHeader, " ")
+	if len(tokenStrParts) != 2 {
+		return ""
+	}
+	return tokenStrParts[1]
+}
+
+func getFromCookies(c *gin.Context) string {
+	cookie, err := c.Cookie(AuthCookieName)
+	if err != nil {
+		return ""
+	}
+	return cookie
+}
+
 func GetUserFromContext(c *gin.Context) (*storage.User, error) {
-	userVal := c.Value("user-creds")
+	userVal := c.Value(userCredsKey)
 	if userVal == nil {
-		return nil, aerrors.NewHttpError(http.StatusForbidden, "no credentials found")
+		return nil, httperrors.Errorf(http.StatusUnauthorized, "no credentials found")
 	}
 
 	if user, ok := userVal.(*storage.User); ok {
 		return user, nil
 	}
-	return nil, aerrors.NewHttpError(http.StatusForbidden, "invalid credentials")
+	return nil, httperrors.Errorf(http.StatusUnauthorized, "invalid credentials")
 }

@@ -56,3 +56,37 @@ type UpdateQuestRequest struct {
 type DeleteQuestRequest struct {
 	ID string
 }
+
+type CreateTaskGroupRequest struct {
+	QuestID  string     `json:"-"`
+	OrderIdx int        `json:"order_idx"`
+	Name     string     `json:"name"`
+	PubTime  *time.Time `json:"pub_time,omitempty"`
+}
+
+type GetTaskGroupRequest struct {
+	ID string
+}
+
+type GetTaskGroupsRequest struct {
+	QuestID string
+}
+
+type UpdateTaskGroupRequest struct {
+	QuestID  string     `json:"-"`
+	ID       string     `json:"id"`
+	OrderIdx int        `json:"order_idx"`
+	Name     string     `json:"name"`
+	PubTime  *time.Time `json:"pub_time"`
+}
+
+type DeleteTaskGroupRequest struct {
+	ID string `json:"id"`
+}
+
+type TaskGroupsBulkUpdateRequest struct {
+	QuestID string                   `json:"-"`
+	Create  []CreateTaskGroupRequest `json:"create"`
+	Update  []UpdateTaskGroupRequest `json:"update"`
+	Delete  []DeleteTaskGroupRequest `json:"delete"`
+}

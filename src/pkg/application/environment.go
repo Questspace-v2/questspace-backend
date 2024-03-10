@@ -47,7 +47,7 @@ func GetEnvironmentFromSystem() (Environment, error) {
 	}
 	appEnv := new(Environment)
 	if err := appEnv.Set(env); err != nil {
-		return "", xerrors.Errorf("failed to read app env from environment: %w", err)
+		return "", xerrors.Errorf("read app env from environment: %w", err)
 	}
 	return *appEnv, nil
 }

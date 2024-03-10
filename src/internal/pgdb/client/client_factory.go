@@ -19,15 +19,17 @@ type QuestspaceClientFactory interface {
 	NewStorageTx(context.Context, *sql.TxOptions) (storage.QuestSpaceStorage, driver.Tx, error)
 }
 
-type mainFactory struct {
+var _ QuestspaceClientFactory = &ClientFactory{}
+
+type ClientFactory struct {
 	picker dbnode.Picker
 }
 
-func NewQuestspaceClientFactory(p dbnode.Picker) QuestspaceClientFactory {
-	return &mainFactory{picker: p}
+func NewQuestspaceClientFactory(p dbnode.Picker) *ClientFactory {
+	return &ClientFactory{picker: p}
 }
 
-func (m *mainFactory) NewStorage(ctx context.Context, cr dbnode.PickCriteria) (storage.QuestSpaceStorage, error) {
+func (m *ClientFactory) NewStorage(ctx context.Context, cr dbnode.PickCriteria) (storage.QuestSpaceStorage, error) {
 	var db *sql.DB
 	var err error
 
@@ -44,7 +46,7 @@ func (m *mainFactory) NewStorage(ctx context.Context, cr dbnode.PickCriteria) (s
 	return NewClient(sq.WrapStdSqlCtx(db)), err
 }
 
-func (m *mainFactory) NewStorageTx(ctx context.Context, options *sql.TxOptions) (storage.QuestSpaceStorage, driver.Tx, error) {
+func (m *ClientFactory) NewStorageTx(ctx context.Context, options *sql.TxOptions) (storage.QuestSpaceStorage, driver.Tx, error) {
 	tx, err := m.picker.MasterNodeTx(ctx, options)
 	if err != nil {
 		return nil, nil, err

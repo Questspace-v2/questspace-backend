@@ -22,15 +22,15 @@ type questspaceClaims struct {
 	jwt.RegisteredClaims
 }
 
-type parser struct {
+type TokenParser struct {
 	secret []byte
 }
 
-func NewParser(sec []byte) Parser {
-	return &parser{secret: sec}
+func NewTokenParser(sec []byte) *TokenParser {
+	return &TokenParser{secret: sec}
 }
 
-func (p parser) ParseToken(tokenStr string) (*storage.User, error) {
+func (p TokenParser) ParseToken(tokenStr string) (*storage.User, error) {
 	token, err := jwt.ParseWithClaims(tokenStr, &questspaceClaims{}, func(t *jwt.Token) (interface{}, error) {
 		if t.Method.Alg() != usedAlg {
 			return nil, xerrors.Errorf("unexpected signing method: %v", t.Method.Alg())
@@ -53,7 +53,7 @@ func (p parser) ParseToken(tokenStr string) (*storage.User, error) {
 	return nil, xerrors.New("invalid token")
 }
 
-func (p parser) CreateToken(user *storage.User) (string, error) {
+func (p TokenParser) CreateToken(user *storage.User) (string, error) {
 	claims := questspaceClaims{
 		Admin:  false, // TODO(svayp11): Implement admin role
 		Avatar: user.AvatarURL,
@@ -66,7 +66,7 @@ func (p parser) CreateToken(user *storage.User) (string, error) {
 	token := jwt.NewWithClaims(jwt.GetSigningMethod(usedAlg), claims)
 	ss, err := token.SignedString(p.secret)
 	if err != nil {
-		return "", xerrors.Errorf("failed to issue new token: %w", err)
+		return "", xerrors.Errorf("issue new token: %w", err)
 	}
 	return ss, nil
 }

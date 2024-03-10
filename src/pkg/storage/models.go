@@ -14,14 +14,14 @@ var (
 	ErrValidation = xerrors.New("validation error")
 )
 
-var (
+const (
 	Public   AccessType = "public"
 	LinkOnly AccessType = "link_only"
 )
 
 type VerificationType string
 
-var (
+const (
 	Auto   VerificationType = "auto"
 	Manual VerificationType = "manual"
 )
@@ -56,14 +56,16 @@ type User struct {
 }
 
 type TaskGroup struct {
-	ID      string
-	Quest   *Quest
-	Name    string
-	PubTime *time.Time
+	ID       string
+	OrderIdx int
+	Quest    *Quest
+	Name     string
+	PubTime  *time.Time
 }
 
 type Task struct {
 	ID             string
+	OrderIdx       int
 	Group          *TaskGroup
 	Name           string
 	Question       string

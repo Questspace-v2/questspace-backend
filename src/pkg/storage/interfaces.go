@@ -6,19 +6,28 @@ import "context"
 type QuestSpaceStorage interface {
 	UserStorage
 	QuestStorage
+	TaskGroupStorage
 }
 
 type UserStorage interface {
-	CreateUser(ctx context.Context, req *CreateUserRequest) (*User, error)
-	GetUser(ctx context.Context, req *GetUserRequest) (*User, error)
-	UpdateUser(ctx context.Context, req *UpdateUserRequest) (*User, error)
-	GetUserPasswordHash(ctx context.Context, req *GetUserRequest) (string, error)
-	DeleteUser(ctx context.Context, req *DeleteUserRequest) error
+	CreateUser(context.Context, *CreateUserRequest) (*User, error)
+	GetUser(context.Context, *GetUserRequest) (*User, error)
+	UpdateUser(context.Context, *UpdateUserRequest) (*User, error)
+	GetUserPasswordHash(context.Context, *GetUserRequest) (string, error)
+	DeleteUser(context.Context, *DeleteUserRequest) error
 }
 
 type QuestStorage interface {
-	CreateQuest(ctx context.Context, req *CreateQuestRequest) (*Quest, error)
-	GetQuest(ctx context.Context, req *GetQuestRequest) (*Quest, error)
-	UpdateQuest(ctx context.Context, req *UpdateQuestRequest) (*Quest, error)
-	DeleteQuest(ctx context.Context, req *DeleteQuestRequest) error
+	CreateQuest(context.Context, *CreateQuestRequest) (*Quest, error)
+	GetQuest(context.Context, *GetQuestRequest) (*Quest, error)
+	UpdateQuest(context.Context, *UpdateQuestRequest) (*Quest, error)
+	DeleteQuest(context.Context, *DeleteQuestRequest) error
+}
+
+type TaskGroupStorage interface {
+	CreateTaskGroup(context.Context, *CreateTaskGroupRequest) (*TaskGroup, error)
+	GetTaskGroup(context.Context, *GetTaskGroupRequest) (*TaskGroup, error)
+	GetTaskGroups(context.Context, *GetTaskGroupsRequest) ([]*TaskGroup, error)
+	UpdateTaskGroup(context.Context, *UpdateTaskGroupRequest) (*TaskGroup, error)
+	DeleteTaskGroup(context.Context, *DeleteTaskGroupRequest) error
 }

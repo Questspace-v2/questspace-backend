@@ -15,7 +15,7 @@ import (
 	"questspace/internal/hasher"
 	pgdb "questspace/internal/pgdb/client"
 	"questspace/internal/validate"
-	aerrors "questspace/pkg/application/errors"
+	"questspace/pkg/application/httperrors"
 	"questspace/pkg/application/logging"
 	"questspace/pkg/auth/jwt"
 	"questspace/pkg/dbnode"
@@ -52,38 +52,37 @@ func NewHandler(cf pgdb.QuestspaceClientFactory, f http.Client, h hasher.Hasher,
 func (h *Handler) HandleBasicSignUp(c *gin.Context) error {
 	data, err := c.GetRawData()
 	if err != nil {
-		return xerrors.Errorf("failed to get raw data: %w", err)
+		return xerrors.Errorf("get raw data: %w", err)
 	}
 	req := storage.CreateUserRequest{}
 	if err := json.Unmarshal(data, &req); err != nil {
-		return xerrors.Errorf("failed to unmarshall request: %w", err)
+		return xerrors.Errorf("unmarshall request: %w", err)
 	}
 	if err := validate.ImageURL(c, h.fetcher, req.AvatarURL); err != nil {
-		return aerrors.WrapHTTP(http.StatusUnsupportedMediaType, err)
+		return xerrors.Errorf("%w", err)
 	}
 	if req.AvatarURL == "" {
-		seed, _ := uuid.NewV4()
-		req.AvatarURL = defaultAvatarURLTmpl + seed.String()
+		req.AvatarURL = defaultAvatarURLTmpl + uuid.Must(uuid.NewV4()).String()
 	}
 	if req.Password == "" {
-		return aerrors.NewHttpError(http.StatusBadRequest, "unexpected empty password")
+		return httperrors.New(http.StatusBadRequest, "unexpected empty password")
 	}
 	req.Password, err = h.pwHasher.HashString(req.Password)
 	if err != nil {
-		return xerrors.Errorf("failed to calculate password hash: %w", err)
+		return xerrors.Errorf("calculate password hash: %w", err)
 	}
 
 	s, tx, err := h.clientFactory.NewStorageTx(c, nil)
 	if err != nil {
-		return xerrors.Errorf("failed to get storage: %w", err)
+		return xerrors.Errorf("get storage client: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
 	user, err := s.CreateUser(c, &req)
 	if err != nil {
 		if errors.Is(err, storage.ErrExists) {
-			return aerrors.NewHttpError(http.StatusBadRequest, "user %q already exits", req.Username)
+			return httperrors.Errorf(http.StatusBadRequest, "user %q already exits", req.Username)
 		}
-		return xerrors.Errorf("failed to create user: %w", err)
+		return xerrors.Errorf("create user: %w", err)
 	}
 
 	if err := h.sendAuthDataAndCommit(c, user, tx); err != nil {
@@ -114,37 +113,37 @@ type SignInRequest struct {
 func (h *Handler) HandleBasicSignIn(c *gin.Context) error {
 	data, err := c.GetRawData()
 	if err != nil {
-		return xerrors.Errorf("failed to get raw data: %w", err)
+		return xerrors.Errorf("get raw data: %w", err)
 	}
 	req := SignInRequest{}
 	if err := json.Unmarshal(data, &req); err != nil {
-		return xerrors.Errorf("failed to unmarshall request: %w", err)
+		return xerrors.Errorf("unmarshall request: %w", err)
 	}
 
 	s, err := h.clientFactory.NewStorage(c, dbnode.Alive)
 	if err != nil {
-		return xerrors.Errorf("failed to get storage: %w", err)
+		return xerrors.Errorf("get storage client: %w", err)
 	}
 	pwHash, err := s.GetUserPasswordHash(c, &storage.GetUserRequest{Username: req.Username})
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
-			return aerrors.NewHttpError(http.StatusNotFound, "user %s not exists", req.Username)
+			return httperrors.Errorf(http.StatusNotFound, "user %s not exists", req.Username)
 		}
-		return xerrors.Errorf("failed to lookup user password: %w", err)
+		return xerrors.Errorf("lookup user password: %w", err)
 	}
 	if !h.pwHasher.HasSameHash(req.Password, pwHash) {
-		return aerrors.NewHttpError(http.StatusForbidden, "invalid password")
+		return httperrors.New(http.StatusForbidden, "invalid password")
 	}
 	user, err := s.GetUser(c, &storage.GetUserRequest{Username: req.Username})
 	if err != nil {
-		return xerrors.Errorf("failed to get user: %w", err)
+		return xerrors.Errorf("get user: %w", err)
 	}
 	token, err := h.tokenGenerator.CreateToken(user)
 	if err != nil {
-		return xerrors.Errorf("failed to issue token: %w", err)
+		return xerrors.Errorf("issue token: %w", err)
 	}
 
-	c.SetCookie("access_token", token, 60*60, "/", "questspace.app", true, false)
+	c.SetCookie(jwt.AuthCookieName, token, 60*60, "/", "questspace.app", true, false)
 	c.JSON(http.StatusOK, user)
 	return nil
 }
@@ -166,21 +165,21 @@ type GoogleOAuthRequest struct {
 func (h *Handler) HandleGoogle(c *gin.Context) error {
 	data, err := c.GetRawData()
 	if err != nil {
-		return xerrors.Errorf("failed to get raw data: %w", err)
+		return xerrors.Errorf("get raw data: %w", err)
 	}
 	req := GoogleOAuthRequest{}
 	if err := json.Unmarshal(data, &req); err != nil {
-		return xerrors.Errorf("failed to unmarshall request: %w", err)
+		return xerrors.Errorf("unmarshall request: %w", err)
 	}
 	// TODO(svayp11): INSERT CLIENT_ID
 	pld, err := h.externalClient.Validate(c, req.IdToken, "CLIENT_ID")
 	if err != nil {
-		return aerrors.NewHttpError(http.StatusBadRequest, "invalid google token: %w", err)
+		return httperrors.Errorf(http.StatusBadRequest, "invalid google token: %w", err)
 	}
 
 	s, tx, err := h.clientFactory.NewStorageTx(c, nil)
 	if err != nil {
-		return xerrors.Errorf("failed to get storage: %w", err)
+		return xerrors.Errorf("get storage client: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
 	createUserReq := storage.CreateUserRequest{
@@ -192,15 +191,15 @@ func (h *Handler) HandleGoogle(c *gin.Context) error {
 		if errors.Is(err, storage.ErrExists) {
 			user, err = s.GetUser(c, &storage.GetUserRequest{Username: createUserReq.Username})
 			if err != nil {
-				return xerrors.Errorf("cannot get and insert user: %w", err)
+				return xerrors.Errorf("get and insert user: %w", err)
 			}
 			return h.sendAuthDataAndCommit(c, user, tx)
 		}
-		return xerrors.Errorf("failed to create user: %w", err)
+		return xerrors.Errorf("create user: %w", err)
 	}
 
 	if err := h.sendAuthDataAndCommit(c, user, tx); err != nil {
-		return err
+		return xerrors.Errorf("%w", err)
 	}
 
 	logging.Info(c, "google registration done",
@@ -220,7 +219,7 @@ func (h *Handler) sendAuthDataAndCommit(c *gin.Context, user *storage.User, tx d
 	}
 
 	// TODO(svayp11): set http-only
-	c.SetCookie("access_token", token, 60*60, "/", "questspace.app", true, false)
+	c.SetCookie(jwt.AuthCookieName, token, 60*60, "/", "questspace.app", true, false)
 	c.JSON(http.StatusOK, user)
 	return nil
 }

@@ -7,6 +7,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"go.uber.org/zap"
+
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
@@ -55,6 +57,10 @@ func TestGetHandler_CommonCases(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	userStorage := storagemock.NewMockQuestSpaceStorage(ctrl)
 	router := gin.Default()
+	router.Use(func(c *gin.Context) {
+		c.Set("app-logger", zap.NewNop())
+		c.Next()
+	})
 	factory := pgdb.NewFakeClientFactory(userStorage)
 	handler := NewGetHandler(factory)
 	router.GET("/user/:id", application.AsGinHandler(handler.Handle))
@@ -82,6 +88,10 @@ func TestUpdateHandler_HandleUser(t *testing.T) {
 	pwHasher := hasher.NewNopHasher()
 
 	router := gin.Default()
+	router.Use(func(c *gin.Context) {
+		c.Set("app-logger", zap.NewNop())
+		c.Next()
+	})
 	handler := NewUpdateHandler(factory, http.Client{}, pwHasher, jwtParser)
 	router.POST("/user/:id", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, handler.HandleUser)))
 
@@ -125,6 +135,10 @@ func TestUpdateHandler_HandlePassword(t *testing.T) {
 	pwHasher := hasher.NewNopHasher()
 
 	router := gin.Default()
+	router.Use(func(c *gin.Context) {
+		c.Set("app-logger", zap.NewNop())
+		c.Next()
+	})
 	handler := NewUpdateHandler(factory, http.Client{}, pwHasher, jwtParser)
 	router.POST("/user/:id/password", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, handler.HandlePassword)))
 

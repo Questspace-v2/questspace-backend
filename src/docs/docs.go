@@ -141,6 +141,42 @@ const docTemplate = `{
                 }
             }
         },
+        "/quest/{id}/task-groups/bulk": {
+            "patch": {
+                "summary": "Patch task groups by creating new ones, delete, update and reorder all ones. Returns all exising task groups.",
+                "parameters": [
+                    {
+                        "description": "Requests to delete/create/update task groups",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/storage.TaskGroupsBulkUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/storage.TaskGroup"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                }
+            }
+        },
         "/quest/{quest_id}": {
             "get": {
                 "summary": "Get quest by id",
@@ -383,14 +419,22 @@ const docTemplate = `{
                 }
             }
         },
+        "storage.AccessType": {
+            "type": "string",
+            "enum": [
+                "public",
+                "link_only"
+            ],
+            "x-enum-varnames": [
+                "Public",
+                "LinkOnly"
+            ]
+        },
         "storage.CreateQuestRequest": {
             "type": "object",
             "properties": {
                 "access": {
-                    "type": "string"
-                },
-                "creator_name": {
-                    "type": "string"
+                    "$ref": "#/definitions/storage.AccessType"
                 },
                 "description": {
                     "type": "string"
@@ -415,6 +459,20 @@ const docTemplate = `{
                 }
             }
         },
+        "storage.CreateTaskGroupRequest": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "order_idx": {
+                    "type": "integer"
+                },
+                "pub_time": {
+                    "type": "string"
+                }
+            }
+        },
         "storage.CreateUserRequest": {
             "type": "object",
             "properties": {
@@ -432,11 +490,19 @@ const docTemplate = `{
                 }
             }
         },
+        "storage.DeleteTaskGroupRequest": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                }
+            }
+        },
         "storage.Quest": {
             "type": "object",
             "properties": {
                 "access": {
-                    "type": "string"
+                    "$ref": "#/definitions/storage.AccessType"
                 },
                 "creator": {
                     "$ref": "#/definitions/storage.User"
@@ -467,11 +533,54 @@ const docTemplate = `{
                 }
             }
         },
+        "storage.TaskGroup": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "orderIdx": {
+                    "type": "integer"
+                },
+                "pubTime": {
+                    "type": "string"
+                },
+                "quest": {
+                    "$ref": "#/definitions/storage.Quest"
+                }
+            }
+        },
+        "storage.TaskGroupsBulkUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "create": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/storage.CreateTaskGroupRequest"
+                    }
+                },
+                "delete": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/storage.DeleteTaskGroupRequest"
+                    }
+                },
+                "update": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/storage.UpdateTaskGroupRequest"
+                    }
+                }
+            }
+        },
         "storage.UpdateQuestRequest": {
             "type": "object",
             "properties": {
                 "access": {
-                    "type": "string"
+                    "$ref": "#/definitions/storage.AccessType"
                 },
                 "creator_name": {
                     "type": "string"
@@ -495,6 +604,23 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "start_time": {
+                    "type": "string"
+                }
+            }
+        },
+        "storage.UpdateTaskGroupRequest": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "order_idx": {
+                    "type": "integer"
+                },
+                "pub_time": {
                     "type": "string"
                 }
             }

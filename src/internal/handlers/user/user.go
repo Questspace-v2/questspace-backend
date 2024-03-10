@@ -12,7 +12,7 @@ import (
 	"questspace/internal/hasher"
 	pgdb "questspace/internal/pgdb/client"
 	"questspace/internal/validate"
-	aerrors "questspace/pkg/application/errors"
+	"questspace/pkg/application/httperrors"
 	"questspace/pkg/auth/jwt"
 	"questspace/pkg/dbnode"
 	"questspace/pkg/storage"
@@ -45,7 +45,7 @@ func (h *GetHandler) Handle(c *gin.Context) error {
 	user, err := s.GetUser(c, req)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
-			return aerrors.NewHttpError(http.StatusNotFound, "user with id %q not found", req.ID)
+			return httperrors.Errorf(http.StatusNotFound, "user with id %q not found", req.ID)
 		}
 		return xerrors.Errorf("failed to get user: %w", err)
 	}
@@ -100,15 +100,15 @@ func (h *UpdateHandler) HandleUser(c *gin.Context) error {
 	}
 	uauth, err := jwt.GetUserFromContext(c)
 	if err != nil {
-		return aerrors.WrapHTTP(http.StatusUnauthorized, err)
+		return xerrors.Errorf("%w", err)
 	}
 	id := c.Param("id")
 	if uauth.ID != id {
-		return aerrors.NewHttpError(http.StatusForbidden, "cannot change data of another user")
+		return httperrors.Errorf(http.StatusForbidden, "cannot change data of another user")
 	}
 	if req.AvatarURL != "" {
 		if err := validate.ImageURL(c, h.fetcher, req.AvatarURL); err != nil {
-			return aerrors.WrapHTTP(http.StatusUnsupportedMediaType, err)
+			return httperrors.WrapWithCode(http.StatusUnsupportedMediaType, err)
 		}
 	}
 
@@ -120,7 +120,7 @@ func (h *UpdateHandler) HandleUser(c *gin.Context) error {
 	user, err := s.UpdateUser(c, &storage.UpdateUserRequest{ID: id, Username: req.Username, AvatarURL: req.AvatarURL})
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
-			return aerrors.NewHttpError(http.StatusNotFound, "user with id %q not found", id)
+			return httperrors.Errorf(http.StatusNotFound, "user with id %q not found", id)
 		}
 		return xerrors.Errorf("failed to update user: %w", err)
 	}
@@ -165,11 +165,11 @@ func (h *UpdateHandler) HandlePassword(c *gin.Context) error {
 	}
 	uauth, err := jwt.GetUserFromContext(c)
 	if err != nil {
-		return aerrors.WrapHTTP(http.StatusUnauthorized, err)
+		return httperrors.WrapWithCode(http.StatusUnauthorized, err)
 	}
 	id := c.Param("id")
 	if uauth.ID != id {
-		return aerrors.NewHttpError(http.StatusForbidden, "cannot change data of another user")
+		return httperrors.Errorf(http.StatusForbidden, "cannot change data of another user")
 	}
 
 	s, err := h.clientFactory.NewStorage(c, dbnode.Master)
@@ -179,12 +179,12 @@ func (h *UpdateHandler) HandlePassword(c *gin.Context) error {
 	oldPw, err := s.GetUserPasswordHash(c, &storage.GetUserRequest{ID: id})
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
-			return aerrors.NewHttpError(http.StatusNotFound, "user with id %q not found", id)
+			return httperrors.Errorf(http.StatusNotFound, "user with id %q not found", id)
 		}
 		return xerrors.Errorf("failed to lookup user password: %w", err)
 	}
 	if !h.pwHasher.HasSameHash(oldPw, req.OldPassword) {
-		return aerrors.NewHttpError(http.StatusForbidden, "invalid password")
+		return httperrors.Errorf(http.StatusForbidden, "invalid password")
 	}
 
 	user, err := s.UpdateUser(c, &storage.UpdateUserRequest{ID: id, Password: req.NewPassword})
@@ -212,10 +212,10 @@ func (h *UpdateHandler) HandleDelete(c *gin.Context) error {
 	id := c.Param("id")
 	uauth, err := jwt.GetUserFromContext(c)
 	if err != nil {
-		return aerrors.WrapHTTP(http.StatusUnauthorized, err)
+		return httperrors.WrapWithCode(http.StatusUnauthorized, err)
 	}
 	if uauth.ID != id {
-		return aerrors.NewHttpError(http.StatusForbidden, "cannot delete other users")
+		return httperrors.Errorf(http.StatusForbidden, "cannot delete other users")
 	}
 
 	req := storage.DeleteUserRequest{ID: id}

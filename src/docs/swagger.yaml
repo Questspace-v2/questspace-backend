@@ -11,12 +11,18 @@ definitions:
       username:
         type: string
     type: object
+  storage.AccessType:
+    enum:
+    - public
+    - link_only
+    type: string
+    x-enum-varnames:
+    - Public
+    - LinkOnly
   storage.CreateQuestRequest:
     properties:
       access:
-        type: string
-      creator_name:
-        type: string
+        $ref: '#/definitions/storage.AccessType'
       description:
         type: string
       finish_time:
@@ -32,6 +38,15 @@ definitions:
       start_time:
         type: string
     type: object
+  storage.CreateTaskGroupRequest:
+    properties:
+      name:
+        type: string
+      order_idx:
+        type: integer
+      pub_time:
+        type: string
+    type: object
   storage.CreateUserRequest:
     properties:
       avatar_url:
@@ -44,10 +59,15 @@ definitions:
         example: svayp11
         type: string
     type: object
+  storage.DeleteTaskGroupRequest:
+    properties:
+      id:
+        type: string
+    type: object
   storage.Quest:
     properties:
       access:
-        type: string
+        $ref: '#/definitions/storage.AccessType'
       creator:
         $ref: '#/definitions/storage.User'
       description:
@@ -67,10 +87,38 @@ definitions:
       start_time:
         type: string
     type: object
+  storage.TaskGroup:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      orderIdx:
+        type: integer
+      pubTime:
+        type: string
+      quest:
+        $ref: '#/definitions/storage.Quest'
+    type: object
+  storage.TaskGroupsBulkUpdateRequest:
+    properties:
+      create:
+        items:
+          $ref: '#/definitions/storage.CreateTaskGroupRequest'
+        type: array
+      delete:
+        items:
+          $ref: '#/definitions/storage.DeleteTaskGroupRequest'
+        type: array
+      update:
+        items:
+          $ref: '#/definitions/storage.UpdateTaskGroupRequest'
+        type: array
+    type: object
   storage.UpdateQuestRequest:
     properties:
       access:
-        type: string
+        $ref: '#/definitions/storage.AccessType'
       creator_name:
         type: string
       description:
@@ -86,6 +134,17 @@ definitions:
       registration_deadline:
         type: string
       start_time:
+        type: string
+    type: object
+  storage.UpdateTaskGroupRequest:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      order_idx:
+        type: integer
+      pub_time:
         type: string
     type: object
   storage.User:
@@ -194,6 +253,30 @@ paths:
         "415":
           description: Unsupported Media Type
       summary: Create new quest
+  /quest/{id}/task-groups/bulk:
+    patch:
+      parameters:
+      - description: Requests to delete/create/update task groups
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/storage.TaskGroupsBulkUpdateRequest'
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/storage.TaskGroup'
+            type: array
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+      summary: Patch task groups by creating new ones, delete, update and reorder
+        all ones. Returns all exising task groups.
   /quest/{quest_id}:
     delete:
       parameters:

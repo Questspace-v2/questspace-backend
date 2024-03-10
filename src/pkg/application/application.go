@@ -13,7 +13,7 @@ import (
 	"github.com/gofor-little/env"
 	"go.uber.org/zap"
 
-	aerrors "questspace/pkg/application/errors"
+	"questspace/pkg/application/httperrors"
 	"questspace/pkg/application/logging"
 )
 
@@ -71,7 +71,6 @@ func Run(initFunc func(app App) error, configHolder interface{}) {
 	app.logger = logger
 	app.engine.Use(ginzap.Ginzap(app.logger, time.RFC3339, false))
 	app.engine.Use(logging.Middleware(logger))
-	app.engine.Use(aerrors.ErrorHandler())
 
 	// liveness check
 	app.engine.GET("/ping", Ping)
@@ -102,7 +101,7 @@ func AsGinHandler(handler func(c *gin.Context) error) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		err := handler(c)
 		if err != nil {
-			aerrors.WriteErrorResponse(c, err)
+			httperrors.WriteErrorResponse(c, err)
 		}
 	}
 }

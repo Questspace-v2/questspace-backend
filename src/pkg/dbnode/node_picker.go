@@ -11,10 +11,12 @@ import (
 
 type PickCriteria int
 
-var (
+const (
 	Alive  PickCriteria = 0
 	Master PickCriteria = 1
 )
+
+const DefaultAwaitTimeout = time.Second * 3
 
 //go:generate mockgen -source=node_picker.go -destination mocks/node_picker.go -package mocks
 type Picker interface {
@@ -34,35 +36,35 @@ func NewBasicPicker(c *hasql.Cluster) *BasicPicker {
 }
 
 func (p *BasicPicker) AliveNode(ctx context.Context) (*sql.DB, error) {
-	timeoutCtx, cancel := context.WithTimeout(ctx, time.Second*10)
+	timeoutCtx, cancel := context.WithTimeout(ctx, DefaultAwaitTimeout)
 	defer cancel()
 	node, err := p.cluster.WaitForAlive(timeoutCtx)
 	if err != nil {
-		return nil, xerrors.Errorf("cannot get alive node: %w", err)
+		return nil, xerrors.Errorf("get alive node: %w", err)
 	}
 	return node.DB(), err
 }
 
 func (p *BasicPicker) MasterNode(ctx context.Context) (*sql.DB, error) {
-	timeoutCtx, cancel := context.WithTimeout(ctx, time.Second*10)
+	timeoutCtx, cancel := context.WithTimeout(ctx, DefaultAwaitTimeout)
 	defer cancel()
 	node, err := p.cluster.WaitForPrimary(timeoutCtx)
 	if err != nil {
-		return nil, xerrors.Errorf("cannot get primary node: %w", err)
+		return nil, xerrors.Errorf("get primary node: %w", err)
 	}
 	return node.DB(), err
 }
 
 func (p *BasicPicker) MasterNodeTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error) {
-	timeoutCtx, cancel := context.WithTimeout(ctx, time.Second*10)
+	timeoutCtx, cancel := context.WithTimeout(ctx, DefaultAwaitTimeout)
 	defer cancel()
 	node, err := p.cluster.WaitForPrimary(timeoutCtx)
 	if err != nil {
-		return nil, xerrors.Errorf("cannot get primary node: %w", err)
+		return nil, xerrors.Errorf("get primary node: %w", err)
 	}
 	tx, err := node.DB().BeginTx(ctx, opts)
 	if err != nil {
-		return nil, xerrors.Errorf("cannot start tx: %w", err)
+		return nil, xerrors.Errorf("start tx: %w", err)
 	}
 	return tx, nil
 }

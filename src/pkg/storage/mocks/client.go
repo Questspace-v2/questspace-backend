@@ -6,11 +6,10 @@ package mocks
 
 import (
 	context "context"
+	storage "questspace/pkg/storage"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-
-	storage "questspace/pkg/storage"
 )
 
 // MockQuestSpaceStorage is a mock of QuestSpaceStorage interface.
@@ -37,136 +36,210 @@ func (m *MockQuestSpaceStorage) EXPECT() *MockQuestSpaceStorageMockRecorder {
 }
 
 // CreateQuest mocks base method.
-func (m *MockQuestSpaceStorage) CreateQuest(ctx context.Context, req *storage.CreateQuestRequest) (*storage.Quest, error) {
+func (m *MockQuestSpaceStorage) CreateQuest(arg0 context.Context, arg1 *storage.CreateQuestRequest) (*storage.Quest, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateQuest", ctx, req)
+	ret := m.ctrl.Call(m, "CreateQuest", arg0, arg1)
 	ret0, _ := ret[0].(*storage.Quest)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateQuest indicates an expected call of CreateQuest.
-func (mr *MockQuestSpaceStorageMockRecorder) CreateQuest(ctx, req interface{}) *gomock.Call {
+func (mr *MockQuestSpaceStorageMockRecorder) CreateQuest(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateQuest", reflect.TypeOf((*MockQuestSpaceStorage)(nil).CreateQuest), ctx, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateQuest", reflect.TypeOf((*MockQuestSpaceStorage)(nil).CreateQuest), arg0, arg1)
+}
+
+// CreateTaskGroup mocks base method.
+func (m *MockQuestSpaceStorage) CreateTaskGroup(arg0 context.Context, arg1 *storage.CreateTaskGroupRequest) (*storage.TaskGroup, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateTaskGroup", arg0, arg1)
+	ret0, _ := ret[0].(*storage.TaskGroup)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateTaskGroup indicates an expected call of CreateTaskGroup.
+func (mr *MockQuestSpaceStorageMockRecorder) CreateTaskGroup(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateTaskGroup", reflect.TypeOf((*MockQuestSpaceStorage)(nil).CreateTaskGroup), arg0, arg1)
 }
 
 // CreateUser mocks base method.
-func (m *MockQuestSpaceStorage) CreateUser(ctx context.Context, req *storage.CreateUserRequest) (*storage.User, error) {
+func (m *MockQuestSpaceStorage) CreateUser(arg0 context.Context, arg1 *storage.CreateUserRequest) (*storage.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateUser", ctx, req)
+	ret := m.ctrl.Call(m, "CreateUser", arg0, arg1)
 	ret0, _ := ret[0].(*storage.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateUser indicates an expected call of CreateUser.
-func (mr *MockQuestSpaceStorageMockRecorder) CreateUser(ctx, req interface{}) *gomock.Call {
+func (mr *MockQuestSpaceStorageMockRecorder) CreateUser(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockQuestSpaceStorage)(nil).CreateUser), ctx, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockQuestSpaceStorage)(nil).CreateUser), arg0, arg1)
 }
 
 // DeleteQuest mocks base method.
-func (m *MockQuestSpaceStorage) DeleteQuest(ctx context.Context, req *storage.DeleteQuestRequest) error {
+func (m *MockQuestSpaceStorage) DeleteQuest(arg0 context.Context, arg1 *storage.DeleteQuestRequest) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteQuest", ctx, req)
+	ret := m.ctrl.Call(m, "DeleteQuest", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteQuest indicates an expected call of DeleteQuest.
-func (mr *MockQuestSpaceStorageMockRecorder) DeleteQuest(ctx, req interface{}) *gomock.Call {
+func (mr *MockQuestSpaceStorageMockRecorder) DeleteQuest(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteQuest", reflect.TypeOf((*MockQuestSpaceStorage)(nil).DeleteQuest), ctx, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteQuest", reflect.TypeOf((*MockQuestSpaceStorage)(nil).DeleteQuest), arg0, arg1)
+}
+
+// DeleteTaskGroup mocks base method.
+func (m *MockQuestSpaceStorage) DeleteTaskGroup(arg0 context.Context, arg1 *storage.DeleteTaskGroupRequest) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteTaskGroup", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteTaskGroup indicates an expected call of DeleteTaskGroup.
+func (mr *MockQuestSpaceStorageMockRecorder) DeleteTaskGroup(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteTaskGroup", reflect.TypeOf((*MockQuestSpaceStorage)(nil).DeleteTaskGroup), arg0, arg1)
 }
 
 // DeleteUser mocks base method.
-func (m *MockQuestSpaceStorage) DeleteUser(ctx context.Context, req *storage.DeleteUserRequest) error {
+func (m *MockQuestSpaceStorage) DeleteUser(arg0 context.Context, arg1 *storage.DeleteUserRequest) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteUser", ctx, req)
+	ret := m.ctrl.Call(m, "DeleteUser", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteUser indicates an expected call of DeleteUser.
-func (mr *MockQuestSpaceStorageMockRecorder) DeleteUser(ctx, req interface{}) *gomock.Call {
+func (mr *MockQuestSpaceStorageMockRecorder) DeleteUser(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUser", reflect.TypeOf((*MockQuestSpaceStorage)(nil).DeleteUser), ctx, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUser", reflect.TypeOf((*MockQuestSpaceStorage)(nil).DeleteUser), arg0, arg1)
 }
 
 // GetQuest mocks base method.
-func (m *MockQuestSpaceStorage) GetQuest(ctx context.Context, req *storage.GetQuestRequest) (*storage.Quest, error) {
+func (m *MockQuestSpaceStorage) GetQuest(arg0 context.Context, arg1 *storage.GetQuestRequest) (*storage.Quest, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetQuest", ctx, req)
+	ret := m.ctrl.Call(m, "GetQuest", arg0, arg1)
 	ret0, _ := ret[0].(*storage.Quest)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetQuest indicates an expected call of GetQuest.
-func (mr *MockQuestSpaceStorageMockRecorder) GetQuest(ctx, req interface{}) *gomock.Call {
+func (mr *MockQuestSpaceStorageMockRecorder) GetQuest(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQuest", reflect.TypeOf((*MockQuestSpaceStorage)(nil).GetQuest), ctx, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQuest", reflect.TypeOf((*MockQuestSpaceStorage)(nil).GetQuest), arg0, arg1)
+}
+
+// GetTaskGroup mocks base method.
+func (m *MockQuestSpaceStorage) GetTaskGroup(arg0 context.Context, arg1 *storage.GetTaskGroupRequest) (*storage.TaskGroup, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTaskGroup", arg0, arg1)
+	ret0, _ := ret[0].(*storage.TaskGroup)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTaskGroup indicates an expected call of GetTaskGroup.
+func (mr *MockQuestSpaceStorageMockRecorder) GetTaskGroup(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTaskGroup", reflect.TypeOf((*MockQuestSpaceStorage)(nil).GetTaskGroup), arg0, arg1)
+}
+
+// GetTaskGroups mocks base method.
+func (m *MockQuestSpaceStorage) GetTaskGroups(arg0 context.Context, arg1 *storage.GetTaskGroupsRequest) ([]*storage.TaskGroup, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTaskGroups", arg0, arg1)
+	ret0, _ := ret[0].([]*storage.TaskGroup)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTaskGroups indicates an expected call of GetTaskGroups.
+func (mr *MockQuestSpaceStorageMockRecorder) GetTaskGroups(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTaskGroups", reflect.TypeOf((*MockQuestSpaceStorage)(nil).GetTaskGroups), arg0, arg1)
 }
 
 // GetUser mocks base method.
-func (m *MockQuestSpaceStorage) GetUser(ctx context.Context, req *storage.GetUserRequest) (*storage.User, error) {
+func (m *MockQuestSpaceStorage) GetUser(arg0 context.Context, arg1 *storage.GetUserRequest) (*storage.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUser", ctx, req)
+	ret := m.ctrl.Call(m, "GetUser", arg0, arg1)
 	ret0, _ := ret[0].(*storage.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetUser indicates an expected call of GetUser.
-func (mr *MockQuestSpaceStorageMockRecorder) GetUser(ctx, req interface{}) *gomock.Call {
+func (mr *MockQuestSpaceStorageMockRecorder) GetUser(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUser", reflect.TypeOf((*MockQuestSpaceStorage)(nil).GetUser), ctx, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUser", reflect.TypeOf((*MockQuestSpaceStorage)(nil).GetUser), arg0, arg1)
 }
 
 // GetUserPasswordHash mocks base method.
-func (m *MockQuestSpaceStorage) GetUserPasswordHash(ctx context.Context, req *storage.GetUserRequest) (string, error) {
+func (m *MockQuestSpaceStorage) GetUserPasswordHash(arg0 context.Context, arg1 *storage.GetUserRequest) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserPasswordHash", ctx, req)
+	ret := m.ctrl.Call(m, "GetUserPasswordHash", arg0, arg1)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetUserPasswordHash indicates an expected call of GetUserPasswordHash.
-func (mr *MockQuestSpaceStorageMockRecorder) GetUserPasswordHash(ctx, req interface{}) *gomock.Call {
+func (mr *MockQuestSpaceStorageMockRecorder) GetUserPasswordHash(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserPasswordHash", reflect.TypeOf((*MockQuestSpaceStorage)(nil).GetUserPasswordHash), ctx, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserPasswordHash", reflect.TypeOf((*MockQuestSpaceStorage)(nil).GetUserPasswordHash), arg0, arg1)
 }
 
 // UpdateQuest mocks base method.
-func (m *MockQuestSpaceStorage) UpdateQuest(ctx context.Context, req *storage.UpdateQuestRequest) (*storage.Quest, error) {
+func (m *MockQuestSpaceStorage) UpdateQuest(arg0 context.Context, arg1 *storage.UpdateQuestRequest) (*storage.Quest, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateQuest", ctx, req)
+	ret := m.ctrl.Call(m, "UpdateQuest", arg0, arg1)
 	ret0, _ := ret[0].(*storage.Quest)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // UpdateQuest indicates an expected call of UpdateQuest.
-func (mr *MockQuestSpaceStorageMockRecorder) UpdateQuest(ctx, req interface{}) *gomock.Call {
+func (mr *MockQuestSpaceStorageMockRecorder) UpdateQuest(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateQuest", reflect.TypeOf((*MockQuestSpaceStorage)(nil).UpdateQuest), ctx, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateQuest", reflect.TypeOf((*MockQuestSpaceStorage)(nil).UpdateQuest), arg0, arg1)
+}
+
+// UpdateTaskGroup mocks base method.
+func (m *MockQuestSpaceStorage) UpdateTaskGroup(arg0 context.Context, arg1 *storage.UpdateTaskGroupRequest) (*storage.TaskGroup, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateTaskGroup", arg0, arg1)
+	ret0, _ := ret[0].(*storage.TaskGroup)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateTaskGroup indicates an expected call of UpdateTaskGroup.
+func (mr *MockQuestSpaceStorageMockRecorder) UpdateTaskGroup(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateTaskGroup", reflect.TypeOf((*MockQuestSpaceStorage)(nil).UpdateTaskGroup), arg0, arg1)
 }
 
 // UpdateUser mocks base method.
-func (m *MockQuestSpaceStorage) UpdateUser(ctx context.Context, req *storage.UpdateUserRequest) (*storage.User, error) {
+func (m *MockQuestSpaceStorage) UpdateUser(arg0 context.Context, arg1 *storage.UpdateUserRequest) (*storage.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateUser", ctx, req)
+	ret := m.ctrl.Call(m, "UpdateUser", arg0, arg1)
 	ret0, _ := ret[0].(*storage.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // UpdateUser indicates an expected call of UpdateUser.
-func (mr *MockQuestSpaceStorageMockRecorder) UpdateUser(ctx, req interface{}) *gomock.Call {
+func (mr *MockQuestSpaceStorageMockRecorder) UpdateUser(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUser", reflect.TypeOf((*MockQuestSpaceStorage)(nil).UpdateUser), ctx, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUser", reflect.TypeOf((*MockQuestSpaceStorage)(nil).UpdateUser), arg0, arg1)
 }
 
 // MockUserStorage is a mock of UserStorage interface.
@@ -193,77 +266,77 @@ func (m *MockUserStorage) EXPECT() *MockUserStorageMockRecorder {
 }
 
 // CreateUser mocks base method.
-func (m *MockUserStorage) CreateUser(ctx context.Context, req *storage.CreateUserRequest) (*storage.User, error) {
+func (m *MockUserStorage) CreateUser(arg0 context.Context, arg1 *storage.CreateUserRequest) (*storage.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateUser", ctx, req)
+	ret := m.ctrl.Call(m, "CreateUser", arg0, arg1)
 	ret0, _ := ret[0].(*storage.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateUser indicates an expected call of CreateUser.
-func (mr *MockUserStorageMockRecorder) CreateUser(ctx, req interface{}) *gomock.Call {
+func (mr *MockUserStorageMockRecorder) CreateUser(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockUserStorage)(nil).CreateUser), ctx, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockUserStorage)(nil).CreateUser), arg0, arg1)
 }
 
 // DeleteUser mocks base method.
-func (m *MockUserStorage) DeleteUser(ctx context.Context, req *storage.DeleteUserRequest) error {
+func (m *MockUserStorage) DeleteUser(arg0 context.Context, arg1 *storage.DeleteUserRequest) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteUser", ctx, req)
+	ret := m.ctrl.Call(m, "DeleteUser", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteUser indicates an expected call of DeleteUser.
-func (mr *MockUserStorageMockRecorder) DeleteUser(ctx, req interface{}) *gomock.Call {
+func (mr *MockUserStorageMockRecorder) DeleteUser(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUser", reflect.TypeOf((*MockUserStorage)(nil).DeleteUser), ctx, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUser", reflect.TypeOf((*MockUserStorage)(nil).DeleteUser), arg0, arg1)
 }
 
 // GetUser mocks base method.
-func (m *MockUserStorage) GetUser(ctx context.Context, req *storage.GetUserRequest) (*storage.User, error) {
+func (m *MockUserStorage) GetUser(arg0 context.Context, arg1 *storage.GetUserRequest) (*storage.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUser", ctx, req)
+	ret := m.ctrl.Call(m, "GetUser", arg0, arg1)
 	ret0, _ := ret[0].(*storage.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetUser indicates an expected call of GetUser.
-func (mr *MockUserStorageMockRecorder) GetUser(ctx, req interface{}) *gomock.Call {
+func (mr *MockUserStorageMockRecorder) GetUser(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUser", reflect.TypeOf((*MockUserStorage)(nil).GetUser), ctx, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUser", reflect.TypeOf((*MockUserStorage)(nil).GetUser), arg0, arg1)
 }
 
 // GetUserPasswordHash mocks base method.
-func (m *MockUserStorage) GetUserPasswordHash(ctx context.Context, req *storage.GetUserRequest) (string, error) {
+func (m *MockUserStorage) GetUserPasswordHash(arg0 context.Context, arg1 *storage.GetUserRequest) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetUserPasswordHash", ctx, req)
+	ret := m.ctrl.Call(m, "GetUserPasswordHash", arg0, arg1)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetUserPasswordHash indicates an expected call of GetUserPasswordHash.
-func (mr *MockUserStorageMockRecorder) GetUserPasswordHash(ctx, req interface{}) *gomock.Call {
+func (mr *MockUserStorageMockRecorder) GetUserPasswordHash(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserPasswordHash", reflect.TypeOf((*MockUserStorage)(nil).GetUserPasswordHash), ctx, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserPasswordHash", reflect.TypeOf((*MockUserStorage)(nil).GetUserPasswordHash), arg0, arg1)
 }
 
 // UpdateUser mocks base method.
-func (m *MockUserStorage) UpdateUser(ctx context.Context, req *storage.UpdateUserRequest) (*storage.User, error) {
+func (m *MockUserStorage) UpdateUser(arg0 context.Context, arg1 *storage.UpdateUserRequest) (*storage.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateUser", ctx, req)
+	ret := m.ctrl.Call(m, "UpdateUser", arg0, arg1)
 	ret0, _ := ret[0].(*storage.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // UpdateUser indicates an expected call of UpdateUser.
-func (mr *MockUserStorageMockRecorder) UpdateUser(ctx, req interface{}) *gomock.Call {
+func (mr *MockUserStorageMockRecorder) UpdateUser(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUser", reflect.TypeOf((*MockUserStorage)(nil).UpdateUser), ctx, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUser", reflect.TypeOf((*MockUserStorage)(nil).UpdateUser), arg0, arg1)
 }
 
 // MockQuestStorage is a mock of QuestStorage interface.
@@ -290,60 +363,157 @@ func (m *MockQuestStorage) EXPECT() *MockQuestStorageMockRecorder {
 }
 
 // CreateQuest mocks base method.
-func (m *MockQuestStorage) CreateQuest(ctx context.Context, req *storage.CreateQuestRequest) (*storage.Quest, error) {
+func (m *MockQuestStorage) CreateQuest(arg0 context.Context, arg1 *storage.CreateQuestRequest) (*storage.Quest, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateQuest", ctx, req)
+	ret := m.ctrl.Call(m, "CreateQuest", arg0, arg1)
 	ret0, _ := ret[0].(*storage.Quest)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateQuest indicates an expected call of CreateQuest.
-func (mr *MockQuestStorageMockRecorder) CreateQuest(ctx, req interface{}) *gomock.Call {
+func (mr *MockQuestStorageMockRecorder) CreateQuest(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateQuest", reflect.TypeOf((*MockQuestStorage)(nil).CreateQuest), ctx, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateQuest", reflect.TypeOf((*MockQuestStorage)(nil).CreateQuest), arg0, arg1)
 }
 
 // DeleteQuest mocks base method.
-func (m *MockQuestStorage) DeleteQuest(ctx context.Context, req *storage.DeleteQuestRequest) error {
+func (m *MockQuestStorage) DeleteQuest(arg0 context.Context, arg1 *storage.DeleteQuestRequest) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteQuest", ctx, req)
+	ret := m.ctrl.Call(m, "DeleteQuest", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteQuest indicates an expected call of DeleteQuest.
-func (mr *MockQuestStorageMockRecorder) DeleteQuest(ctx, req interface{}) *gomock.Call {
+func (mr *MockQuestStorageMockRecorder) DeleteQuest(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteQuest", reflect.TypeOf((*MockQuestStorage)(nil).DeleteQuest), ctx, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteQuest", reflect.TypeOf((*MockQuestStorage)(nil).DeleteQuest), arg0, arg1)
 }
 
 // GetQuest mocks base method.
-func (m *MockQuestStorage) GetQuest(ctx context.Context, req *storage.GetQuestRequest) (*storage.Quest, error) {
+func (m *MockQuestStorage) GetQuest(arg0 context.Context, arg1 *storage.GetQuestRequest) (*storage.Quest, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetQuest", ctx, req)
+	ret := m.ctrl.Call(m, "GetQuest", arg0, arg1)
 	ret0, _ := ret[0].(*storage.Quest)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetQuest indicates an expected call of GetQuest.
-func (mr *MockQuestStorageMockRecorder) GetQuest(ctx, req interface{}) *gomock.Call {
+func (mr *MockQuestStorageMockRecorder) GetQuest(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQuest", reflect.TypeOf((*MockQuestStorage)(nil).GetQuest), ctx, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQuest", reflect.TypeOf((*MockQuestStorage)(nil).GetQuest), arg0, arg1)
 }
 
 // UpdateQuest mocks base method.
-func (m *MockQuestStorage) UpdateQuest(ctx context.Context, req *storage.UpdateQuestRequest) (*storage.Quest, error) {
+func (m *MockQuestStorage) UpdateQuest(arg0 context.Context, arg1 *storage.UpdateQuestRequest) (*storage.Quest, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateQuest", ctx, req)
+	ret := m.ctrl.Call(m, "UpdateQuest", arg0, arg1)
 	ret0, _ := ret[0].(*storage.Quest)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // UpdateQuest indicates an expected call of UpdateQuest.
-func (mr *MockQuestStorageMockRecorder) UpdateQuest(ctx, req interface{}) *gomock.Call {
+func (mr *MockQuestStorageMockRecorder) UpdateQuest(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateQuest", reflect.TypeOf((*MockQuestStorage)(nil).UpdateQuest), ctx, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateQuest", reflect.TypeOf((*MockQuestStorage)(nil).UpdateQuest), arg0, arg1)
+}
+
+// MockTaskGroupStorage is a mock of TaskGroupStorage interface.
+type MockTaskGroupStorage struct {
+	ctrl     *gomock.Controller
+	recorder *MockTaskGroupStorageMockRecorder
+}
+
+// MockTaskGroupStorageMockRecorder is the mock recorder for MockTaskGroupStorage.
+type MockTaskGroupStorageMockRecorder struct {
+	mock *MockTaskGroupStorage
+}
+
+// NewMockTaskGroupStorage creates a new mock instance.
+func NewMockTaskGroupStorage(ctrl *gomock.Controller) *MockTaskGroupStorage {
+	mock := &MockTaskGroupStorage{ctrl: ctrl}
+	mock.recorder = &MockTaskGroupStorageMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockTaskGroupStorage) EXPECT() *MockTaskGroupStorageMockRecorder {
+	return m.recorder
+}
+
+// CreateTaskGroup mocks base method.
+func (m *MockTaskGroupStorage) CreateTaskGroup(arg0 context.Context, arg1 *storage.CreateTaskGroupRequest) (*storage.TaskGroup, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateTaskGroup", arg0, arg1)
+	ret0, _ := ret[0].(*storage.TaskGroup)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateTaskGroup indicates an expected call of CreateTaskGroup.
+func (mr *MockTaskGroupStorageMockRecorder) CreateTaskGroup(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateTaskGroup", reflect.TypeOf((*MockTaskGroupStorage)(nil).CreateTaskGroup), arg0, arg1)
+}
+
+// DeleteTaskGroup mocks base method.
+func (m *MockTaskGroupStorage) DeleteTaskGroup(arg0 context.Context, arg1 *storage.DeleteTaskGroupRequest) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteTaskGroup", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteTaskGroup indicates an expected call of DeleteTaskGroup.
+func (mr *MockTaskGroupStorageMockRecorder) DeleteTaskGroup(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteTaskGroup", reflect.TypeOf((*MockTaskGroupStorage)(nil).DeleteTaskGroup), arg0, arg1)
+}
+
+// GetTaskGroup mocks base method.
+func (m *MockTaskGroupStorage) GetTaskGroup(arg0 context.Context, arg1 *storage.GetTaskGroupRequest) (*storage.TaskGroup, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTaskGroup", arg0, arg1)
+	ret0, _ := ret[0].(*storage.TaskGroup)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTaskGroup indicates an expected call of GetTaskGroup.
+func (mr *MockTaskGroupStorageMockRecorder) GetTaskGroup(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTaskGroup", reflect.TypeOf((*MockTaskGroupStorage)(nil).GetTaskGroup), arg0, arg1)
+}
+
+// GetTaskGroups mocks base method.
+func (m *MockTaskGroupStorage) GetTaskGroups(arg0 context.Context, arg1 *storage.GetTaskGroupsRequest) ([]*storage.TaskGroup, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTaskGroups", arg0, arg1)
+	ret0, _ := ret[0].([]*storage.TaskGroup)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTaskGroups indicates an expected call of GetTaskGroups.
+func (mr *MockTaskGroupStorageMockRecorder) GetTaskGroups(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTaskGroups", reflect.TypeOf((*MockTaskGroupStorage)(nil).GetTaskGroups), arg0, arg1)
+}
+
+// UpdateTaskGroup mocks base method.
+func (m *MockTaskGroupStorage) UpdateTaskGroup(arg0 context.Context, arg1 *storage.UpdateTaskGroupRequest) (*storage.TaskGroup, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateTaskGroup", arg0, arg1)
+	ret0, _ := ret[0].(*storage.TaskGroup)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateTaskGroup indicates an expected call of UpdateTaskGroup.
+func (mr *MockTaskGroupStorageMockRecorder) UpdateTaskGroup(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateTaskGroup", reflect.TypeOf((*MockTaskGroupStorage)(nil).UpdateTaskGroup), arg0, arg1)
 }
