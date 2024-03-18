@@ -45,7 +45,7 @@ func (c *Client) GetQuest(ctx context.Context, req *storage.GetQuestRequest) (*s
 	query := sq.Select(
 		"q.id", "q.name", "q.description", "q.media_link", "q.registration_deadline",
 		"q.start_time", "q.finish_time", "q.access", "q.max_team_cap",
-		"u.id", "u.avatar_url",
+		"u.id", "u.username", "u.avatar_url",
 	).From("questspace.quest q").
 		LeftJoin("questspace.user u ON u.username = q.creator").
 		Where(sq.Eq{"q.id": req.ID}).
@@ -54,12 +54,13 @@ func (c *Client) GetQuest(ctx context.Context, req *storage.GetQuestRequest) (*s
 	row := query.RunWith(c.runner).QueryRowContext(ctx)
 	var (
 		q                     storage.Quest
+		creatorName           sql.NullString
 		userId, userAvatarURL sql.NullString
 		regDeadline, finTime  sql.NullTime
 		maxTeamCap            sql.NullInt32
 	)
 	if err := row.Scan(&q.ID, &q.Name, &q.Description, &q.MediaLink, &regDeadline,
-		&q.StartTime, &finTime, &q.Access, &maxTeamCap, &userId, &userAvatarURL); err != nil {
+		&q.StartTime, &finTime, &q.Access, &maxTeamCap, &userId, &creatorName, &userAvatarURL); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, storage.ErrNotFound
 		}
@@ -70,6 +71,9 @@ func (c *Client) GetQuest(ctx context.Context, req *storage.GetQuestRequest) (*s
 	}
 	if q.Creator != nil && userAvatarURL.Valid {
 		q.Creator.AvatarURL = userAvatarURL.String
+	}
+	if q.Creator != nil && userAvatarURL.Valid {
+		q.Creator.Username = creatorName.String
 	}
 	if regDeadline.Valid {
 		q.RegistrationDeadline = &regDeadline.Time
