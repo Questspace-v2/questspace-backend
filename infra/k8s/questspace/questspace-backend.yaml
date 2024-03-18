@@ -9,10 +9,11 @@ spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - millionaire-web.ru
+        - api-new.questspace.app
+        - new.questspace.app
       secretName: questspace-tls-secret
   rules:
-    - host: millionaire-web.ru
+    - host: api-new.questspace.app
       http:
         paths:
           - path: /
@@ -22,7 +23,7 @@ spec:
                 name: backend-service
                 port:
                   number: 8080
-    - host: api-new.questspace.app
+    - host: new.questspace.app
       http:
         paths:
           - path: /
