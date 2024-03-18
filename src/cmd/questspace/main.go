@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"strings"
+	"slices"
 	"time"
 
 	"questspace/internal/handlers/taskgroups"
@@ -32,19 +32,15 @@ import (
 var config struct {
 	DB       pgconfig.Config `yaml:"db"`
 	HashCost int             `yaml:"hash-cost"`
-	Cors     struct {
-		AllowOrigin string `yaml:"allow-origin"`
+	CORS     struct {
+		AllowOrigins []string `yaml:"allow-origins"`
 	} `yaml:"cors"`
 	JWT jwt.Config `yaml:"jwt"`
 }
 
 func Init(app application.App) error {
 	corsConfig := cors.DefaultConfig()
-	if config.Cors.AllowOrigin == "*" {
-		corsConfig.AllowAllOrigins = true
-	} else {
-		corsConfig.AllowOrigins = strings.Split(config.Cors.AllowOrigin, ",")
-	}
+	corsConfig.AllowOrigins = slices.Clone(config.CORS.AllowOrigins)
 	app.Router().Use(cors.New(corsConfig))
 
 	nodes, errs := config.DB.GetNodes()
@@ -96,7 +92,6 @@ func Init(app application.App) error {
 	questGroup.PATCH("/:id/task-groups/bulk", application.AsGinHandler(taskGroupHandler.HandleBulkUpdate))
 
 	app.Router().GET("/swagger/*any", ginswagger.WrapHandler(swaggerfiles.Handler))
-
 	return nil
 }
 

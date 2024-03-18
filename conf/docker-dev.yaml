@@ -6,7 +6,8 @@ db:
   user: env:POSTGRES_USER
   password: env:POSTGRES_PASSWORD
 cors:
-  allow-origin: "*"
+  allow-origins:
+    - "*"
 hash-cost: 11
 jwt:
   secret: env:JWT_SECRET_KEY
