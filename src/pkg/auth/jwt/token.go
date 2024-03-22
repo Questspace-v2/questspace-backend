@@ -43,7 +43,7 @@ func (p TokenParser) ParseToken(tokenStr string) (*storage.User, error) {
 		return nil, err
 	}
 
-	if claims, ok := token.Claims.(questspaceClaims); ok {
+	if claims, ok := token.Claims.(*questspaceClaims); ok {
 		return &storage.User{
 			ID:        claims.ID,
 			Username:  claims.Issuer,
