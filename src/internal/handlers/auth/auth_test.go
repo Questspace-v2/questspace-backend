@@ -151,9 +151,6 @@ func TestAuth_HandleBasicSignUp(t *testing.T) {
 			if tc.storageData.willCommit {
 				factory.ExpectCommit(t)
 			}
-			if tc.jwtData.err != nil {
-				require.Contains(t, rr.Header().Get("Set-Cookie"), tc.jwtData.token)
-			}
 		})
 	}
 }
@@ -249,9 +246,6 @@ func TestAuth_HandleBasicSignIn(t *testing.T) {
 
 			router.ServeHTTP(rr, httpReq)
 			require.Equal(t, tc.statusCode, rr.Code)
-			if tc.jwtData.err != nil {
-				require.Contains(t, rr.Header().Get("Set-Cookie"), tc.jwtData.token)
-			}
 		})
 	}
 }

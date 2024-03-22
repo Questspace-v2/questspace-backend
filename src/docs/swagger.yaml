@@ -4,6 +4,13 @@ definitions:
       id_token:
         type: string
     type: object
+  auth.Response:
+    properties:
+      access_token:
+        type: string
+      user:
+        $ref: '#/definitions/storage.User'
+    type: object
   auth.SignInRequest:
     properties:
       password:
@@ -186,7 +193,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/storage.User'
+            $ref: '#/definitions/auth.Response'
         "400":
           description: Bad Request
         "415":
@@ -205,7 +212,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/storage.User'
+            $ref: '#/definitions/auth.Response'
         "400":
           description: Bad Request
         "415":
@@ -224,7 +231,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/storage.User'
+            $ref: '#/definitions/auth.Response'
         "400":
           description: Bad Request
         "403":

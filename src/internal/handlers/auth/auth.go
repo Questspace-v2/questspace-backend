@@ -41,11 +41,16 @@ func NewHandler(cf pgdb.QuestspaceClientFactory, f http.Client, h hasher.Hasher,
 	}
 }
 
+type Response struct {
+	User        *storage.User `json:"user"`
+	AccessToken string        `json:"access_token"`
+}
+
 // HandleBasicSignUp handles POST /auth/register request
 //
 //	@Summary	Register new user and return auth data
 //	@Param		request	body		storage.CreateUserRequest	true	"Create user request"
-//	@Success	200		{object}	storage.User
+//	@Success	200		{object}	Response
 //	@Failure	400
 //	@Failure	415
 //	@Router		/auth/register [post]
@@ -84,10 +89,17 @@ func (h *Handler) HandleBasicSignUp(c *gin.Context) error {
 		}
 		return xerrors.Errorf("create user: %w", err)
 	}
-
-	if err := h.sendAuthDataAndCommit(c, user, tx); err != nil {
-		return err
+	resp := Response{
+		User: user,
 	}
+	resp.AccessToken, err = h.tokenGenerator.CreateToken(user)
+	if err != nil {
+		return xerrors.Errorf("issue token: %w", err)
+	}
+	if err := tx.Commit(); err != nil {
+		return xerrors.Errorf("commit tx: %w", err)
+	}
+	c.JSON(http.StatusOK, resp)
 
 	logging.Info(c, "basic registration done",
 		zap.String("username", user.Username),
@@ -105,7 +117,7 @@ type SignInRequest struct {
 //
 //	@Summary	Sign in to user account and return auth data
 //	@Param		request	body		auth.SignInRequest	true	"Sign in request"
-//	@Success	200		{object}	storage.User
+//	@Success	200		{object}	Response
 //	@Failure	400
 //	@Failure	403
 //	@Failure	415
@@ -142,9 +154,11 @@ func (h *Handler) HandleBasicSignIn(c *gin.Context) error {
 	if err != nil {
 		return xerrors.Errorf("issue token: %w", err)
 	}
-
-	c.SetCookie(jwt.AuthCookieName, token, 60*60, "/", "questspace.app", true, false)
-	c.JSON(http.StatusOK, user)
+	resp := Response{
+		User:        user,
+		AccessToken: token,
+	}
+	c.JSON(http.StatusOK, resp)
 	return nil
 }
 
@@ -156,7 +170,7 @@ type GoogleOAuthRequest struct {
 //
 //	@Summary	Register new or sign in old user using Google OAuth2.0
 //	@Param		request	body		auth.GoogleOAuthRequest	true	"Google OAuth request"
-//	@Success	200		{object}	storage.User
+//	@Success	200		{object}	Response
 //	@Failure	400
 //	@Failure	415
 //	@Router		/auth/google [post]
