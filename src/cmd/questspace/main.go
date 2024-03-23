@@ -7,9 +7,8 @@ import (
 	"slices"
 	"time"
 
-	"questspace/internal/handlers/taskgroups"
-
 	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 	_ "github.com/jackc/pgx/stdlib"
 	swaggerfiles "github.com/swaggo/files"
 	ginswagger "github.com/swaggo/gin-swagger"
@@ -20,6 +19,7 @@ import (
 	"questspace/docs"
 	"questspace/internal/handlers/auth"
 	"questspace/internal/handlers/quest"
+	"questspace/internal/handlers/taskgroups"
 	"questspace/internal/handlers/user"
 	"questspace/internal/hasher"
 	pgdb "questspace/internal/pgdb/client"
@@ -42,6 +42,7 @@ func Init(app application.App) error {
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowOrigins = slices.Clone(config.CORS.AllowOrigins)
 	app.Router().Use(cors.New(corsConfig))
+	app.Router().OPTIONS("/*any", func(c *gin.Context) { c.Status(http.StatusNoContent) })
 
 	nodes, errs := config.DB.GetNodes()
 	if len(errs) > 0 {

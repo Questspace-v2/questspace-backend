@@ -46,7 +46,6 @@ func (u *Updater) getOldTaskGroups(ctx context.Context, questID string) (*taskGr
 	}, nil
 }
 
-// func (u *Updater) DeleteQuests()
 func (u *Updater) deleteTaskGroups(ctx context.Context, taskGroups *taskGroupsPacked, deleteReqs []storage.DeleteTaskGroupRequest) error {
 	var errs []error
 	for _, deleteReq := range deleteReqs {
