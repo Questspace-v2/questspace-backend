@@ -9,6 +9,9 @@ db:
 cors:
   allow-origins:
     - "*"
+  allow-headers:
+    - Authorization
+  allow-methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD]
 hash-cost: 10 # default
 jwt:
   secret: env:JWT_SECRET_KEY

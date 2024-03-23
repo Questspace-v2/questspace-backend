@@ -34,6 +34,8 @@ var config struct {
 	HashCost int             `yaml:"hash-cost"`
 	CORS     struct {
 		AllowOrigins []string `yaml:"allow-origins"`
+		AllowHeaders []string `yaml:"allow-headers"`
+		AllowMethods []string `yaml:"allow-methods"`
 	} `yaml:"cors"`
 	JWT jwt.Config `yaml:"jwt"`
 }
@@ -41,6 +43,8 @@ var config struct {
 func Init(app application.App) error {
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowOrigins = slices.Clone(config.CORS.AllowOrigins)
+	corsConfig.AllowHeaders = slices.Clone(config.CORS.AllowHeaders)
+	corsConfig.AllowMethods = slices.Clone(config.CORS.AllowMethods)
 	app.Router().Use(cors.New(corsConfig))
 	app.Router().OPTIONS("/*any", func(c *gin.Context) { c.Status(http.StatusNoContent) })
 
