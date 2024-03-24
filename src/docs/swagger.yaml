@@ -122,6 +122,27 @@ definitions:
           $ref: '#/definitions/storage.UpdateTaskGroupRequest'
         type: array
     type: object
+  storage.Team:
+    properties:
+      capitan:
+        $ref: '#/definitions/storage.User'
+      id:
+        type: string
+      inviteLink:
+        type: string
+      inviteLinkID:
+        type: integer
+      members:
+        items:
+          $ref: '#/definitions/storage.User'
+        type: array
+      name:
+        type: string
+      quest:
+        $ref: '#/definitions/storage.Quest'
+      score:
+        type: integer
+    type: object
   storage.UpdateQuestRequest:
     properties:
       access:
@@ -161,6 +182,11 @@ definitions:
       id:
         type: string
       username:
+        type: string
+    type: object
+  teams.CreateRequest:
+    properties:
+      name:
         type: string
     type: object
   user.UpdatePasswordRequest:
@@ -344,6 +370,39 @@ paths:
         "415":
           description: Unsupported Media Type
       summary: Update main quest information
+  /quest/{quest_id}/teams:
+    post:
+      parameters:
+      - description: Desired team information
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/teams.CreateRequest'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/storage.Team'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "406":
+          description: Not Acceptable
+      summary: Create new team
+  /teams/join/{invite_path}:
+    get:
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/storage.Team'
+        "401":
+          description: Unauthorized
+        "406":
+          description: Not Acceptable
+      summary: Join team
   /user/{user_id}:
     delete:
       parameters:

@@ -7,6 +7,7 @@ type QuestSpaceStorage interface {
 	UserStorage
 	QuestStorage
 	TaskGroupStorage
+	TeamStorage
 }
 
 type UserStorage interface {
@@ -30,4 +31,12 @@ type TaskGroupStorage interface {
 	GetTaskGroups(context.Context, *GetTaskGroupsRequest) ([]*TaskGroup, error)
 	UpdateTaskGroup(context.Context, *UpdateTaskGroupRequest) (*TaskGroup, error)
 	DeleteTaskGroup(context.Context, *DeleteTaskGroupRequest) error
+}
+
+type TeamStorage interface {
+	CreateTeam(context.Context, *CreateTeamRequest) (*Team, error)
+	GetTeam(context.Context, *GetTeamRequest) (*Team, error)
+	GetTeams(context.Context, *GetTeamsRequest) ([]*Team, error)
+	SetInviteLink(context.Context, *SetInviteLinkRequest) error
+	JoinTeam(context.Context, *JoinTeamRequest) (*User, error)
 }

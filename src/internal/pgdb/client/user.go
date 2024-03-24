@@ -6,7 +6,7 @@ import (
 	"errors"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/jackc/pgx"
+	"github.com/jackc/pgx/v5/pgconn"
 	"golang.org/x/xerrors"
 
 	"questspace/pkg/storage"
@@ -27,7 +27,7 @@ func (c *Client) CreateUser(ctx context.Context, req *storage.CreateUserRequest)
 
 	var id string
 	if err := row.Scan(&id); err != nil {
-		if pgErr := new(pgx.PgError); errors.As(err, pgErr) && pgErr.Code == uniqueViolationCode {
+		if pgErr := new(pgconn.PgError); errors.As(err, &pgErr) && pgErr.Code == uniqueViolationCode {
 			return nil, storage.ErrExists
 		}
 		return nil, xerrors.Errorf("scan row: %w", err)
@@ -50,7 +50,7 @@ func (c *Client) GetUser(ctx context.Context, req *storage.GetUserRequest) (*sto
 	} else if req.Username != "" {
 		query = query.Where(sq.Eq{"username": req.Username})
 	} else {
-		return nil, xerrors.New("at least one of request fields must not be empty")
+		return nil, xerrors.Errorf("at least one of request fields must not be empty: %w", storage.ErrValidation)
 	}
 	row := query.RunWith(c.runner).QueryRowContext(ctx)
 
@@ -66,7 +66,7 @@ func (c *Client) GetUser(ctx context.Context, req *storage.GetUserRequest) (*sto
 
 func (c *Client) UpdateUser(ctx context.Context, req *storage.UpdateUserRequest) (*storage.User, error) {
 	if req.Username == "" && req.Password == "" && req.AvatarURL == "" {
-		return nil, xerrors.New("nothing to change!")
+		return nil, xerrors.Errorf("nothing to change: %w", storage.ErrValidation)
 	}
 
 	query := sq.
@@ -87,6 +87,9 @@ func (c *Client) UpdateUser(ctx context.Context, req *storage.UpdateUserRequest)
 
 	user := storage.User{}
 	if err := row.Scan(&user.ID, &user.Username, &user.AvatarURL); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, storage.ErrNotFound
+		}
 		return nil, xerrors.Errorf("scan row: %w", err)
 	}
 	return &user, nil
@@ -101,7 +104,7 @@ func (c *Client) GetUserPasswordHash(ctx context.Context, req *storage.GetUserRe
 	} else if req.Username != "" {
 		query = query.Where(sq.Eq{"username": req.Username})
 	} else {
-		return "", xerrors.New("either user id or username should be present")
+		return "", xerrors.Errorf("either user id or username should be present: %w", storage.ErrValidation)
 	}
 	row := query.RunWith(c.runner).QueryRowContext(ctx)
 

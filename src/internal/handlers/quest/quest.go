@@ -1,7 +1,6 @@
 package quest
 
 import (
-	"encoding/json"
 	"errors"
 	"net/http"
 
@@ -9,6 +8,7 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/xerrors"
 
+	"questspace/internal/handlers/transport"
 	pgdb "questspace/internal/pgdb/client"
 	"questspace/internal/validate"
 	"questspace/pkg/application/httperrors"
@@ -40,13 +40,9 @@ func NewHandler(cf pgdb.QuestspaceClientFactory, f http.Client) *Handler {
 //		@Failure	415
 //		@Router		/quest [post]
 func (h *Handler) HandleCreate(c *gin.Context) error {
-	data, err := c.GetRawData()
+	req, err := transport.UnmarshalRequestData[storage.CreateQuestRequest](c.Request)
 	if err != nil {
-		return xerrors.Errorf("get raw data: %w", err)
-	}
-	req := storage.CreateQuestRequest{}
-	if err := json.Unmarshal(data, &req); err != nil {
-		return xerrors.Errorf("unmarshall request: %w", err)
+		return xerrors.Errorf("%w", err)
 	}
 	if err := validate.ImageURL(c, h.fetcher, req.MediaLink); err != nil {
 		return xerrors.Errorf("%w", err)
@@ -61,7 +57,7 @@ func (h *Handler) HandleCreate(c *gin.Context) error {
 	if err != nil {
 		return xerrors.Errorf("get storage client: %w", err)
 	}
-	quest, err := s.CreateQuest(c, &req)
+	quest, err := s.CreateQuest(c, req)
 	if err != nil {
 		return xerrors.Errorf("create quest: %w", err)
 	}
@@ -113,13 +109,9 @@ func (h *Handler) HandleGet(c *gin.Context) error {
 //		@Failure	415
 //		@Router		/quest/{quest_id} [post]
 func (h *Handler) HandleUpdate(c *gin.Context) error {
-	data, err := c.GetRawData()
+	req, err := transport.UnmarshalRequestData[storage.UpdateQuestRequest](c.Request)
 	if err != nil {
-		return xerrors.Errorf("get raw data: %w", err)
-	}
-	req := storage.UpdateQuestRequest{}
-	if err := json.Unmarshal(data, &req); err != nil {
-		return xerrors.Errorf("unmarshall request: %w", err)
+		return xerrors.Errorf("%w", err)
 	}
 	req.ID = c.Param("id")
 	if err := validate.ImageURL(c, h.fetcher, req.MediaLink); err != nil {
@@ -135,7 +127,7 @@ func (h *Handler) HandleUpdate(c *gin.Context) error {
 		return xerrors.Errorf("get storage: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
-	quest, err := s.UpdateQuest(c, &req)
+	quest, err := s.UpdateQuest(c, req)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return httperrors.Errorf(http.StatusNotFound, "not found quest with id %q", req.ID)

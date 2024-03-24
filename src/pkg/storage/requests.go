@@ -57,6 +57,33 @@ type DeleteQuestRequest struct {
 	ID string
 }
 
+type CreateTeamRequest struct {
+	Name    string
+	QuestID string
+	Creator *User
+}
+
+type GetTeamRequest struct {
+	ID             string
+	InvitePath     string
+	IncludeMembers bool
+}
+
+type GetTeamsRequest struct {
+	User     *User
+	QuestIDs []string
+}
+
+type SetInviteLinkRequest struct {
+	TeamID    string
+	InviteURL string
+}
+
+type JoinTeamRequest struct {
+	InvitePath string
+	User       *User
+}
+
 type CreateTaskGroupRequest struct {
 	QuestID  string     `json:"-"`
 	OrderIdx int        `json:"order_idx"`

@@ -9,9 +9,10 @@ import (
 type AccessType string
 
 var (
-	ErrExists     = xerrors.New("already exists")
-	ErrNotFound   = xerrors.New("not found")
-	ErrValidation = xerrors.New("validation error")
+	ErrExists          = xerrors.New("already exists")
+	ErrNotFound        = xerrors.New("not found")
+	ErrValidation      = xerrors.New("validation error")
+	ErrTeamAlreadyFull = xerrors.New("team already has maximum amount of members")
 )
 
 const (
@@ -40,12 +41,14 @@ type Quest struct {
 }
 
 type Team struct {
-	ID         string
-	Name       string
-	Quest      *Quest
-	Capitan    *User
-	Score      int
-	InviteLink string
+	ID           string
+	Name         string
+	Quest        *Quest
+	Capitan      *User
+	Score        int
+	InviteLink   string
+	InviteLinkID int64
+	Members      []*User
 }
 
 type User struct {

@@ -2,19 +2,45 @@ package logging
 
 import (
 	"fmt"
-
-	"github.com/gofrs/uuid"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gofrs/uuid"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
 const loggerKey = "app-logger"
 
+var restrictedHeaders = map[string]struct{}{
+	"authorization": {},
+	"cookie":        {},
+	"cookie2":       {},
+}
+
 func Middleware(logger *zap.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		logger = logger.With(zap.String("response_id", uuid.Must(uuid.NewV4()).String()))
+		reqId := uuid.Must(uuid.NewV4()).String() + "-" + strconv.FormatInt(time.Now().UTC().Unix(), 10)
+		fields := []zap.Field{
+			zap.String("request_id", reqId),
+		}
+
+		req := c.Request
+		for name, values := range req.Header {
+			headerNameLower := strings.ToLower(name)
+			if _, ok := restrictedHeaders[headerNameLower]; ok {
+				fields = append(fields, zap.String(headerNameLower, "***"))
+				continue
+			}
+			for _, val := range values {
+				fields = append(fields, zap.String(headerNameLower, val))
+			}
+		}
+		fields = append(fields, zap.String("uri", req.RequestURI+"?"+req.URL.RawQuery))
+
+		logger = logger.With(fields...)
 		c.Set(loggerKey, logger)
 		c.Next()
 	}

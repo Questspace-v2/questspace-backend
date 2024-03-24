@@ -13,7 +13,7 @@ import (
 )
 
 func (c *Client) CreateQuest(ctx context.Context, req *storage.CreateQuestRequest) (*storage.Quest, error) {
-	values := []interface{}{req.Name, req.Description, req.MediaLink, req.RegistrationDeadline, req.StartTime, req.FinishTime, req.Access, req.Creator.Username}
+	values := []interface{}{req.Name, req.Description, req.MediaLink, req.RegistrationDeadline, req.StartTime, req.FinishTime, string(req.Access), req.Creator.Username}
 	query := sq.Insert("questspace.quest").
 		Columns("name", "description", "media_link", "registration_deadline", "start_time", "finish_time", "access", "creator").
 		Suffix("RETURNING id").
@@ -25,13 +25,17 @@ func (c *Client) CreateQuest(ctx context.Context, req *storage.CreateQuestReques
 
 	row := query.Values(values...).RunWith(c.runner).QueryRowContext(ctx)
 	quest := storage.Quest{
-		Name:                 req.Name,
-		Description:          req.Description,
-		MediaLink:            req.MediaLink,
-		StartTime:            req.StartTime,
-		FinishTime:           req.FinishTime,
-		Access:               req.Access,
-		Creator:              &storage.User{Username: req.Creator.Username},
+		Name:        req.Name,
+		Description: req.Description,
+		MediaLink:   req.MediaLink,
+		StartTime:   req.StartTime,
+		FinishTime:  req.FinishTime,
+		Access:      req.Access,
+		Creator: &storage.User{
+			ID:        req.Creator.ID,
+			Username:  req.Creator.Username,
+			AvatarURL: req.Creator.AvatarURL,
+		},
 		RegistrationDeadline: req.RegistrationDeadline,
 		MaxTeamCap:           req.MaxTeamCap,
 	}
@@ -84,7 +88,6 @@ func (c *Client) GetQuest(ctx context.Context, req *storage.GetQuestRequest) (*s
 	if maxTeamCap.Valid {
 		q.MaxTeamCap = ptr.Int(int(maxTeamCap.Int32))
 	}
-
 	return &q, nil
 }
 

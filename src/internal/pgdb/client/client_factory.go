@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 
 	"questspace/pkg/dbnode"
 	"questspace/pkg/storage"
@@ -83,12 +83,14 @@ func (f *FakeClientFactory) Rollback() error {
 }
 
 func (f *FakeClientFactory) ExpectCommit(t *testing.T) {
+	t.Helper()
 	cnt := f.cmCnt.Load()
-	require.NotZero(t, cnt, "Expected transaction commit")
-	require.Equal(t, uint64(1), cnt, "Too many transaction commits")
+	assert.NotZero(t, cnt, "Expected transaction commit")
+	assert.Equal(t, uint64(1), cnt, "Too many transaction commits")
 }
 
 func (f *FakeClientFactory) ExpectCommits(t *testing.T, expectedCnt uint64) {
+	t.Helper()
 	cnt := f.cmCnt.Load()
-	require.Equal(t, expectedCnt, cnt, "Expected %d commits", expectedCnt)
+	assert.Equal(t, expectedCnt, cnt, "Expected %d commits", expectedCnt)
 }

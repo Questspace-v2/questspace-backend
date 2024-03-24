@@ -269,6 +269,58 @@ const docTemplate = `{
                 }
             }
         },
+        "/quest/{quest_id}/teams": {
+            "post": {
+                "summary": "Create new team",
+                "parameters": [
+                    {
+                        "description": "Desired team information",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/teams.CreateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/storage.Team"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "406": {
+                        "description": "Not Acceptable"
+                    }
+                }
+            }
+        },
+        "/teams/join/{invite_path}": {
+            "get": {
+                "summary": "Join team",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/storage.Team"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "406": {
+                        "description": "Not Acceptable"
+                    }
+                }
+            }
+        },
         "/user/{user_id}": {
             "get": {
                 "summary": "Get user by id",
@@ -587,6 +639,38 @@ const docTemplate = `{
                 }
             }
         },
+        "storage.Team": {
+            "type": "object",
+            "properties": {
+                "capitan": {
+                    "$ref": "#/definitions/storage.User"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "inviteLink": {
+                    "type": "string"
+                },
+                "inviteLinkID": {
+                    "type": "integer"
+                },
+                "members": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/storage.User"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "quest": {
+                    "$ref": "#/definitions/storage.Quest"
+                },
+                "score": {
+                    "type": "integer"
+                }
+            }
+        },
         "storage.UpdateQuestRequest": {
             "type": "object",
             "properties": {
@@ -646,6 +730,14 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "teams.CreateRequest": {
+            "type": "object",
+            "properties": {
+                "name": {
                     "type": "string"
                 }
             }

@@ -89,7 +89,7 @@ func (c *Client) GetTaskGroups(ctx context.Context, req *storage.GetTaskGroupsRe
 }
 
 func (c *Client) UpdateTaskGroup(ctx context.Context, req *storage.UpdateTaskGroupRequest) (*storage.TaskGroup, error) {
-	query := sq.Update("questspace.quest").
+	query := sq.Update("questspace.task_group").
 		Where(sq.Eq{"id": req.ID}).
 		Set("order_idx", req.OrderIdx).
 		Suffix("RETURNING id, name, order_idx, pub_time, quest_id").
@@ -116,7 +116,7 @@ func (c *Client) UpdateTaskGroup(ctx context.Context, req *storage.UpdateTaskGro
 }
 
 func (c *Client) DeleteTaskGroup(ctx context.Context, req *storage.DeleteTaskGroupRequest) error {
-	query := sq.Delete("questspace.quest").
+	query := sq.Delete("questspace.task_group").
 		Where(sq.Eq{"id": req.ID}).
 		PlaceholderFormat(sq.Dollar)
 	_, err := query.RunWith(c.runner).ExecContext(ctx)

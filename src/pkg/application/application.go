@@ -103,6 +103,7 @@ func AsGinHandler(handler func(c *gin.Context) error) gin.HandlerFunc {
 		if err != nil {
 			httperrors.WriteErrorResponse(c, err)
 		}
+		logging.Info(c, "new request handled")
 	}
 }
 

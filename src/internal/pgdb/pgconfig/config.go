@@ -6,7 +6,7 @@ import (
 	"os"
 	"path"
 
-	_ "github.com/jackc/pgx/stdlib"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"golang.org/x/xerrors"
 	"golang.yandex/hasql"
 	"gopkg.in/yaml.v3"

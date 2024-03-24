@@ -9,7 +9,7 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	_ "github.com/jackc/pgx/stdlib"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	swaggerfiles "github.com/swaggo/files"
 	ginswagger "github.com/swaggo/gin-swagger"
 	"golang.org/x/xerrors"
@@ -20,6 +20,7 @@ import (
 	"questspace/internal/handlers/auth"
 	"questspace/internal/handlers/quest"
 	"questspace/internal/handlers/taskgroups"
+	"questspace/internal/handlers/teams"
 	"questspace/internal/handlers/user"
 	"questspace/internal/hasher"
 	pgdb "questspace/internal/pgdb/client"
@@ -86,12 +87,18 @@ func Init(app application.App) error {
 	userGroup.POST("/:id/password", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, updateUserHandler.HandlePassword)))
 	userGroup.DELETE("/:id", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, updateUserHandler.HandleDelete)))
 
+	teamsHandler := teams.NewHandler(clientFactory, "https://new.questspace.app:3000/join")
+
 	questGroup := app.Router().Group("/quest")
 	questHandler := quest.NewHandler(clientFactory, client)
 	questGroup.POST("", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, questHandler.HandleCreate)))
 	questGroup.GET("/:id", application.AsGinHandler(questHandler.HandleGet))
 	questGroup.POST("/:id", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, questHandler.HandleUpdate)))
 	questGroup.DELETE("/:id", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, questHandler.HandleDelete)))
+	questGroup.POST("/:id/teams", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, teamsHandler.HandleCreate)))
+
+	teamsGroup := app.Router().Group("/teams")
+	teamsGroup.GET("/:path", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, teamsHandler.HandleJoin)))
 
 	taskGroupHandler := taskgroups.NewHandler(clientFactory)
 	questGroup.PATCH("/:id/task-groups/bulk", application.AsGinHandler(taskGroupHandler.HandleBulkUpdate))

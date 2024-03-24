@@ -12,6 +12,7 @@ import (
 	"golang.org/x/xerrors"
 	"google.golang.org/api/idtoken"
 
+	"questspace/internal/handlers/transport"
 	"questspace/internal/hasher"
 	pgdb "questspace/internal/pgdb/client"
 	"questspace/internal/validate"
@@ -55,13 +56,9 @@ type Response struct {
 //	@Failure	415
 //	@Router		/auth/register [post]
 func (h *Handler) HandleBasicSignUp(c *gin.Context) error {
-	data, err := c.GetRawData()
+	req, err := transport.UnmarshalRequestData[storage.CreateUserRequest](c.Request)
 	if err != nil {
-		return xerrors.Errorf("get raw data: %w", err)
-	}
-	req := storage.CreateUserRequest{}
-	if err := json.Unmarshal(data, &req); err != nil {
-		return xerrors.Errorf("unmarshall request: %w", err)
+		return xerrors.Errorf("%w", err)
 	}
 	if err := validate.ImageURL(c, h.fetcher, req.AvatarURL); err != nil {
 		return xerrors.Errorf("%w", err)
@@ -82,7 +79,7 @@ func (h *Handler) HandleBasicSignUp(c *gin.Context) error {
 		return xerrors.Errorf("get storage client: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
-	user, err := s.CreateUser(c, &req)
+	user, err := s.CreateUser(c, req)
 	if err != nil {
 		if errors.Is(err, storage.ErrExists) {
 			return httperrors.Errorf(http.StatusBadRequest, "user %q already exits", req.Username)
@@ -123,13 +120,9 @@ type SignInRequest struct {
 //	@Failure	415
 //	@Router		/auth/sign-in [post]
 func (h *Handler) HandleBasicSignIn(c *gin.Context) error {
-	data, err := c.GetRawData()
+	req, err := transport.UnmarshalRequestData[SignInRequest](c.Request)
 	if err != nil {
-		return xerrors.Errorf("get raw data: %w", err)
-	}
-	req := SignInRequest{}
-	if err := json.Unmarshal(data, &req); err != nil {
-		return xerrors.Errorf("unmarshall request: %w", err)
+		return xerrors.Errorf("%w", err)
 	}
 
 	s, err := h.clientFactory.NewStorage(c, dbnode.Alive)

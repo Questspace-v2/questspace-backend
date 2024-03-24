@@ -6,7 +6,10 @@ import (
 	"questspace/pkg/storage"
 )
 
-const uniqueViolationCode = "23505"
+const (
+	uniqueViolationCode        = "23505"
+	triggerActionExceptionCode = "P0001"
+)
 
 type Client struct {
 	runner sq.RunnerContext

@@ -2,12 +2,12 @@ package taskgroups
 
 import (
 	"database/sql"
-	"encoding/json"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/xerrors"
 
+	"questspace/internal/handlers/transport"
 	pgdb "questspace/internal/pgdb/client"
 	"questspace/internal/questspace/taskgroups"
 	"questspace/pkg/storage"
@@ -35,13 +35,9 @@ type TaskGroups []*storage.TaskGroup
 func (h *Handler) HandleBulkUpdate(c *gin.Context) error {
 	//TODO(svayp11): add auth
 	questID := c.Param("id")
-	req := storage.TaskGroupsBulkUpdateRequest{}
-	rawData, err := c.GetRawData()
+	req, err := transport.UnmarshalRequestData[storage.TaskGroupsBulkUpdateRequest](c.Request)
 	if err != nil {
-		return xerrors.Errorf("get raw data: %w", err)
-	}
-	if err := json.Unmarshal(rawData, &req); err != nil {
-		return xerrors.Errorf("unmarshal request: %w", err)
+		return xerrors.Errorf("%w", err)
 	}
 	req.QuestID = questID
 
@@ -52,7 +48,7 @@ func (h *Handler) HandleBulkUpdate(c *gin.Context) error {
 	defer func() { _ = tx.Rollback() }()
 
 	updater := taskgroups.NewUpdater(s)
-	tasksGroups, err := updater.BulkUpdateTaskGroups(c, &req)
+	tasksGroups, err := updater.BulkUpdateTaskGroups(c, req)
 	if err != nil {
 		return xerrors.Errorf("bulk update: %w", err)
 	}
