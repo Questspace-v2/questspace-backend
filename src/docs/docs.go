@@ -645,17 +645,14 @@ const docTemplate = `{
         "storage.Team": {
             "type": "object",
             "properties": {
-                "capitan": {
+                "captain": {
                     "$ref": "#/definitions/storage.User"
                 },
                 "id": {
                     "type": "string"
                 },
-                "inviteLink": {
+                "invite_link": {
                     "type": "string"
-                },
-                "inviteLinkID": {
-                    "type": "integer"
                 },
                 "members": {
                     "type": "array",
@@ -665,9 +662,6 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
-                },
-                "quest": {
-                    "$ref": "#/definitions/storage.Quest"
                 },
                 "score": {
                     "type": "integer"
