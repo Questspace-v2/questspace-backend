@@ -95,6 +95,125 @@ func (c *Client) GetQuest(ctx context.Context, req *storage.GetQuestRequest) (*s
 	return &q, nil
 }
 
+func (c *Client) addAllQuestsCond(query sq.SelectBuilder, userID string) sq.SelectBuilder {
+	const allExpr = `q.access = 'public' OR (q.access = 'link_only' AND EXISTS(
+	SELECT 1 FROM questspace.registration r
+		LEFT JOIN questspace.team t ON t.id = r.team_id
+		WHERE t.quest_id = q.id AND r.user_id = ?
+))`
+	query = query.Where(sq.Expr(allExpr, userID))
+	return query
+}
+
+func (c *Client) addRegisteredQuestsCond(query sq.SelectBuilder, userID string) sq.SelectBuilder {
+	const registeredExpr = `EXISTS(
+	SELECT 1 FROM questspace.registration r
+		LEFT JOIN questspace.team t ON t.id = r.team_id
+		WHERE t.quest_id = q.id AND r.user_id = ?
+)`
+	query = query.Where(sq.Expr(registeredExpr, userID))
+	return query
+}
+
+func (c *Client) addOwnedQuestsCond(query sq.SelectBuilder, userID string) sq.SelectBuilder {
+	query = query.Where(sq.Eq{"q.creator_id": userID})
+	return query
+}
+
+func (c *Client) GetQuests(ctx context.Context, req *storage.GetQuestsRequest) (*storage.GetQuestsResponse, error) {
+	query := sq.Select(
+		"q.id", "q.name", "q.description", "q.access", "q.registration_deadline",
+		"q.start_time", "q.finish_time", "q.media_link", "q.max_team_cap", "q.finished",
+		"q.creator_id", "u.username", "u.avatar_url",
+	).From("questspace.quest q").LeftJoin("questspace.user u ON q.creator_id = u.id").
+		OrderBy("q.finished", "q.start_time").
+		Limit(uint64(req.PageSize)).
+		PlaceholderFormat(sq.Dollar)
+	if req.Page != nil {
+		query = query.Where(sq.And{
+			sq.GtOrEq{"q.finished": req.Page.Finished},
+			sq.Expr(`q.start_time > to_timestamp(?)`, req.Page.Timestamp),
+			//sq.Gt{"q.start_time": sq.Expr("to_timestamp(?)", req.Page.Timestamp)},
+		})
+	}
+	switch req.Type {
+	case storage.GetAll:
+		query = c.addAllQuestsCond(query, req.User.ID)
+	case storage.GetRegistered:
+		query = c.addRegisteredQuestsCond(query, req.User.ID)
+	case storage.GetOwned:
+		query = c.addOwnedQuestsCond(query, req.User.ID)
+	}
+
+	rows, err := query.RunWith(c.runner).QueryContext(ctx)
+	if err != nil {
+		return nil, xerrors.Errorf("query rows: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+
+	var quests []*storage.Quest
+	var (
+		username              sql.NullString
+		userId, userAvatarURL sql.NullString
+		regDeadline, finTime  sql.NullTime
+		maxTeamCap            sql.NullInt32
+		finished              bool
+	)
+
+	for rows.Next() {
+		var q storage.Quest
+
+		if err := rows.Scan(
+			&q.ID, &q.Name, &q.Description, &q.Access, &regDeadline,
+			&q.StartTime, &finTime, &q.MediaLink, &maxTeamCap, &finished,
+			&userId, &username, &userAvatarURL,
+		); err != nil {
+			return nil, xerrors.Errorf("scan row: %w", err)
+		}
+
+		if userId.Valid {
+			q.Creator = &storage.User{ID: userId.String}
+		}
+		if q.Creator != nil && username.Valid {
+			q.Creator.Username = username.String
+		}
+		if q.Creator != nil && userAvatarURL.Valid {
+			q.Creator.AvatarURL = userAvatarURL.String
+		}
+
+		if regDeadline.Valid {
+			deadline := regDeadline.Time
+			q.RegistrationDeadline = &deadline
+		}
+		if finTime.Valid {
+			finish := finTime.Time
+			q.RegistrationDeadline = &finish
+		}
+		if maxTeamCap.Valid {
+			teamCap := int(maxTeamCap.Int32)
+			q.MaxTeamCap = &teamCap
+		}
+		if finished {
+			q.Status = storage.StatusFinished
+		}
+		quests = append(quests, &q)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, xerrors.Errorf("iter rows: %w", err)
+	}
+
+	var page *storage.Page
+	if len(quests) > 0 {
+		lastQuest := quests[len(quests)-1]
+		page = &storage.Page{
+			Finished:  lastQuest.Status == storage.StatusFinished,
+			Timestamp: lastQuest.StartTime.UTC().Unix(),
+		}
+	}
+
+	return &storage.GetQuestsResponse{Quests: quests, NextPage: page}, nil
+}
+
 func (c *Client) UpdateQuest(ctx context.Context, req *storage.UpdateQuestRequest) (*storage.Quest, error) {
 	query := sq.Update("questspace.quest").
 		Where(sq.Eq{"id": req.ID}).

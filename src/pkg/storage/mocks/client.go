@@ -153,6 +153,21 @@ func (mr *MockQuestSpaceStorageMockRecorder) GetQuest(arg0, arg1 interface{}) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQuest", reflect.TypeOf((*MockQuestSpaceStorage)(nil).GetQuest), arg0, arg1)
 }
 
+// GetQuests mocks base method.
+func (m *MockQuestSpaceStorage) GetQuests(arg0 context.Context, arg1 *storage.GetQuestsRequest) (*storage.GetQuestsResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetQuests", arg0, arg1)
+	ret0, _ := ret[0].(*storage.GetQuestsResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetQuests indicates an expected call of GetQuests.
+func (mr *MockQuestSpaceStorageMockRecorder) GetQuests(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQuests", reflect.TypeOf((*MockQuestSpaceStorage)(nil).GetQuests), arg0, arg1)
+}
+
 // GetTaskGroup mocks base method.
 func (m *MockQuestSpaceStorage) GetTaskGroup(arg0 context.Context, arg1 *storage.GetTaskGroupRequest) (*storage.TaskGroup, error) {
 	m.ctrl.T.Helper()
@@ -479,6 +494,21 @@ func (m *MockQuestStorage) GetQuest(arg0 context.Context, arg1 *storage.GetQuest
 func (mr *MockQuestStorageMockRecorder) GetQuest(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQuest", reflect.TypeOf((*MockQuestStorage)(nil).GetQuest), arg0, arg1)
+}
+
+// GetQuests mocks base method.
+func (m *MockQuestStorage) GetQuests(arg0 context.Context, arg1 *storage.GetQuestsRequest) (*storage.GetQuestsResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetQuests", arg0, arg1)
+	ret0, _ := ret[0].(*storage.GetQuestsResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetQuests indicates an expected call of GetQuests.
+func (mr *MockQuestStorageMockRecorder) GetQuests(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQuests", reflect.TypeOf((*MockQuestStorage)(nil).GetQuests), arg0, arg1)
 }
 
 // UpdateQuest mocks base method.

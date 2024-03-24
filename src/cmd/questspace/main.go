@@ -93,6 +93,7 @@ func Init(app application.App) error {
 	questGroup := app.Router().Group("/quest")
 	questHandler := quest.NewHandler(clientFactory, client)
 	questGroup.POST("", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, questHandler.HandleCreate)))
+	questGroup.GET("", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, questHandler.HandleGetMany)))
 	questGroup.GET("/:id", application.AsGinHandler(questHandler.HandleGet))
 	questGroup.POST("/:id", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, questHandler.HandleUpdate)))
 	questGroup.DELETE("/:id", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, questHandler.HandleDelete)))

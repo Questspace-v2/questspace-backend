@@ -21,6 +21,7 @@ type UserStorage interface {
 type QuestStorage interface {
 	CreateQuest(context.Context, *CreateQuestRequest) (*Quest, error)
 	GetQuest(context.Context, *GetQuestRequest) (*Quest, error)
+	GetQuests(context.Context, *GetQuestsRequest) (*GetQuestsResponse, error)
 	UpdateQuest(context.Context, *UpdateQuestRequest) (*Quest, error)
 	DeleteQuest(context.Context, *DeleteQuestRequest) error
 }

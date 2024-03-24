@@ -109,6 +109,55 @@ const docTemplate = `{
             }
         },
         "/quest": {
+            "get": {
+                "summary": "Get many quests sorted by start time and finished status",
+                "parameters": [
+                    {
+                        "maxLength": 3,
+                        "minLength": 0,
+                        "type": "array",
+                        "items": {
+                            "enum": [
+                                "all",
+                                "registered",
+                                "owned"
+                            ],
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "description": "Fields to return",
+                        "name": "fields",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 50,
+                        "description": "Number of quests to return for each field",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Page ID to return. Mutually exclusive to multiple fields",
+                        "name": "page_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/quests.Quests"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            },
             "post": {
                 "summary": "Create new quest",
                 "parameters": [
@@ -498,6 +547,34 @@ const docTemplate = `{
                 }
             }
         },
+        "quests.PaginatedQuestsResponse": {
+            "type": "object",
+            "properties": {
+                "next_page_id": {
+                    "type": "string"
+                },
+                "quests": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/storage.Quest"
+                    }
+                }
+            }
+        },
+        "quests.Quests": {
+            "type": "object",
+            "properties": {
+                "all": {
+                    "$ref": "#/definitions/quests.PaginatedQuestsResponse"
+                },
+                "owned": {
+                    "$ref": "#/definitions/quests.PaginatedQuestsResponse"
+                },
+                "registered": {
+                    "$ref": "#/definitions/quests.PaginatedQuestsResponse"
+                }
+            }
+        },
         "storage.AccessType": {
             "type": "string",
             "enum": [
@@ -505,8 +582,8 @@ const docTemplate = `{
                 "link_only"
             ],
             "x-enum-varnames": [
-                "Public",
-                "LinkOnly"
+                "AccessPublic",
+                "AccessLinkOnly"
             ]
         },
         "storage.CreateQuestRequest": {

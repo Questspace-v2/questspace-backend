@@ -1,6 +1,8 @@
 package storage
 
 import (
+	"strconv"
+	"strings"
 	"time"
 
 	"golang.org/x/xerrors"
@@ -16,15 +18,15 @@ var (
 )
 
 const (
-	Public   AccessType = "public"
-	LinkOnly AccessType = "link_only"
+	AccessPublic   AccessType = "public"
+	AccessLinkOnly AccessType = "link_only"
 )
 
 type VerificationType string
 
 const (
-	Auto   VerificationType = "auto"
-	Manual VerificationType = "manual"
+	VerificationAuto   VerificationType = "auto"
+	VerificationManual VerificationType = "manual"
 )
 
 type QuestStatus string
@@ -50,6 +52,56 @@ type Quest struct {
 	MediaLink            string      `json:"media_link"`
 	MaxTeamCap           *int        `json:"max_team_cap,omitempty"`
 	Status               QuestStatus `json:"status"`
+}
+
+type GetQuestType int
+
+const (
+	GetAll        GetQuestType = 0
+	GetRegistered GetQuestType = 1
+	GetOwned      GetQuestType = 2
+)
+
+type Page struct {
+	Timestamp int64
+	Finished  bool
+}
+
+func PageFromIDString(id string) (*Page, error) {
+	if id == "" {
+		return &Page{Finished: false, Timestamp: 0}, nil
+	}
+	done, timestamp := id[:1], id[1:]
+	var doneFlag bool
+	var tsInt int64
+
+	switch done[0] {
+	case 'f':
+		doneFlag = false
+	case 't':
+		doneFlag = true
+	default:
+		return nil, xerrors.Errorf("invalid page id format: %w", ErrValidation)
+	}
+
+	tsInt, err := strconv.ParseInt(timestamp, 10, 64)
+	if err != nil {
+		return nil, xerrors.Errorf("%w: %w", ErrValidation, err)
+	}
+
+	return &Page{Finished: doneFlag, Timestamp: tsInt}, nil
+}
+
+func (p *Page) ID() string {
+	var b strings.Builder
+	if p.Finished {
+		_ = b.WriteByte('t')
+	} else {
+		_ = b.WriteByte('f')
+	}
+
+	_, _ = b.WriteString(strconv.FormatInt(p.Timestamp, 10))
+	return b.String()
 }
 
 type Team struct {

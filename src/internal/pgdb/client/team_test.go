@@ -28,12 +28,12 @@ var (
 	questReq1 = storage.CreateQuestRequest{
 		Name:      "newquest",
 		StartTime: ptr.Time(time.Now()),
-		Access:    storage.Public,
+		Access:    storage.AccessPublic,
 	}
 	questReq2 = storage.CreateQuestRequest{
 		Name:      "newerquest",
 		StartTime: ptr.Time(time.Now()),
-		Access:    storage.Public,
+		Access:    storage.AccessPublic,
 	}
 
 	teamReq1 = storage.CreateTeamRequest{

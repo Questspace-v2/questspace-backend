@@ -3,6 +3,7 @@ package quest
 import (
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -97,6 +98,50 @@ func (h *Handler) HandleGet(c *gin.Context) error {
 	}
 	quests.SetStatus(quest)
 	c.JSON(http.StatusOK, quest)
+	return nil
+}
+
+const defaultPageSize = 50
+
+// HandleGetMany handles GET /quest request
+//
+//		@Summary	Get many quests sorted by start time and finished status
+//	 @Param      fields      query       []string   false  "Fields to return"  Enums(all, registered, owned) minlength(0) maxlength(3)
+//
+// @Param   page_size     query     int        false  "Number of quests to return for each field" default(50)
+// @Param   page_id  query     string     false  "Page ID to return. Mutually exclusive to multiple fields"
+// @Success	200			{object}	quests.Quests
+// @Failure	400
+// @Failure	401
+// @Router		/quest [get]
+func (h *Handler) HandleGetMany(c *gin.Context) error {
+	uauth, err := jwt.GetUserFromContext(c)
+	if err != nil {
+		return xerrors.Errorf("%w", err)
+	}
+
+	fields := c.QueryArray("fields")
+	pageSizeStr := c.Query("page_size")
+	pageSize := defaultPageSize
+	if pageSizeStr != "" {
+		var err error
+		pageSize, err = strconv.Atoi(pageSizeStr)
+		if err != nil {
+			return httperrors.Errorf(http.StatusBadRequest, "parse page size: %w", err)
+		}
+	}
+	pageID := c.Query("page_id")
+
+	s, err := h.clientFactory.NewStorage(c, dbnode.Alive)
+	if err != nil {
+		return xerrors.Errorf("get storage: %w", err)
+	}
+	gotQuests, err := quests.ReadQuests(c, s, uauth, fields, pageID, pageSize)
+	if err != nil {
+		return xerrors.Errorf("read quests: %w", err)
+	}
+
+	c.JSON(http.StatusOK, gotQuests)
 	return nil
 }
 

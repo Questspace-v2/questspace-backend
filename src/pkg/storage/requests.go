@@ -1,6 +1,8 @@
 package storage
 
-import "time"
+import (
+	"time"
+)
 
 type CreateUserRequest struct {
 	Username  string `json:"username" example:"svayp11"`
@@ -41,7 +43,15 @@ type GetQuestRequest struct {
 }
 
 type GetQuestsRequest struct {
-	User *User
+	User     *User
+	Type     GetQuestType
+	PageSize int
+	Page     *Page
+}
+
+type GetQuestsResponse struct {
+	Quests   []*Quest
+	NextPage *Page
 }
 
 type UpdateQuestRequest struct {

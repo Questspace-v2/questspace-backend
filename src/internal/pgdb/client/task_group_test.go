@@ -24,7 +24,7 @@ func createTestQuest(t *testing.T, ctx context.Context, client *Client, username
 	quest, err := client.CreateQuest(ctx, &storage.CreateQuestRequest{
 		Name:                 questname,
 		Description:          "desc",
-		Access:               storage.Public,
+		Access:               storage.AccessPublic,
 		Creator:              user,
 		RegistrationDeadline: &now,
 		StartTime:            &now,

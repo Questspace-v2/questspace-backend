@@ -63,13 +63,13 @@ func TestQuestStorage_GetQuest(t *testing.T) {
 			createReq: storage.CreateQuestRequest{
 				Name:      "new_quest",
 				Creator:   &storage.User{ID: user.ID},
-				Access:    storage.Public,
+				Access:    storage.AccessPublic,
 				StartTime: &now,
 			},
 			expected: storage.Quest{
 				Name:      "new_quest",
 				Creator:   user,
-				Access:    storage.Public,
+				Access:    storage.AccessPublic,
 				StartTime: &now,
 			},
 		},
@@ -78,7 +78,7 @@ func TestQuestStorage_GetQuest(t *testing.T) {
 			createReq: storage.CreateQuestRequest{
 				Name:                 "full",
 				Creator:              user,
-				Access:               storage.LinkOnly,
+				Access:               storage.AccessLinkOnly,
 				Description:          "some desc",
 				RegistrationDeadline: &now,
 				StartTime:            &now,
@@ -89,7 +89,7 @@ func TestQuestStorage_GetQuest(t *testing.T) {
 			expected: storage.Quest{
 				Name:                 "full",
 				Creator:              user,
-				Access:               storage.LinkOnly,
+				Access:               storage.AccessLinkOnly,
 				Description:          "some desc",
 				RegistrationDeadline: &now,
 				StartTime:            &now,
@@ -125,4 +125,50 @@ func TestQuestStorage_GetQuest_NotFound(t *testing.T) {
 	require.Error(t, err)
 	assert.ErrorIs(t, err, storage.ErrNotFound)
 	assert.Nil(t, got)
+}
+
+func TestQuestStorage_GetQuests(t *testing.T) {
+	ctx := context.Background()
+	client := NewClient(pgtest.NewEmbeddedQuestspaceDB(t))
+	user, err := client.CreateUser(ctx, &storage.CreateUserRequest{
+		Username:  "svayp11",
+		AvatarURL: "avatar_url",
+	})
+	require.NoError(t, err)
+	now := time.Now().UTC()
+
+	q1, err := client.CreateQuest(ctx, &storage.CreateQuestRequest{
+		Name:      "q1",
+		Creator:   user,
+		Access:    storage.AccessPublic,
+		StartTime: ptr.Time(now.Add(time.Hour * 24)),
+	})
+	require.NoError(t, err)
+	q2, err := client.CreateQuest(ctx, &storage.CreateQuestRequest{
+		Name:      "q2",
+		Creator:   user,
+		Access:    storage.AccessPublic,
+		StartTime: ptr.Time(now.Add(time.Hour * 48)),
+	})
+	require.NoError(t, err)
+
+	allQuests, err := client.GetQuests(ctx, &storage.GetQuestsRequest{
+		User:     user,
+		Type:     storage.GetAll,
+		PageSize: 100,
+	})
+	require.NoError(t, err)
+	require.Len(t, allQuests.Quests, 2)
+	assert.Equal(t, q1.ID, allQuests.Quests[0].ID)
+	assert.Equal(t, q2.ID, allQuests.Quests[1].ID)
+
+	rest, err := client.GetQuests(ctx, &storage.GetQuestsRequest{
+		User:     user,
+		Type:     storage.GetAll,
+		Page:     allQuests.NextPage,
+		PageSize: 100,
+	})
+	require.NoError(t, err)
+	assert.Empty(t, rest.Quests)
+	assert.Nil(t, rest.NextPage)
 }

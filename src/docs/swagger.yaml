@@ -18,14 +18,32 @@ definitions:
       username:
         type: string
     type: object
+  quests.PaginatedQuestsResponse:
+    properties:
+      next_page_id:
+        type: string
+      quests:
+        items:
+          $ref: '#/definitions/storage.Quest'
+        type: array
+    type: object
+  quests.Quests:
+    properties:
+      all:
+        $ref: '#/definitions/quests.PaginatedQuestsResponse'
+      owned:
+        $ref: '#/definitions/quests.PaginatedQuestsResponse'
+      registered:
+        $ref: '#/definitions/quests.PaginatedQuestsResponse'
+    type: object
   storage.AccessType:
     enum:
     - public
     - link_only
     type: string
     x-enum-varnames:
-    - Public
-    - LinkOnly
+    - AccessPublic
+    - AccessLinkOnly
   storage.CreateQuestRequest:
     properties:
       access:
@@ -264,6 +282,40 @@ paths:
           description: Unsupported Media Type
       summary: Sign in to user account and return auth data
   /quest:
+    get:
+      parameters:
+      - collectionFormat: csv
+        description: Fields to return
+        in: query
+        items:
+          enum:
+          - all
+          - registered
+          - owned
+          type: string
+        maxLength: 3
+        minLength: 0
+        name: fields
+        type: array
+      - default: 50
+        description: Number of quests to return for each field
+        in: query
+        name: page_size
+        type: integer
+      - description: Page ID to return. Mutually exclusive to multiple fields
+        in: query
+        name: page_id
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/quests.Quests'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+      summary: Get many quests sorted by start time and finished status
     post:
       parameters:
       - description: Main quest information

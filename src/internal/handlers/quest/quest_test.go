@@ -47,7 +47,7 @@ func TestHandleCreate(t *testing.T) {
 	req := storage.CreateQuestRequest{
 		Name:        "questname",
 		Description: "test description yea",
-		Access:      storage.Public,
+		Access:      storage.AccessPublic,
 		StartTime:   now,
 		MaxTeamCap:  ptr.Int(228),
 	}
