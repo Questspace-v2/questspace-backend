@@ -88,6 +88,11 @@ type GetTeamsRequest struct {
 	QuestIDs []string
 }
 
+type ChangeTeamNameRequest struct {
+	ID   string
+	Name string
+}
+
 type SetInvitePathRequest struct {
 	TeamID     string
 	InvitePath string

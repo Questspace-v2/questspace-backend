@@ -162,6 +162,45 @@ func (h *Handler) HandleGetMany(c *gin.Context) error {
 	return nil
 }
 
+type UpdateRequest struct {
+	Name string `json:"name"`
+}
+
+// HandleUpdate handles POST /teams/:id request
+//
+//		@Summary	Change team information
+//		@Param		team_id	path		string						true	"Team id"
+//		@Param		request	body		UpdateRequest						true	"New information"
+//		@Success	200		{object} storage.Team
+//	    @Failure    400
+//	    @Failure    403
+//	    @Failure    404
+//		@Router		/teams/{team_id} [post]
+func (h *Handler) HandleUpdate(c *gin.Context) error {
+	teamID := c.Param("id")
+	req, err := transport.UnmarshalRequestData[UpdateRequest](c.Request)
+	if err != nil {
+		return xerrors.Errorf("%w", err)
+	}
+	uauth, err := jwt.GetUserFromContext(c)
+	if err != nil {
+		return xerrors.Errorf("%w", err)
+	}
+
+	s, err := h.factory.NewStorage(c, dbnode.Master)
+	if err != nil {
+		return xerrors.Errorf("get storage: %w", err)
+	}
+	teamService := teams.NewService(s, h.inviteLinkPrefix)
+	team, err := teamService.UpdateTeamName(c, uauth, &storage.ChangeTeamNameRequest{ID: teamID, Name: req.Name})
+	if err != nil {
+		return xerrors.Errorf("update name: %w", err)
+	}
+
+	c.JSON(http.StatusOK, team)
+	return nil
+}
+
 // HandleDelete handles DELETE /teams/:id request
 //
 //		@Summary	Delete team by id
@@ -232,7 +271,7 @@ func (h *Handler) HandleChangeLeader(c *gin.Context) error {
 
 // HandleLeave handles POST /teams/:id/leave request
 //
-//		@Summary	Change team captain
+//		@Summary	Leave the team
 //		@Param		team_id	path		string						true	"Team id"
 //		@Param		new_captain_id	query		string						false	"New captain (if leader leaves)"
 //		@Success	200		{object} storage.Team

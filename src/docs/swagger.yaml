@@ -210,6 +210,11 @@ definitions:
       name:
         type: string
     type: object
+  teams.UpdateRequest:
+    properties:
+      name:
+        type: string
+    type: object
   user.UpdatePasswordRequest:
     properties:
       new_password:
@@ -503,6 +508,31 @@ paths:
         "404":
           description: Not Found
       summary: Get team by id
+    post:
+      parameters:
+      - description: Team id
+        in: path
+        name: team_id
+        required: true
+        type: string
+      - description: New information
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/teams.UpdateRequest'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/storage.Team'
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      summary: Change team information
   /teams/{team_id}/{member_id}:
     delete:
       parameters:
@@ -577,7 +607,7 @@ paths:
           description: Forbidden
         "404":
           description: Not Found
-      summary: Change team captain
+      summary: Leave the team
   /teams/join/{invite_path}:
     get:
       parameters:

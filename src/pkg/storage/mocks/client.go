@@ -6,9 +6,8 @@ package mocks
 
 import (
 	context "context"
-	reflect "reflect"
-
 	storage "questspace/pkg/storage"
+	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
 )
@@ -49,6 +48,21 @@ func (m *MockQuestSpaceStorage) ChangeLeader(arg0 context.Context, arg1 *storage
 func (mr *MockQuestSpaceStorageMockRecorder) ChangeLeader(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ChangeLeader", reflect.TypeOf((*MockQuestSpaceStorage)(nil).ChangeLeader), arg0, arg1)
+}
+
+// ChangeTeamName mocks base method.
+func (m *MockQuestSpaceStorage) ChangeTeamName(arg0 context.Context, arg1 *storage.ChangeTeamNameRequest) (*storage.Team, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ChangeTeamName", arg0, arg1)
+	ret0, _ := ret[0].(*storage.Team)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ChangeTeamName indicates an expected call of ChangeTeamName.
+func (mr *MockQuestSpaceStorageMockRecorder) ChangeTeamName(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ChangeTeamName", reflect.TypeOf((*MockQuestSpaceStorage)(nil).ChangeTeamName), arg0, arg1)
 }
 
 // CreateQuest mocks base method.
@@ -302,7 +316,7 @@ func (mr *MockQuestSpaceStorageMockRecorder) JoinTeam(arg0, arg1 interface{}) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "JoinTeam", reflect.TypeOf((*MockQuestSpaceStorage)(nil).JoinTeam), arg0, arg1)
 }
 
-// LeaveTeam mocks base method.
+// RemoveUser mocks base method.
 func (m *MockQuestSpaceStorage) RemoveUser(arg0 context.Context, arg1 *storage.RemoveUserRequest) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RemoveUser", arg0, arg1)
@@ -310,8 +324,8 @@ func (m *MockQuestSpaceStorage) RemoveUser(arg0 context.Context, arg1 *storage.R
 	return ret0
 }
 
-// LeaveTeam indicates an expected call of LeaveTeam.
-func (mr *MockQuestSpaceStorageMockRecorder) LeaveTeam(arg0, arg1 interface{}) *gomock.Call {
+// RemoveUser indicates an expected call of RemoveUser.
+func (mr *MockQuestSpaceStorageMockRecorder) RemoveUser(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveUser", reflect.TypeOf((*MockQuestSpaceStorage)(nil).RemoveUser), arg0, arg1)
 }
@@ -704,6 +718,21 @@ func (mr *MockTeamStorageMockRecorder) ChangeLeader(arg0, arg1 interface{}) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ChangeLeader", reflect.TypeOf((*MockTeamStorage)(nil).ChangeLeader), arg0, arg1)
 }
 
+// ChangeTeamName mocks base method.
+func (m *MockTeamStorage) ChangeTeamName(arg0 context.Context, arg1 *storage.ChangeTeamNameRequest) (*storage.Team, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ChangeTeamName", arg0, arg1)
+	ret0, _ := ret[0].(*storage.Team)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ChangeTeamName indicates an expected call of ChangeTeamName.
+func (mr *MockTeamStorageMockRecorder) ChangeTeamName(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ChangeTeamName", reflect.TypeOf((*MockTeamStorage)(nil).ChangeTeamName), arg0, arg1)
+}
+
 // CreateTeam mocks base method.
 func (m *MockTeamStorage) CreateTeam(arg0 context.Context, arg1 *storage.CreateTeamRequest) (*storage.Team, error) {
 	m.ctrl.T.Helper()
@@ -778,7 +807,7 @@ func (mr *MockTeamStorageMockRecorder) JoinTeam(arg0, arg1 interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "JoinTeam", reflect.TypeOf((*MockTeamStorage)(nil).JoinTeam), arg0, arg1)
 }
 
-// LeaveTeam mocks base method.
+// RemoveUser mocks base method.
 func (m *MockTeamStorage) RemoveUser(arg0 context.Context, arg1 *storage.RemoveUserRequest) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RemoveUser", arg0, arg1)
@@ -786,8 +815,8 @@ func (m *MockTeamStorage) RemoveUser(arg0 context.Context, arg1 *storage.RemoveU
 	return ret0
 }
 
-// LeaveTeam indicates an expected call of LeaveTeam.
-func (mr *MockTeamStorageMockRecorder) LeaveTeam(arg0, arg1 interface{}) *gomock.Call {
+// RemoveUser indicates an expected call of RemoveUser.
+func (mr *MockTeamStorageMockRecorder) RemoveUser(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveUser", reflect.TypeOf((*MockTeamStorage)(nil).RemoveUser), arg0, arg1)
 }

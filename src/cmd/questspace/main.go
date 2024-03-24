@@ -103,6 +103,7 @@ func Init(app application.App) error {
 	teamsGroup := app.Router().Group("/teams")
 	teamsGroup.GET("/join/:path", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, teamsHandler.HandleJoin)))
 	teamsGroup.GET("/:id", application.AsGinHandler(teamsHandler.HandleGet))
+	teamsGroup.POST("/:id", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, teamsHandler.HandleUpdate)))
 	teamsGroup.DELETE("/:id", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, teamsHandler.HandleDelete)))
 	teamsGroup.POST("/:id/captain", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, teamsHandler.HandleChangeLeader)))
 	teamsGroup.POST("/:id/leave", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, teamsHandler.HandleLeave)))

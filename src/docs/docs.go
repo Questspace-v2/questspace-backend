@@ -439,6 +439,44 @@ const docTemplate = `{
                     }
                 }
             },
+            "post": {
+                "summary": "Change team information",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Team id",
+                        "name": "team_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "New information",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/teams.UpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/storage.Team"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                }
+            },
             "delete": {
                 "summary": "Delete team by id",
                 "parameters": [
@@ -508,7 +546,7 @@ const docTemplate = `{
         },
         "/teams/{team_id}/leave": {
             "post": {
-                "summary": "Change team captain",
+                "summary": "Leave the team",
                 "parameters": [
                     {
                         "type": "string",
@@ -1028,6 +1066,14 @@ const docTemplate = `{
             }
         },
         "teams.CreateRequest": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "teams.UpdateRequest": {
             "type": "object",
             "properties": {
                 "name": {

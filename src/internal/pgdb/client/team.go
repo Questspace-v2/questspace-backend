@@ -133,6 +133,27 @@ func (c *Client) GetTeams(ctx context.Context, req *storage.GetTeamsRequest) ([]
 	return teams, nil
 }
 
+const changeNameQuery = `
+WITH updated_team AS (
+	UPDATE questspace.team SET (name) = ($1)
+	WHERE id = $2
+	RETURNING id, name, cap_id, invite_link
+) SELECT t.id, t.name, t.invite_link, t.cap_id, u.username, u.avatar_url
+FROM updated_team t LEFT JOIN questspace.user u ON t.cap_id = u.id
+`
+
+func (c *Client) ChangeTeamName(ctx context.Context, req *storage.ChangeTeamNameRequest) (*storage.Team, error) {
+	sqlQuery := sq.Expr(changeNameQuery, req.Name, req.ID)
+
+	row := sq.QueryRowContextWith(ctx, c.runner, sqlQuery)
+	team := &storage.Team{Captain: &storage.User{}}
+
+	if err := row.Scan(&team.ID, &team.Name, &team.InviteLink, &team.Captain.ID, &team.Captain.Username, &team.Captain.AvatarURL); err != nil {
+		return nil, xerrors.Errorf("scan row: %w", err)
+	}
+	return team, nil
+}
+
 func (c *Client) SetInviteLink(ctx context.Context, req *storage.SetInvitePathRequest) error {
 	query := sq.Update("questspace.team").
 		Set("invite_path", req.InvitePath).

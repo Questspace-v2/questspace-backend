@@ -74,6 +74,27 @@ func (s *Service) GetQuestTeams(ctx context.Context, questID string) ([]*storage
 	return teams, nil
 }
 
+func (s *Service) UpdateTeamName(ctx context.Context, user *storage.User, req *storage.ChangeTeamNameRequest) (*storage.Team, error) {
+	team, err := s.s.GetTeam(ctx, &storage.GetTeamRequest{ID: req.ID, IncludeMembers: true})
+	if err != nil {
+		if errors.Is(err, storage.ErrNotFound) {
+			return nil, httperrors.New(http.StatusNotFound, "team not found")
+		}
+		return nil, xerrors.Errorf("get team information: %w", err)
+	}
+
+	if team.Captain.ID != user.ID {
+		return nil, httperrors.New(http.StatusForbidden, "only captain can change team name")
+	}
+
+	newTeam, err := s.s.ChangeTeamName(ctx, req)
+	if err != nil {
+		return nil, xerrors.Errorf("change team name: %w", err)
+	}
+	newTeam.InviteLink = s.inviteLinkPrefix + newTeam.InviteLink
+	return newTeam, nil
+}
+
 func (s *Service) JoinTeam(ctx context.Context, req *storage.JoinTeamRequest) (*storage.Team, error) {
 	team, err := s.s.GetTeam(ctx, &storage.GetTeamRequest{InvitePath: req.InvitePath, IncludeMembers: true})
 	if err != nil {
