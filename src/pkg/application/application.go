@@ -6,9 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"time"
 
-	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
 	"github.com/gofor-little/env"
 	"go.uber.org/zap"
@@ -69,7 +67,6 @@ func Run(initFunc func(app App) error, configHolder interface{}) {
 	}
 
 	app.logger = logger
-	app.engine.Use(ginzap.Ginzap(app.logger, time.RFC3339, false))
 	app.engine.Use(logging.Middleware(logger))
 
 	// liveness check

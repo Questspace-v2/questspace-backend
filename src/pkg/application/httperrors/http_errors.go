@@ -2,6 +2,7 @@ package httperrors
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -42,8 +43,13 @@ func WriteErrorResponse(c *gin.Context, err error) {
 	httpErr := &HTTPError{}
 	if errors.As(err, &httpErr) {
 		c.JSON(httpErr.Code, gin.H{"error": httpErr.Error()})
+		logging.Warn(c, "user error",
+			zap.String("status_str", http.StatusText(httpErr.Code)),
+			zap.Int("status", httpErr.Code),
+			zap.String("error_trace", fmt.Sprintf("%+v", httpErr.err)),
+		)
 		return
 	}
-	logging.Error(c, "error handling request", zap.Error(err))
+	logging.Error(c, "error handling request", zap.String("error_trace", fmt.Sprintf("%+v", err)))
 	c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 }

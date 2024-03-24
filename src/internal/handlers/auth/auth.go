@@ -132,7 +132,7 @@ func (h *Handler) HandleBasicSignIn(c *gin.Context) error {
 	pwHash, err := s.GetUserPasswordHash(c, &storage.GetUserRequest{Username: req.Username})
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
-			return httperrors.Errorf(http.StatusNotFound, "user %s not exists", req.Username)
+			return httperrors.Errorf(http.StatusNotFound, "user %s does not exist", req.Username)
 		}
 		return xerrors.Errorf("lookup user password: %w", err)
 	}

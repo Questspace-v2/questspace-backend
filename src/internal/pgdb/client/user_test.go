@@ -149,6 +149,31 @@ func TestUserStorage_UpdateUser_ErrorOnEmptyRequest(t *testing.T) {
 	assert.Nil(t, upd)
 }
 
+func TestUserStorage_UpdateUser_ErrOnAlreadyExists(t *testing.T) {
+	ctx := context.Background()
+	client := NewClient(pgtest.NewEmbeddedQuestspaceDB(t))
+
+	userReq := createUserReq
+	user, err := client.CreateUser(ctx, &userReq)
+	require.NoError(t, err)
+	require.NotNil(t, user)
+
+	createReq2 := createUserReq
+	createReq2.Username = "new"
+	user2, err := client.CreateUser(ctx, &createReq2)
+	require.NoError(t, err)
+	require.NotNil(t, user2)
+
+	updateReq := storage.UpdateUserRequest{
+		ID:       user2.ID,
+		Username: user.Username,
+	}
+	updated, err := client.UpdateUser(ctx, &updateReq)
+	require.Error(t, err)
+	assert.ErrorIs(t, err, storage.ErrExists)
+	assert.Nil(t, updated)
+}
+
 func TestUserStorage_GetUserPasswordHash(t *testing.T) {
 	ctx := context.Background()
 	client := NewClient(pgtest.NewEmbeddedQuestspaceDB(t))

@@ -122,6 +122,9 @@ func (h *UpdateHandler) HandleUser(c *gin.Context) error {
 		if errors.Is(err, storage.ErrNotFound) {
 			return httperrors.Errorf(http.StatusNotFound, "user with id %q not found", id)
 		}
+		if errors.Is(err, storage.ErrExists) {
+			return httperrors.New(http.StatusBadRequest, "user with such name already exists")
+		}
 		return xerrors.Errorf("failed to update user: %w", err)
 	}
 	token, err := h.tokenGenerator.CreateToken(user)

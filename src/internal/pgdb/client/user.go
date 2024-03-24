@@ -90,6 +90,9 @@ func (c *Client) UpdateUser(ctx context.Context, req *storage.UpdateUserRequest)
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, storage.ErrNotFound
 		}
+		if pgErr := new(pgconn.PgError); errors.As(err, &pgErr) && pgErr.Code == uniqueViolationCode {
+			return nil, storage.ErrExists
+		}
 		return nil, xerrors.Errorf("scan row: %w", err)
 	}
 	return &user, nil
