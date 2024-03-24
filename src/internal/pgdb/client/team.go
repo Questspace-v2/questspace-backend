@@ -101,9 +101,12 @@ func (c *Client) GetTeam(ctx context.Context, req *storage.GetTeamRequest) (*sto
 func (c *Client) GetTeams(ctx context.Context, req *storage.GetTeamsRequest) ([]*storage.Team, error) {
 	query := sq.Select("t.id", "t.name").
 		From("questspace.team t").
-		LeftJoin("questspace.registration r ON r.team_id = t.id").
-		Where(sq.Eq{"r.user_id": req.User.ID}).
 		PlaceholderFormat(sq.Dollar)
+	if req.User != nil {
+		query = query.
+			LeftJoin("questspace.registration r ON r.team_id = t.id").
+			Where(sq.Eq{"r.user_id": req.User.ID})
+	}
 	if len(req.QuestIDs) > 0 {
 		query = query.Where(sq.Eq{"t.quest_id": req.QuestIDs})
 	}
@@ -168,4 +171,49 @@ func (c *Client) JoinTeam(ctx context.Context, req *storage.JoinTeamRequest) (*s
 		return nil, xerrors.Errorf("scan row: %w", err)
 	}
 	return user, nil
+}
+
+func (c *Client) DeleteTeam(ctx context.Context, req *storage.DeleteTeamRequest) error {
+	query := sq.Delete("questspace.team").
+		Where(sq.Eq{"id": req.ID}).
+		PlaceholderFormat(sq.Dollar)
+
+	_, err := query.RunWith(c.runner).ExecContext(ctx)
+	if err != nil {
+		return xerrors.Errorf("exec query: %w", err)
+	}
+	return nil
+}
+
+const changeLeaderQuery = `
+WITH updated_team AS (
+	UPDATE questspace.team SET (cap_id) = ($1)
+	WHERE id = $2
+	RETURNING id, name, cap_id, invite_link
+) SELECT t.id, t.name, t.invite_link, t.cap_id, u.username, u.avatar_url
+FROM updated_team t LEFT JOIN questspace.user u ON t.cap_id = u.id
+`
+
+func (c *Client) ChangeLeader(ctx context.Context, req *storage.ChangeLeaderRequest) (*storage.Team, error) {
+	sqlQuery := sq.Expr(changeLeaderQuery, req.CaptainID, req.ID)
+
+	row := sq.QueryRowContextWith(ctx, c.runner, sqlQuery)
+	team := &storage.Team{Captain: &storage.User{}}
+
+	if err := row.Scan(&team.ID, &team.Name, &team.InviteLink, &team.Captain.ID, &team.Captain.Username, &team.Captain.AvatarURL); err != nil {
+		return nil, xerrors.Errorf("scan row: %w", err)
+	}
+	return team, nil
+}
+
+func (c *Client) RemoveUser(ctx context.Context, req *storage.RemoveUserRequest) error {
+	query := sq.Delete("questspace.registration").
+		Where(sq.Eq{"user_id": req.UserID, "team_id": req.ID}).
+		PlaceholderFormat(sq.Dollar)
+
+	_, err := query.RunWith(c.runner).ExecContext(ctx)
+	if err != nil {
+		return xerrors.Errorf("exec query: %w", err)
+	}
+	return nil
 }

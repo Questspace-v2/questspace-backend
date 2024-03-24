@@ -98,6 +98,20 @@ type JoinTeamRequest struct {
 	User       *User
 }
 
+type DeleteTeamRequest struct {
+	ID string
+}
+
+type ChangeLeaderRequest struct {
+	ID        string
+	CaptainID string
+}
+
+type RemoveUserRequest struct {
+	ID     string
+	UserID string
+}
+
 type CreateTaskGroupRequest struct {
 	QuestID  string     `json:"-"`
 	OrderIdx int        `json:"order_idx"`

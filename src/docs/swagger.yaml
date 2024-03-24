@@ -200,6 +200,11 @@ definitions:
       username:
         type: string
     type: object
+  teams.ChangeLeaderRequest:
+    properties:
+      new_captain_id:
+        type: string
+    type: object
   teams.CreateRequest:
     properties:
       name:
@@ -421,6 +426,23 @@ paths:
           description: Unsupported Media Type
       summary: Update main quest information
   /quest/{quest_id}/teams:
+    get:
+      parameters:
+      - description: Quest id
+        in: path
+        name: quest_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/storage.Team'
+            type: array
+        "400":
+          description: Bad Request
+      summary: Get all teams by quest id
     post:
       parameters:
       - description: Quest ID
@@ -446,6 +468,116 @@ paths:
         "406":
           description: Not Acceptable
       summary: Create new team
+  /teams/{team_id}:
+    delete:
+      parameters:
+      - description: Team id
+        in: path
+        name: team_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      summary: Delete team by id
+    get:
+      parameters:
+      - description: Team id
+        in: path
+        name: team_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/storage.Team'
+        "400":
+          description: Bad Request
+        "404":
+          description: Not Found
+      summary: Get team by id
+  /teams/{team_id}/{member_id}:
+    delete:
+      parameters:
+      - description: Team id
+        in: path
+        name: team_id
+        required: true
+        type: string
+      - description: Member id
+        in: path
+        name: member_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/storage.Team'
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      summary: Remove member from team
+  /teams/{team_id}/captain:
+    post:
+      parameters:
+      - description: Team id
+        in: path
+        name: team_id
+        required: true
+        type: string
+      - description: Change captain request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/teams.ChangeLeaderRequest'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/storage.Team'
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      summary: Change team captain
+  /teams/{team_id}/leave:
+    post:
+      parameters:
+      - description: Team id
+        in: path
+        name: team_id
+        required: true
+        type: string
+      - description: New captain (if leader leaves)
+        in: query
+        name: new_captain_id
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/storage.Team'
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      summary: Change team captain
   /teams/join/{invite_path}:
     get:
       parameters:

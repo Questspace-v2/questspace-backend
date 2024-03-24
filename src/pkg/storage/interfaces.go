@@ -40,4 +40,7 @@ type TeamStorage interface {
 	GetTeams(context.Context, *GetTeamsRequest) ([]*Team, error)
 	SetInviteLink(context.Context, *SetInvitePathRequest) error
 	JoinTeam(context.Context, *JoinTeamRequest) (*User, error)
+	DeleteTeam(context.Context, *DeleteTeamRequest) error
+	ChangeLeader(context.Context, *ChangeLeaderRequest) (*Team, error)
+	RemoveUser(context.Context, *RemoveUserRequest) error
 }

@@ -1,6 +1,7 @@
 package logging
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -98,5 +99,85 @@ func Errorf(c *gin.Context, msg string, params ...interface{}) {
 }
 
 func Panicf(c *gin.Context, msg string, params ...interface{}) {
+	log(c, zap.PanicLevel, fmt.Sprintf(msg, params...))
+}
+
+func DebugCtx(ctx context.Context, msg string, fields ...zap.Field) {
+	c, ok := ctx.(*gin.Context)
+	if !ok {
+		return
+	}
+	log(c, zap.DebugLevel, msg, fields...)
+}
+
+func InfoCtx(ctx context.Context, msg string, fields ...zap.Field) {
+	c, ok := ctx.(*gin.Context)
+	if !ok {
+		return
+	}
+	log(c, zap.InfoLevel, msg, fields...)
+}
+
+func WarnCtx(ctx context.Context, msg string, fields ...zap.Field) {
+	c, ok := ctx.(*gin.Context)
+	if !ok {
+		return
+	}
+	log(c, zap.WarnLevel, msg, fields...)
+}
+
+func ErrorCtx(ctx context.Context, msg string, fields ...zap.Field) {
+	c, ok := ctx.(*gin.Context)
+	if !ok {
+		return
+	}
+	log(c, zap.ErrorLevel, msg, fields...)
+}
+
+func PanicCtx(ctx context.Context, msg string, fields ...zap.Field) {
+	c, ok := ctx.(*gin.Context)
+	if !ok {
+		return
+	}
+	log(c, zap.PanicLevel, msg, fields...)
+}
+
+func DebugCtxf(ctx context.Context, msg string, params ...interface{}) {
+	c, ok := ctx.(*gin.Context)
+	if !ok {
+		return
+	}
+	log(c, zap.DebugLevel, fmt.Sprintf(msg, params...))
+}
+
+func InfoCtxf(ctx context.Context, msg string, params ...interface{}) {
+	c, ok := ctx.(*gin.Context)
+	if !ok {
+		return
+	}
+	log(c, zap.InfoLevel, fmt.Sprintf(msg, params...))
+}
+
+func WarnCtxf(ctx context.Context, msg string, params ...interface{}) {
+	c, ok := ctx.(*gin.Context)
+	if !ok {
+		return
+	}
+	log(c, zap.WarnLevel, fmt.Sprintf(msg, params...))
+}
+
+func ErrorCtxf(ctx context.Context, msg string, params ...interface{}) {
+	c, ok := ctx.(*gin.Context)
+	if !ok {
+		return
+	}
+	log(c, zap.ErrorLevel, fmt.Sprintf(msg, params...))
+}
+
+func PanicCtxf(ctx context.Context, msg string, params ...interface{}) {
+	c, ok := ctx.(*gin.Context)
+	if !ok {
+		return
+	}
 	log(c, zap.PanicLevel, fmt.Sprintf(msg, params...))
 }

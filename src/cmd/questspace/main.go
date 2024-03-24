@@ -98,9 +98,15 @@ func Init(app application.App) error {
 	questGroup.POST("/:id", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, questHandler.HandleUpdate)))
 	questGroup.DELETE("/:id", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, questHandler.HandleDelete)))
 	questGroup.POST("/:id/teams", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, teamsHandler.HandleCreate)))
+	questGroup.GET("/:id/teams", application.AsGinHandler(teamsHandler.HandleGetMany))
 
 	teamsGroup := app.Router().Group("/teams")
-	teamsGroup.GET("/:path", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, teamsHandler.HandleJoin)))
+	teamsGroup.GET("/join/:path", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, teamsHandler.HandleJoin)))
+	teamsGroup.GET("/:id", application.AsGinHandler(teamsHandler.HandleGet))
+	teamsGroup.DELETE("/:id", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, teamsHandler.HandleDelete)))
+	teamsGroup.POST("/:id/captain", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, teamsHandler.HandleChangeLeader)))
+	teamsGroup.POST("/:id/leave", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, teamsHandler.HandleLeave)))
+	teamsGroup.DELETE("/:id/:user_id", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, teamsHandler.HandleRemoveUser)))
 
 	taskGroupHandler := taskgroups.NewHandler(clientFactory)
 	questGroup.PATCH("/:id/task-groups/bulk", application.AsGinHandler(taskGroupHandler.HandleBulkUpdate))

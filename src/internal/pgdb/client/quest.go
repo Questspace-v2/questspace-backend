@@ -133,7 +133,6 @@ func (c *Client) GetQuests(ctx context.Context, req *storage.GetQuestsRequest) (
 		query = query.Where(sq.And{
 			sq.GtOrEq{"q.finished": req.Page.Finished},
 			sq.Expr(`q.start_time > to_timestamp(?)`, req.Page.Timestamp),
-			//sq.Gt{"q.start_time": sq.Expr("to_timestamp(?)", req.Page.Timestamp)},
 		})
 	}
 	switch req.Type {
