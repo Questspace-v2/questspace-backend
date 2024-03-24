@@ -53,14 +53,14 @@ type Quest struct {
 }
 
 type Team struct {
-	ID           string
-	Name         string
-	Quest        *Quest
-	Capitan      *User
-	Score        int
-	InviteLink   string
-	InviteLinkID int64
-	Members      []*User
+	ID           string  `json:"id"`
+	Name         string  `json:"name"`
+	Quest        *Quest  `json:"-"`
+	Captain      *User   `json:"captain"`
+	Score        int     `json:"score"`
+	InviteLink   string  `json:"invite_link"`
+	InviteLinkID int64   `json:"-"`
+	Members      []*User `json:"members"`
 }
 
 type User struct {

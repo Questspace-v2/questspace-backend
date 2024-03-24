@@ -44,7 +44,7 @@ func TestService_CreateTeam(t *testing.T) {
 	createdTeam := storage.Team{
 		ID:           uuid.Must(uuid.NewV4()).String(),
 		Name:         req.Name,
-		Capitan:      &creator,
+		Captain:      &creator,
 		Quest:        &storage.Quest{ID: questID, MaxTeamCap: ptr.Int(5)},
 		InviteLinkID: 123,
 	}
@@ -57,7 +57,7 @@ func TestService_CreateTeam(t *testing.T) {
 		s.EXPECT().CreateTeam(ctx, &req).Return(&createdTeam, nil),
 
 		s.EXPECT().
-			SetInviteLink(ctx, &storage.SetInviteLinkRequest{TeamID: createdTeam.ID, InviteURL: "321"}).
+			SetInviteLink(ctx, &storage.SetInvitePathRequest{TeamID: createdTeam.ID, InvitePath: "321"}).
 			Return(nil),
 	)
 
@@ -132,7 +132,7 @@ func TestTeamService_JoinTeam(t *testing.T) {
 			ID: questID,
 		},
 		InviteLink: req.InvitePath,
-		Capitan:    &teamCreator,
+		Captain:    &teamCreator,
 		Members:    []*storage.User{&teamCreator},
 	}
 
@@ -184,7 +184,7 @@ func TestTeamService_JoinTeam_AlreadyInvited(t *testing.T) {
 			ID: questID,
 		},
 		InviteLink: req.InvitePath,
-		Capitan:    &teamCreator,
+		Captain:    &teamCreator,
 		Members:    []*storage.User{&teamCreator, &oldMember},
 	}
 

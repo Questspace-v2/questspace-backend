@@ -39,7 +39,7 @@ func (t *Service) CreateTeam(ctx context.Context, req *storage.CreateTeamRequest
 	if err != nil {
 		return nil, xerrors.Errorf("create invite link: %w", err)
 	}
-	if err := t.s.SetInviteLink(ctx, &storage.SetInviteLinkRequest{InviteURL: invitePath, TeamID: team.ID}); err != nil {
+	if err := t.s.SetInviteLink(ctx, &storage.SetInvitePathRequest{InvitePath: invitePath, TeamID: team.ID}); err != nil {
 		return nil, xerrors.Errorf("save invite url: %w", err)
 	}
 	team.InviteLink = t.inviteLinkPrefix + invitePath

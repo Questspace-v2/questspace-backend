@@ -37,6 +37,6 @@ type TeamStorage interface {
 	CreateTeam(context.Context, *CreateTeamRequest) (*Team, error)
 	GetTeam(context.Context, *GetTeamRequest) (*Team, error)
 	GetTeams(context.Context, *GetTeamsRequest) ([]*Team, error)
-	SetInviteLink(context.Context, *SetInviteLinkRequest) error
+	SetInviteLink(context.Context, *SetInvitePathRequest) error
 	JoinTeam(context.Context, *JoinTeamRequest) (*User, error)
 }

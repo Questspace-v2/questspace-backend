@@ -25,8 +25,8 @@ func (c *Client) CreateTeam(ctx context.Context, req *storage.CreateTeamRequest)
 	sqlQuery := sq.Expr(createTeamQuery, req.Name, req.QuestID, req.Creator.ID)
 
 	row := sq.QueryRowContextWith(ctx, c.runner, sqlQuery)
-	team := &storage.Team{Capitan: &storage.User{}}
-	if err := row.Scan(&team.ID, &team.Name, &team.InviteLinkID, &team.Capitan.ID, &team.Capitan.Username, &team.Capitan.AvatarURL); err != nil {
+	team := &storage.Team{Captain: &storage.User{}}
+	if err := row.Scan(&team.ID, &team.Name, &team.InviteLinkID, &team.Captain.ID, &team.Captain.Username, &team.Captain.AvatarURL); err != nil {
 		if pgErr := new(pgconn.PgError); errors.As(err, &pgErr) && pgErr.Code == uniqueViolationCode {
 			return nil, storage.ErrExists
 		}
@@ -77,9 +77,9 @@ func (c *Client) GetTeam(ctx context.Context, req *storage.GetTeamRequest) (*sto
 	}
 
 	row := query.RunWith(c.runner).QueryRowContext(ctx)
-	team := &storage.Team{Quest: &storage.Quest{}, Capitan: &storage.User{}}
+	team := &storage.Team{Quest: &storage.Quest{}, Captain: &storage.User{}}
 	var maxTeamCap sql.NullInt32
-	if err := row.Scan(&team.ID, &team.Name, &team.InviteLink, &team.Score, &maxTeamCap, &team.Capitan.ID, &team.Capitan.Username, &team.Capitan.AvatarURL); err != nil {
+	if err := row.Scan(&team.ID, &team.Name, &team.InviteLink, &team.Score, &maxTeamCap, &team.Captain.ID, &team.Captain.Username, &team.Captain.AvatarURL); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, storage.ErrNotFound
 		}
@@ -130,9 +130,9 @@ func (c *Client) GetTeams(ctx context.Context, req *storage.GetTeamsRequest) ([]
 	return teams, nil
 }
 
-func (c *Client) SetInviteLink(ctx context.Context, req *storage.SetInviteLinkRequest) error {
+func (c *Client) SetInviteLink(ctx context.Context, req *storage.SetInvitePathRequest) error {
 	query := sq.Update("questspace.team").
-		Set("invite_path", req.InviteURL).
+		Set("invite_path", req.InvitePath).
 		Where(sq.Eq{"id": req.TeamID}).
 		PlaceholderFormat(sq.Dollar)
 

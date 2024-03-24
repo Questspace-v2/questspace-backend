@@ -74,9 +74,9 @@ type GetTeamsRequest struct {
 	QuestIDs []string
 }
 
-type SetInviteLinkRequest struct {
-	TeamID    string
-	InviteURL string
+type SetInvitePathRequest struct {
+	TeamID     string
+	InvitePath string
 }
 
 type JoinTeamRequest struct {

@@ -68,17 +68,17 @@ func TestTeamStorage_CreateTeam_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, teamReq.Name, team.Name)
-	assert.Equal(t, teamReq.Creator.ID, team.Capitan.ID)
-	assert.Equal(t, teamReq.Creator.AvatarURL, team.Capitan.AvatarURL)
-	assert.Equal(t, teamReq.Creator.Username, team.Capitan.Username)
+	assert.Equal(t, teamReq.Creator.ID, team.Captain.ID)
+	assert.Equal(t, teamReq.Creator.AvatarURL, team.Captain.AvatarURL)
+	assert.Equal(t, teamReq.Creator.Username, team.Captain.Username)
 	assert.Nil(t, team.Quest)
 
 	members, err := client.getTeamMembers(ctx, team.ID)
 	require.NoError(t, err)
 	require.Len(t, members, 1)
-	assert.Equal(t, team.Capitan.ID, members[0].ID)
-	assert.Equal(t, team.Capitan.Username, members[0].Username)
-	assert.Equal(t, team.Capitan.AvatarURL, members[0].AvatarURL)
+	assert.Equal(t, team.Captain.ID, members[0].ID)
+	assert.Equal(t, team.Captain.Username, members[0].Username)
+	assert.Equal(t, team.Captain.AvatarURL, members[0].AvatarURL)
 }
 
 func TestTeamStorage_AlreadyExists(t *testing.T) {
@@ -188,9 +188,9 @@ func TestTeamStorage_GetTeam(t *testing.T) {
 	tReq1.QuestID = q1.ID
 	team1, err := client.CreateTeam(ctx, &tReq1)
 	require.NoError(t, err)
-	require.NoError(t, client.SetInviteLink(ctx, &storage.SetInviteLinkRequest{
-		TeamID:    team1.ID,
-		InviteURL: firstPath,
+	require.NoError(t, client.SetInviteLink(ctx, &storage.SetInvitePathRequest{
+		TeamID:     team1.ID,
+		InvitePath: firstPath,
 	}))
 	team1.InviteLink = firstPath
 
@@ -199,9 +199,9 @@ func TestTeamStorage_GetTeam(t *testing.T) {
 	tReq2.QuestID = q1.ID
 	team2, err := client.CreateTeam(ctx, &tReq2)
 	require.NoError(t, err)
-	require.NoError(t, client.SetInviteLink(ctx, &storage.SetInviteLinkRequest{
-		TeamID:    team2.ID,
-		InviteURL: secondPath,
+	require.NoError(t, client.SetInviteLink(ctx, &storage.SetInvitePathRequest{
+		TeamID:     team2.ID,
+		InvitePath: secondPath,
 	}))
 	team2.InviteLink = secondPath
 
@@ -213,9 +213,9 @@ func TestTeamStorage_GetTeam(t *testing.T) {
 	assert.Nil(t, recvTeamByID1.Quest.MaxTeamCap)
 	assert.Equal(t, team1.ID, recvTeamByID1.ID)
 	assert.Equal(t, team1.Name, recvTeamByID1.Name)
-	assert.Equal(t, team1.Capitan.ID, recvTeamByID1.Capitan.ID)
-	assert.Equal(t, team1.Capitan.Username, recvTeamByID1.Capitan.Username)
-	assert.Equal(t, team1.Capitan.AvatarURL, recvTeamByID1.Capitan.AvatarURL)
+	assert.Equal(t, team1.Captain.ID, recvTeamByID1.Captain.ID)
+	assert.Equal(t, team1.Captain.Username, recvTeamByID1.Captain.Username)
+	assert.Equal(t, team1.Captain.AvatarURL, recvTeamByID1.Captain.AvatarURL)
 
 	recvTeamByID2, err := client.GetTeam(ctx, &storage.GetTeamRequest{ID: team2.ID, IncludeMembers: true})
 	require.NoError(t, err)
@@ -223,12 +223,12 @@ func TestTeamStorage_GetTeam(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, recvTeamByID2.Members, 1)
 	require.Len(t, recvTeamByURL2.Members, 1)
-	assert.Equal(t, team2.Capitan.ID, recvTeamByID2.Capitan.ID)
-	assert.Equal(t, team2.Capitan.Username, recvTeamByID2.Capitan.Username)
-	assert.Equal(t, team2.Capitan.AvatarURL, recvTeamByID2.Capitan.AvatarURL)
-	assert.Equal(t, team2.Capitan.ID, recvTeamByURL2.Capitan.ID)
-	assert.Equal(t, team2.Capitan.Username, recvTeamByURL2.Capitan.Username)
-	assert.Equal(t, team2.Capitan.AvatarURL, recvTeamByURL2.Capitan.AvatarURL)
+	assert.Equal(t, team2.Captain.ID, recvTeamByID2.Captain.ID)
+	assert.Equal(t, team2.Captain.Username, recvTeamByID2.Captain.Username)
+	assert.Equal(t, team2.Captain.AvatarURL, recvTeamByID2.Captain.AvatarURL)
+	assert.Equal(t, team2.Captain.ID, recvTeamByURL2.Captain.ID)
+	assert.Equal(t, team2.Captain.Username, recvTeamByURL2.Captain.Username)
+	assert.Equal(t, team2.Captain.AvatarURL, recvTeamByURL2.Captain.AvatarURL)
 }
 
 func TestTeamStorage_GetTeam_ErrorOnEmptyRequest(t *testing.T) {
@@ -260,9 +260,9 @@ func TestTeamStorage_JoinTeam(t *testing.T) {
 	tReq1.QuestID = q1.ID
 	team1, err := client.CreateTeam(ctx, &tReq1)
 	require.NoError(t, err)
-	require.NoError(t, client.SetInviteLink(ctx, &storage.SetInviteLinkRequest{
-		TeamID:    team1.ID,
-		InviteURL: firstPath,
+	require.NoError(t, client.SetInviteLink(ctx, &storage.SetInvitePathRequest{
+		TeamID:     team1.ID,
+		InvitePath: firstPath,
 	}))
 	team1.InviteLink = firstPath
 
@@ -296,9 +296,9 @@ func TestTeamStorage_JoinTeam_MaxCapacityReached(t *testing.T) {
 	tReq1.QuestID = q1.ID
 	team1, err := client.CreateTeam(ctx, &tReq1)
 	require.NoError(t, err)
-	require.NoError(t, client.SetInviteLink(ctx, &storage.SetInviteLinkRequest{
-		TeamID:    team1.ID,
-		InviteURL: firstPath,
+	require.NoError(t, client.SetInviteLink(ctx, &storage.SetInvitePathRequest{
+		TeamID:     team1.ID,
+		InvitePath: firstPath,
 	}))
 	team1.InviteLink = firstPath
 

@@ -259,7 +259,7 @@ func (mr *MockQuestSpaceStorageMockRecorder) JoinTeam(arg0, arg1 interface{}) *g
 }
 
 // SetInviteLink mocks base method.
-func (m *MockQuestSpaceStorage) SetInviteLink(arg0 context.Context, arg1 *storage.SetInviteLinkRequest) error {
+func (m *MockQuestSpaceStorage) SetInviteLink(arg0 context.Context, arg1 *storage.SetInvitePathRequest) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetInviteLink", arg0, arg1)
 	ret0, _ := ret[0].(error)
@@ -677,7 +677,7 @@ func (mr *MockTeamStorageMockRecorder) JoinTeam(arg0, arg1 interface{}) *gomock.
 }
 
 // SetInviteLink mocks base method.
-func (m *MockTeamStorage) SetInviteLink(arg0 context.Context, arg1 *storage.SetInviteLinkRequest) error {
+func (m *MockTeamStorage) SetInviteLink(arg0 context.Context, arg1 *storage.SetInvitePathRequest) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetInviteLink", arg0, arg1)
 	ret0, _ := ret[0].(error)
