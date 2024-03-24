@@ -371,6 +371,11 @@ paths:
   /quest/{quest_id}/teams:
     post:
       parameters:
+      - description: Quest ID
+        in: path
+        name: quest_id
+        required: true
+        type: string
       - description: Desired team information
         in: body
         name: request
@@ -391,6 +396,12 @@ paths:
       summary: Create new team
   /teams/join/{invite_path}:
     get:
+      parameters:
+      - description: Team invite url param
+        in: path
+        name: invite_path
+        required: true
+        type: string
       responses:
         "200":
           description: OK

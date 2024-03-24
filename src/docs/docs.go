@@ -274,6 +274,13 @@ const docTemplate = `{
                 "summary": "Create new team",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Quest ID",
+                        "name": "quest_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Desired team information",
                         "name": "request",
                         "in": "body",
@@ -305,6 +312,15 @@ const docTemplate = `{
         "/teams/join/{invite_path}": {
             "get": {
                 "summary": "Join team",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Team invite url param",
+                        "name": "invite_path",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",

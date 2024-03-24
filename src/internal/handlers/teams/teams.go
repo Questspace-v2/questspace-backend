@@ -33,6 +33,7 @@ type CreateRequest struct {
 // HandleCreate handles POST /quest/:id/teams request
 //
 //		@Summary	Create new team
+//		@Param		quest_id	path		string						true	"Quest ID"
 //		@Param		request	body		CreateRequest	true	"Desired team information"
 //		@Success	200		{object}	storage.Team
 //		@Failure	400
@@ -77,6 +78,7 @@ func (h *Handler) HandleCreate(c *gin.Context) error {
 // HandleJoin handles GET /teams/join/:path request
 //
 //		@Summary	Join team
+//		@Param		invite_path	path		string						true	"Team invite url param"
 //		@Success	200		{object}	storage.Team
 //	    @Failure    401
 //	    @Failure    406
