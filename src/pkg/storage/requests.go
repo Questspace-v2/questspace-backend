@@ -40,6 +40,10 @@ type GetQuestRequest struct {
 	ID string
 }
 
+type GetQuestsRequest struct {
+	User *User
+}
+
 type UpdateQuestRequest struct {
 	ID                   string     `json:"-"`
 	Name                 string     `json:"name,omitempty"`

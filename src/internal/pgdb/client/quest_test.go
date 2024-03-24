@@ -62,7 +62,7 @@ func TestQuestStorage_GetQuest(t *testing.T) {
 			name: "necessary fields only",
 			createReq: storage.CreateQuestRequest{
 				Name:      "new_quest",
-				Creator:   &storage.User{Username: user.Username},
+				Creator:   &storage.User{ID: user.ID},
 				Access:    storage.Public,
 				StartTime: &now,
 			},
