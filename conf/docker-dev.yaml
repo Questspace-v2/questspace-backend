@@ -5,12 +5,18 @@ db:
   database: postgres
   user: env:POSTGRES_USER
   password: env:POSTGRES_PASSWORD
+
 cors:
   allow-origins:
     - "*"
   allow-headers:
     - Authorization
   allow-methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD]
+
 hash-cost: 11
+
 jwt:
   secret: env:JWT_SECRET_KEY
+
+teams:
+  invite-link-prefix: https://google.com/

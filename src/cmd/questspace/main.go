@@ -38,7 +38,8 @@ var config struct {
 		AllowHeaders []string `yaml:"allow-headers"`
 		AllowMethods []string `yaml:"allow-methods"`
 	} `yaml:"cors"`
-	JWT jwt.Config `yaml:"jwt"`
+	JWT   jwt.Config   `yaml:"jwt"`
+	Teams teams.Config `yaml:"teams"`
 }
 
 func Init(app application.App) error {
@@ -87,7 +88,7 @@ func Init(app application.App) error {
 	userGroup.POST("/:id/password", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, updateUserHandler.HandlePassword)))
 	userGroup.DELETE("/:id", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, updateUserHandler.HandleDelete)))
 
-	teamsHandler := teams.NewHandler(clientFactory, "https://new.questspace.app:3000/join")
+	teamsHandler := teams.NewHandler(clientFactory, config.Teams.InviteLinkPrefix)
 
 	questGroup := app.Router().Group("/quest")
 	questHandler := quest.NewHandler(clientFactory, client)
