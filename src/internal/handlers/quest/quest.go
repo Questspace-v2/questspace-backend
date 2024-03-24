@@ -10,6 +10,7 @@ import (
 
 	"questspace/internal/handlers/transport"
 	pgdb "questspace/internal/pgdb/client"
+	"questspace/internal/questspace/quests"
 	"questspace/internal/validate"
 	"questspace/pkg/application/httperrors"
 	"questspace/pkg/application/logging"
@@ -61,6 +62,7 @@ func (h *Handler) HandleCreate(c *gin.Context) error {
 	if err != nil {
 		return xerrors.Errorf("create quest: %w", err)
 	}
+	quests.SetStatus(quest)
 	c.JSON(http.StatusOK, quest)
 
 	logging.Info(c, "created quest",
@@ -86,14 +88,15 @@ func (h *Handler) HandleGet(c *gin.Context) error {
 	if err != nil {
 		return xerrors.Errorf("get storage client: %w", err)
 	}
-	user, err := s.GetQuest(c, &req)
+	quest, err := s.GetQuest(c, &req)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return httperrors.Errorf(http.StatusNotFound, "not found quest with id %q", req.ID)
 		}
 		return xerrors.Errorf("get quest: %w", err)
 	}
-	c.JSON(http.StatusOK, user)
+	quests.SetStatus(quest)
+	c.JSON(http.StatusOK, quest)
 	return nil
 }
 
@@ -140,7 +143,7 @@ func (h *Handler) HandleUpdate(c *gin.Context) error {
 	if err := tx.Commit(); err != nil {
 		return xerrors.Errorf("commit transaction: %w", err)
 	}
-
+	quests.SetStatus(quest)
 	c.JSON(http.StatusOK, quest)
 	return nil
 }

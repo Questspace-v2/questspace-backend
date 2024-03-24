@@ -593,6 +593,9 @@ const docTemplate = `{
                 },
                 "start_time": {
                     "type": "string"
+                },
+                "status": {
+                    "type": "string"
                 }
             }
         },

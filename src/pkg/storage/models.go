@@ -27,17 +27,29 @@ const (
 	Manual VerificationType = "manual"
 )
 
+type QuestStatus string
+
+const (
+	StatusUnspecified      = ""
+	StatusOnRegistration   = "ON_REGISTRATION"
+	StatusRegistrationDone = "REGISTRATION_DONE"
+	StatusRunning          = "RUNNING"
+	StatusWaitResults      = "WAIT_RESULTS"
+	StatusFinished         = "FINISHED"
+)
+
 type Quest struct {
-	ID                   string     `json:"id"`
-	Name                 string     `json:"name"`
-	Description          string     `json:"description,omitempty"`
-	Access               AccessType `json:"access"`
-	Creator              *User      `json:"creator"`
-	RegistrationDeadline *time.Time `json:"registration_deadline"`
-	StartTime            *time.Time `json:"start_time"`
-	FinishTime           *time.Time `json:"finish_time,omitempty"`
-	MediaLink            string     `json:"media_link"`
-	MaxTeamCap           *int       `json:"max_team_cap,omitempty"`
+	ID                   string      `json:"id"`
+	Name                 string      `json:"name"`
+	Description          string      `json:"description,omitempty"`
+	Access               AccessType  `json:"access"`
+	Creator              *User       `json:"creator"`
+	RegistrationDeadline *time.Time  `json:"registration_deadline"`
+	StartTime            *time.Time  `json:"start_time"`
+	FinishTime           *time.Time  `json:"finish_time,omitempty"`
+	MediaLink            string      `json:"media_link"`
+	MaxTeamCap           *int        `json:"max_team_cap,omitempty"`
+	Status               QuestStatus `json:"status"`
 }
 
 type Team struct {

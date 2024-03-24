@@ -93,6 +93,8 @@ definitions:
         type: string
       start_time:
         type: string
+      status:
+        type: string
     type: object
   storage.TaskGroup:
     properties:

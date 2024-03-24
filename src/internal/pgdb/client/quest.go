@@ -48,7 +48,7 @@ func (c *Client) CreateQuest(ctx context.Context, req *storage.CreateQuestReques
 func (c *Client) GetQuest(ctx context.Context, req *storage.GetQuestRequest) (*storage.Quest, error) {
 	query := sq.Select(
 		"q.id", "q.name", "q.description", "q.media_link", "q.registration_deadline",
-		"q.start_time", "q.finish_time", "q.access", "q.max_team_cap",
+		"q.start_time", "q.finish_time", "q.access", "q.max_team_cap", "q.finished",
 		"u.id", "u.username", "u.avatar_url",
 	).From("questspace.quest q").
 		LeftJoin("questspace.user u ON u.username = q.creator").
@@ -62,9 +62,10 @@ func (c *Client) GetQuest(ctx context.Context, req *storage.GetQuestRequest) (*s
 		userId, userAvatarURL sql.NullString
 		regDeadline, finTime  sql.NullTime
 		maxTeamCap            sql.NullInt32
+		finished              bool
 	)
 	if err := row.Scan(&q.ID, &q.Name, &q.Description, &q.MediaLink, &regDeadline,
-		&q.StartTime, &finTime, &q.Access, &maxTeamCap, &userId, &creatorName, &userAvatarURL); err != nil {
+		&q.StartTime, &finTime, &q.Access, &maxTeamCap, &finished, &userId, &creatorName, &userAvatarURL); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, storage.ErrNotFound
 		}
@@ -88,6 +89,9 @@ func (c *Client) GetQuest(ctx context.Context, req *storage.GetQuestRequest) (*s
 	if maxTeamCap.Valid {
 		q.MaxTeamCap = ptr.Int(int(maxTeamCap.Int32))
 	}
+	if finished {
+		q.Status = storage.StatusFinished
+	}
 	return &q, nil
 }
 
@@ -95,7 +99,7 @@ func (c *Client) UpdateQuest(ctx context.Context, req *storage.UpdateQuestReques
 	query := sq.Update("questspace.quest").
 		Where(sq.Eq{"id": req.ID}).
 		Suffix("RETURNING id, name, description, media_link, creator_name, " +
-			"registration_deadline, start_time, finish_time, access, max_team_cap").
+			"registration_deadline, start_time, finish_time, access, max_team_cap, finished").
 		PlaceholderFormat(sq.Dollar)
 	if req.Name != "" {
 		query = query.Set("name", req.Name)
@@ -125,9 +129,10 @@ func (c *Client) UpdateQuest(ctx context.Context, req *storage.UpdateQuestReques
 		creatorName          sql.NullString
 		regDeadline, finTime sql.NullTime
 		maxTeamCap           sql.NullInt32
+		finished             bool
 	)
 	if err := row.Scan(&q.ID, &q.Name, &q.Description, &q.MediaLink, &creatorName,
-		&regDeadline, &q.StartTime, &finTime, &q.Access, &maxTeamCap); err != nil {
+		&regDeadline, &q.StartTime, &finTime, &q.Access, &maxTeamCap, &finished); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, storage.ErrNotFound
 		}
@@ -144,6 +149,9 @@ func (c *Client) UpdateQuest(ctx context.Context, req *storage.UpdateQuestReques
 	}
 	if creatorName.Valid {
 		q.Creator = &storage.User{Username: creatorName.String}
+	}
+	if finished {
+		q.Status = storage.StatusFinished
 	}
 
 	return &q, nil
