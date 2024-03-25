@@ -189,8 +189,11 @@ func (h *UpdateHandler) HandlePassword(c *gin.Context) error {
 	if !h.pwHasher.HasSameHash(req.OldPassword, oldPw) {
 		return httperrors.Errorf(http.StatusForbidden, "invalid password")
 	}
-
-	user, err := s.UpdateUser(c, &storage.UpdateUserRequest{ID: id, Password: req.NewPassword})
+	pwHash, err := h.pwHasher.HashString(req.NewPassword)
+	if err != nil {
+		return xerrors.Errorf("hash password: %w", err)
+	}
+	user, err := s.UpdateUser(c, &storage.UpdateUserRequest{ID: id, Password: pwHash})
 	if err != nil {
 		return xerrors.Errorf("failed to update user: %w", err)
 	}
