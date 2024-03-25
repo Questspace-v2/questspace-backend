@@ -186,7 +186,7 @@ func (h *UpdateHandler) HandlePassword(c *gin.Context) error {
 		}
 		return xerrors.Errorf("failed to lookup user password: %w", err)
 	}
-	if !h.pwHasher.HasSameHash(oldPw, req.OldPassword) {
+	if !h.pwHasher.HasSameHash(req.OldPassword, oldPw) {
 		return httperrors.Errorf(http.StatusForbidden, "invalid password")
 	}
 
