@@ -13,6 +13,10 @@ cors:
     - Authorization
   allow-methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD]
 
+google-oauth:
+  client-id: some_id
+  client-secret: env:GOOGLE_CLIENT_SECRET
+
 hash-cost: 11
 
 jwt:

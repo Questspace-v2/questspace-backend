@@ -76,6 +76,11 @@ spec:
                 secretKeyRef:
                   name: questspace-jwt-secret
                   key: jwt-secret-key
+            - name: GOOGLE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: questspace-google-secret
+                  key: google-oauth-secret
 ---
 apiVersion: v1
 kind: Service
