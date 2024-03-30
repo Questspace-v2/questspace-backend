@@ -2,7 +2,6 @@ package application
 
 import (
 	"os"
-	"strings"
 
 	"golang.org/x/xerrors"
 	"gopkg.in/yaml.v3"
@@ -18,18 +17,4 @@ func UnmarshallConfigFromFile(path string, config interface{}) error {
 		return xerrors.Errorf("unmarshall config: %w", err)
 	}
 	return nil
-}
-
-func ReadSecret(value string) (string, error) {
-	if strings.HasPrefix(value, "env:") {
-		val, ok := os.LookupEnv(strings.SplitN(value, ":", 2)[1])
-		if ok {
-			return val, nil
-		}
-	}
-	secret, err := os.ReadFile(value)
-	if err != nil {
-		return "", xerrors.Errorf("read secret file: %w", err)
-	}
-	return string(secret), nil
 }

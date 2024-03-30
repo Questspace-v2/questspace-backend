@@ -69,7 +69,13 @@ func Init(app application.App) error {
 		Timeout: time.Minute,
 	}
 	pwHasher := hasher.NewBCryptHasher(config.HashCost)
-	jwtParser := jwt.NewTokenParser(config.JWT.GetEncryptionKey())
+
+	jwtSecret, err := config.JWT.Secret.Read()
+	if err != nil {
+		return xerrors.Errorf("load jwt secret: %w", err)
+	}
+
+	jwtParser := jwt.NewTokenParser([]byte(jwtSecret))
 
 	docs.SwaggerInfo.BasePath = "/"
 
