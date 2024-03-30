@@ -29,17 +29,21 @@ func Middleware(logger *zap.Logger) gin.HandlerFunc {
 		}
 
 		req := c.Request
+		var headers []zap.Field
 		for name, values := range req.Header {
 			headerNameLower := strings.ToLower(name)
 			if _, ok := restrictedHeaders[headerNameLower]; ok {
-				fields = append(fields, zap.String(headerNameLower, "***"))
+				headers = append(headers, zap.String(headerNameLower, "***"))
 				continue
 			}
 			for _, val := range values {
-				fields = append(fields, zap.String(headerNameLower, val))
+				headers = append(headers, zap.String(headerNameLower, val))
 			}
 		}
-		fields = append(fields, zap.String("uri", req.RequestURI+"?"+req.URL.RawQuery))
+		fields = append(fields,
+			zap.String("uri", req.RequestURI+"?"+req.URL.RawQuery),
+			zap.Dict("headers", headers...),
+		)
 
 		logger = logger.With(fields...)
 		c.Set(loggerKey, logger)

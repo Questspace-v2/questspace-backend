@@ -4,6 +4,10 @@ import (
 	"net/http"
 	"strings"
 
+	"go.uber.org/zap"
+
+	"questspace/pkg/application/logging"
+
 	"github.com/gofrs/uuid"
 
 	"github.com/gin-gonic/gin"
@@ -35,6 +39,11 @@ func WithJWTMiddleware(parser Parser, handler application.AppHandlerFunc) applic
 		if err != nil {
 			return httperrors.WrapWithCode(http.StatusForbidden, err)
 		}
+
+		logging.AddFieldsToContextLogger(c, zap.Dict("user",
+			zap.String("id", user.ID),
+			zap.String("username", user.Username),
+		))
 
 		c.Set(userCredsKey, user)
 		return handler(c)
