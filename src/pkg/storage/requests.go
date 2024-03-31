@@ -37,11 +37,11 @@ type CreateQuestRequest struct {
 	Description          string     `json:"description,omitempty"`
 	Access               AccessType `json:"access"`
 	Creator              *User      `json:"-"`
-	RegistrationDeadline *time.Time `json:"registration_deadline"`
-	StartTime            *time.Time `json:"start_time"`
-	FinishTime           *time.Time `json:"finish_time"`
+	RegistrationDeadline *time.Time `json:"registration_deadline,omitempty" example:"2024-04-14T12:00:00+05:00"`
+	StartTime            *time.Time `json:"start_time" example:"2024-04-14T14:00:00+05:00"`
+	FinishTime           *time.Time `json:"finish_time,omitempty" example:"2024-04-21T14:00:00+05:00"`
 	MediaLink            string     `json:"media_link"`
-	MaxTeamCap           *int       `json:"max_team_cap"`
+	MaxTeamCap           *int       `json:"max_team_cap,omitempty"`
 }
 
 type GetQuestRequest struct {

@@ -917,7 +917,8 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "finish_time": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "2024-04-21T14:00:00+05:00"
                 },
                 "max_team_cap": {
                     "type": "integer"
@@ -929,10 +930,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "registration_deadline": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "2024-04-14T12:00:00+05:00"
                 },
                 "start_time": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "2024-04-14T14:00:00+05:00"
                 }
             }
         },
@@ -988,7 +991,8 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "finish_time": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "2024-04-21T14:00:00+05:00"
                 },
                 "id": {
                     "type": "string"
@@ -1003,13 +1007,22 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "registration_deadline": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "2024-04-14T12:00:00+05:00"
                 },
                 "start_time": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "2024-04-14T14:00:00+05:00"
                 },
                 "status": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "ON_REGISTRATION",
+                        "REGISTRATION_DONE",
+                        "RUNNING",
+                        "WAIT_RESULTS",
+                        "FINISHED"
+                    ]
                 }
             }
         },

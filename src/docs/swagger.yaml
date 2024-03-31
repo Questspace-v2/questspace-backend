@@ -51,6 +51,7 @@ definitions:
       description:
         type: string
       finish_time:
+        example: "2024-04-21T14:00:00+05:00"
         type: string
       max_team_cap:
         type: integer
@@ -59,8 +60,10 @@ definitions:
       name:
         type: string
       registration_deadline:
+        example: "2024-04-14T12:00:00+05:00"
         type: string
       start_time:
+        example: "2024-04-14T14:00:00+05:00"
         type: string
     type: object
   storage.CreateTaskGroupRequest:
@@ -98,6 +101,7 @@ definitions:
       description:
         type: string
       finish_time:
+        example: "2024-04-21T14:00:00+05:00"
         type: string
       id:
         type: string
@@ -108,10 +112,18 @@ definitions:
       name:
         type: string
       registration_deadline:
+        example: "2024-04-14T12:00:00+05:00"
         type: string
       start_time:
+        example: "2024-04-14T14:00:00+05:00"
         type: string
       status:
+        enum:
+        - ON_REGISTRATION
+        - REGISTRATION_DONE
+        - RUNNING
+        - WAIT_RESULTS
+        - FINISHED
         type: string
     type: object
   storage.TaskGroup:
