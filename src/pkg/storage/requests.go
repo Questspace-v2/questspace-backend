@@ -22,6 +22,12 @@ type UpdateUserRequest struct {
 	AvatarURL string
 }
 
+type CreateOrUpdateRequest struct {
+	CreateUserRequest
+
+	ExternalID string
+}
+
 type DeleteUserRequest struct {
 	ID string
 }

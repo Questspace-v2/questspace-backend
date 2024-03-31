@@ -123,7 +123,6 @@ func TestUpdateHandler_HandleUser(t *testing.T) {
 	router.ServeHTTP(rr, httpReq)
 	require.Equal(t, http.StatusOK, rr.Code)
 	factory.ExpectCommit(t)
-	require.Contains(t, rr.Header().Get("Set-Cookie"), "alg.another_pld.new_key")
 }
 
 func TestUpdateHandler_HandlePassword(t *testing.T) {

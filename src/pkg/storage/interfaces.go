@@ -15,6 +15,7 @@ type UserStorage interface {
 	GetUser(context.Context, *GetUserRequest) (*User, error)
 	UpdateUser(context.Context, *UpdateUserRequest) (*User, error)
 	GetUserPasswordHash(context.Context, *GetUserRequest) (string, error)
+	CreateOrUpdateByExternalID(context.Context, *CreateOrUpdateRequest) (*User, error)
 	DeleteUser(context.Context, *DeleteUserRequest) error
 }
 

@@ -1,9 +1,4 @@
 definitions:
-  auth.GoogleOAuthRequest:
-    properties:
-      id_token:
-        type: string
-    type: object
   auth.Response:
     properties:
       access_token:
@@ -16,6 +11,11 @@ definitions:
       password:
         type: string
       username:
+        type: string
+    type: object
+  google.OAuthRequest:
+    properties:
+      id_token:
         type: string
     type: object
   quests.PaginatedQuestsResponse:
@@ -240,7 +240,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/auth.GoogleOAuthRequest'
+          $ref: '#/definitions/google.OAuthRequest'
       responses:
         "200":
           description: OK
@@ -248,9 +248,9 @@ paths:
             $ref: '#/definitions/auth.Response'
         "400":
           description: Bad Request
-        "415":
-          description: Unsupported Media Type
       summary: Register new or sign in old user using Google OAuth2.0
+      tags:
+      - Auth
   /auth/register:
     post:
       parameters:
@@ -270,6 +270,8 @@ paths:
         "415":
           description: Unsupported Media Type
       summary: Register new user and return auth data
+      tags:
+      - Auth
   /auth/sign-in:
     post:
       parameters:
@@ -288,9 +290,11 @@ paths:
           description: Bad Request
         "403":
           description: Forbidden
-        "415":
-          description: Unsupported Media Type
+        "404":
+          description: Not Found
       summary: Sign in to user account and return auth data
+      tags:
+      - Auth
   /quest:
     get:
       parameters:
@@ -325,7 +329,11 @@ paths:
           description: Bad Request
         "401":
           description: Unauthorized
+      security:
+      - ApiKeyAuth: []
       summary: Get many quests sorted by start time and finished status
+      tags:
+      - Quests
     post:
       parameters:
       - description: Main quest information
@@ -345,7 +353,11 @@ paths:
           description: Unauthorized
         "415":
           description: Unsupported Media Type
+      security:
+      - ApiKeyAuth: []
       summary: Create new quest
+      tags:
+      - Quests
   /quest/{id}/task-groups/bulk:
     patch:
       parameters:
@@ -370,6 +382,8 @@ paths:
           description: Forbidden
       summary: Patch task groups by creating new ones, delete, update and reorder
         all ones. Returns all exising task groups.
+      tags:
+      - TaskGroups
   /quest/{quest_id}:
     delete:
       parameters:
@@ -387,7 +401,11 @@ paths:
           description: Forbidden
         "404":
           description: Not Found
+      security:
+      - ApiKeyAuth: []
       summary: Delete quest
+      tags:
+      - Quests
     get:
       parameters:
       - description: Quest ID
@@ -403,6 +421,8 @@ paths:
         "404":
           description: Not Found
       summary: Get quest by id
+      tags:
+      - Quests
     post:
       parameters:
       - description: Quest ID
@@ -429,7 +449,11 @@ paths:
           description: Not Found
         "415":
           description: Unsupported Media Type
+      security:
+      - ApiKeyAuth: []
       summary: Update main quest information
+      tags:
+      - Quests
   /quest/{quest_id}/teams:
     get:
       parameters:
@@ -448,6 +472,8 @@ paths:
         "400":
           description: Bad Request
       summary: Get all teams by quest id
+      tags:
+      - Teams
     post:
       parameters:
       - description: Quest ID
@@ -472,7 +498,11 @@ paths:
           description: Unauthorized
         "406":
           description: Not Acceptable
+      security:
+      - ApiKeyAuth: []
       summary: Create new team
+      tags:
+      - Teams
   /teams/{team_id}:
     delete:
       parameters:
@@ -490,7 +520,11 @@ paths:
           description: Forbidden
         "404":
           description: Not Found
+      security:
+      - ApiKeyAuth: []
       summary: Delete team by id
+      tags:
+      - Teams
     get:
       parameters:
       - description: Team id
@@ -508,6 +542,8 @@ paths:
         "404":
           description: Not Found
       summary: Get team by id
+      tags:
+      - Teams
     post:
       parameters:
       - description: Team id
@@ -532,7 +568,11 @@ paths:
           description: Forbidden
         "404":
           description: Not Found
+      security:
+      - ApiKeyAuth: []
       summary: Change team information
+      tags:
+      - Teams
   /teams/{team_id}/{member_id}:
     delete:
       parameters:
@@ -557,7 +597,11 @@ paths:
           description: Forbidden
         "404":
           description: Not Found
+      security:
+      - ApiKeyAuth: []
       summary: Remove member from team
+      tags:
+      - Teams
   /teams/{team_id}/captain:
     post:
       parameters:
@@ -583,7 +627,11 @@ paths:
           description: Forbidden
         "404":
           description: Not Found
+      security:
+      - ApiKeyAuth: []
       summary: Change team captain
+      tags:
+      - Teams
   /teams/{team_id}/leave:
     post:
       parameters:
@@ -607,7 +655,11 @@ paths:
           description: Forbidden
         "404":
           description: Not Found
+      security:
+      - ApiKeyAuth: []
       summary: Leave the team
+      tags:
+      - Teams
   /teams/join/{invite_path}:
     get:
       parameters:
@@ -625,7 +677,11 @@ paths:
           description: Unauthorized
         "406":
           description: Not Acceptable
+      security:
+      - ApiKeyAuth: []
       summary: Join team
+      tags:
+      - Teams
   /user/{user_id}:
     delete:
       parameters:
@@ -643,7 +699,11 @@ paths:
           description: Forbidden
         "404":
           description: Not Found
+      security:
+      - ApiKeyAuth: []
       summary: Delete user account
+      tags:
+      - Users
     get:
       parameters:
       - description: User ID
@@ -659,6 +719,8 @@ paths:
         "404":
           description: Not Found
       summary: Get user by id
+      tags:
+      - Users
     post:
       parameters:
       - description: User ID
@@ -676,7 +738,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/storage.User'
+            $ref: '#/definitions/auth.Response'
         "401":
           description: Unauthorized
         "403":
@@ -685,30 +747,15 @@ paths:
           description: Not Found
         "422":
           description: Unprocessable Entity
+      security:
+      - ApiKeyAuth: []
       summary: Update user public data such as username or avatar and returns new
         auth data
-  /user/{user_id}/password:
-    post:
-      parameters:
-      - description: User ID
-        in: path
-        name: user_id
-        required: true
-        type: string
-      - description: Old and new password
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/user.UpdatePasswordRequest'
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/storage.User'
-        "401":
-          description: Unauthorized
-        "403":
-          description: Forbidden
-      summary: Update user password
+      tags:
+      - Users
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

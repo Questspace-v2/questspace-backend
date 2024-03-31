@@ -211,6 +211,27 @@ func TestUserStorage_GetUserPasswordHash_ErrorOnEmptyRequest(t *testing.T) {
 	assert.Empty(t, pwHash)
 }
 
+func TestUserStorage_CreateOrUpdateByExternalID(t *testing.T) {
+	ctx := context.Background()
+	client := NewClient(pgtest.NewEmbeddedQuestspaceDB(t))
+
+	req := storage.CreateOrUpdateRequest{
+		ExternalID:        "123",
+		CreateUserRequest: *userReq1,
+	}
+	user, err := client.CreateOrUpdateByExternalID(ctx, &req)
+	require.NoError(t, err)
+
+	assert.Equal(t, userReq1.Username, user.Username)
+	assert.Equal(t, userReq1.AvatarURL, user.AvatarURL)
+
+	req.AvatarURL = "https://golang.org"
+	newUser, err := client.CreateOrUpdateByExternalID(ctx, &req)
+	require.NoError(t, err)
+
+	assert.Equal(t, req.AvatarURL, newUser.AvatarURL)
+}
+
 func TestUserStorage_DeleteUser(t *testing.T) {
 	ctx := context.Background()
 	client := NewClient(pgtest.NewEmbeddedQuestspaceDB(t))

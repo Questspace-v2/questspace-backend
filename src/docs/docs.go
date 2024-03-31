@@ -17,6 +17,9 @@ const docTemplate = `{
     "paths": {
         "/auth/google": {
             "post": {
+                "tags": [
+                    "Auth"
+                ],
                 "summary": "Register new or sign in old user using Google OAuth2.0",
                 "parameters": [
                     {
@@ -25,7 +28,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/auth.GoogleOAuthRequest"
+                            "$ref": "#/definitions/google.OAuthRequest"
                         }
                     }
                 ],
@@ -38,15 +41,15 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request"
-                    },
-                    "415": {
-                        "description": "Unsupported Media Type"
                     }
                 }
             }
         },
         "/auth/register": {
             "post": {
+                "tags": [
+                    "Auth"
+                ],
                 "summary": "Register new user and return auth data",
                 "parameters": [
                     {
@@ -77,6 +80,9 @@ const docTemplate = `{
         },
         "/auth/sign-in": {
             "post": {
+                "tags": [
+                    "Auth"
+                ],
                 "summary": "Sign in to user account and return auth data",
                 "parameters": [
                     {
@@ -102,14 +108,22 @@ const docTemplate = `{
                     "403": {
                         "description": "Forbidden"
                     },
-                    "415": {
-                        "description": "Unsupported Media Type"
+                    "404": {
+                        "description": "Not Found"
                     }
                 }
             }
         },
         "/quest": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "Quests"
+                ],
                 "summary": "Get many quests sorted by start time and finished status",
                 "parameters": [
                     {
@@ -159,6 +173,14 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "Quests"
+                ],
                 "summary": "Create new quest",
                 "parameters": [
                     {
@@ -192,6 +214,9 @@ const docTemplate = `{
         },
         "/quest/{id}/task-groups/bulk": {
             "patch": {
+                "tags": [
+                    "TaskGroups"
+                ],
                 "summary": "Patch task groups by creating new ones, delete, update and reorder all ones. Returns all exising task groups.",
                 "parameters": [
                     {
@@ -228,6 +253,9 @@ const docTemplate = `{
         },
         "/quest/{quest_id}": {
             "get": {
+                "tags": [
+                    "Quests"
+                ],
                 "summary": "Get quest by id",
                 "parameters": [
                     {
@@ -251,6 +279,14 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "Quests"
+                ],
                 "summary": "Update main quest information",
                 "parameters": [
                     {
@@ -292,6 +328,14 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "Quests"
+                ],
                 "summary": "Delete quest",
                 "parameters": [
                     {
@@ -320,6 +364,9 @@ const docTemplate = `{
         },
         "/quest/{quest_id}/teams": {
             "get": {
+                "tags": [
+                    "Teams"
+                ],
                 "summary": "Get all teams by quest id",
                 "parameters": [
                     {
@@ -346,6 +393,14 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "Teams"
+                ],
                 "summary": "Create new team",
                 "parameters": [
                     {
@@ -386,6 +441,14 @@ const docTemplate = `{
         },
         "/teams/join/{invite_path}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "Teams"
+                ],
                 "summary": "Join team",
                 "parameters": [
                     {
@@ -414,6 +477,9 @@ const docTemplate = `{
         },
         "/teams/{team_id}": {
             "get": {
+                "tags": [
+                    "Teams"
+                ],
                 "summary": "Get team by id",
                 "parameters": [
                     {
@@ -440,6 +506,14 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "Teams"
+                ],
                 "summary": "Change team information",
                 "parameters": [
                     {
@@ -478,6 +552,14 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "Teams"
+                ],
                 "summary": "Delete team by id",
                 "parameters": [
                     {
@@ -506,6 +588,14 @@ const docTemplate = `{
         },
         "/teams/{team_id}/captain": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "Teams"
+                ],
                 "summary": "Change team captain",
                 "parameters": [
                     {
@@ -546,6 +636,14 @@ const docTemplate = `{
         },
         "/teams/{team_id}/leave": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "Teams"
+                ],
                 "summary": "Leave the team",
                 "parameters": [
                     {
@@ -583,6 +681,14 @@ const docTemplate = `{
         },
         "/teams/{team_id}/{member_id}": {
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "Teams"
+                ],
                 "summary": "Remove member from team",
                 "parameters": [
                     {
@@ -621,6 +727,9 @@ const docTemplate = `{
         },
         "/user/{user_id}": {
             "get": {
+                "tags": [
+                    "Users"
+                ],
                 "summary": "Get user by id",
                 "parameters": [
                     {
@@ -644,6 +753,14 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "Users"
+                ],
                 "summary": "Update user public data such as username or avatar and returns new auth data",
                 "parameters": [
                     {
@@ -667,7 +784,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/storage.User"
+                            "$ref": "#/definitions/auth.Response"
                         }
                     },
                     "401": {
@@ -685,6 +802,14 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "Users"
+                ],
                 "summary": "Delete user account",
                 "parameters": [
                     {
@@ -710,54 +835,9 @@ const docTemplate = `{
                     }
                 }
             }
-        },
-        "/user/{user_id}/password": {
-            "post": {
-                "summary": "Update user password",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User ID",
-                        "name": "user_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Old and new password",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/user.UpdatePasswordRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/storage.User"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized"
-                    },
-                    "403": {
-                        "description": "Forbidden"
-                    }
-                }
-            }
         }
     },
     "definitions": {
-        "auth.GoogleOAuthRequest": {
-            "type": "object",
-            "properties": {
-                "id_token": {
-                    "type": "string"
-                }
-            }
-        },
         "auth.Response": {
             "type": "object",
             "properties": {
@@ -776,6 +856,14 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "google.OAuthRequest": {
+            "type": "object",
+            "properties": {
+                "id_token": {
                     "type": "string"
                 }
             }
@@ -1102,6 +1190,13 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`

@@ -25,13 +25,14 @@ type TaskGroups []*storage.TaskGroup
 
 // HandleBulkUpdate handles PATCH quest/:id/task-groups/bulk request
 //
-//		@Summary	Patch task groups by creating new ones, delete, update and reorder all ones. Returns all exising task groups.
-//		@Param		request	body		storage.TaskGroupsBulkUpdateRequest	true	"Requests to delete/create/update task groups"
-//		@Success	200		{object}	TaskGroups
-//		@Failure	400
-//	    @Failure    401
-//		@Failure    403
-//		@Router		/quest/{id}/task-groups/bulk [patch]
+// @Summary	Patch task groups by creating new ones, delete, update and reorder all ones. Returns all exising task groups.
+// @Tags	TaskGroups
+// @Param	request	body		storage.TaskGroupsBulkUpdateRequest	true	"Requests to delete/create/update task groups"
+// @Success	200		{object}	TaskGroups
+// @Failure	400
+// @Failure	401
+// @Failure	403
+// @Router	/quest/{id}/task-groups/bulk [patch]
 func (h *Handler) HandleBulkUpdate(c *gin.Context) error {
 	//TODO(svayp11): add auth
 	questID := c.Param("id")

@@ -66,6 +66,21 @@ func (mr *MockQuestSpaceStorageMockRecorder) ChangeTeamName(arg0, arg1 interface
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ChangeTeamName", reflect.TypeOf((*MockQuestSpaceStorage)(nil).ChangeTeamName), arg0, arg1)
 }
 
+// CreateOrUpdateByEmail mocks base method.
+func (m *MockQuestSpaceStorage) CreateOrUpdateByExternalID(arg0 context.Context, arg1 *storage.CreateOrUpdateRequest) (*storage.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateOrUpdateByExternalID", arg0, arg1)
+	ret0, _ := ret[0].(*storage.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateOrUpdateByEmail indicates an expected call of CreateOrUpdateByEmail.
+func (mr *MockQuestSpaceStorageMockRecorder) CreateOrUpdateByEmail(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrUpdateByExternalID", reflect.TypeOf((*MockQuestSpaceStorage)(nil).CreateOrUpdateByExternalID), arg0, arg1)
+}
+
 // CreateQuest mocks base method.
 func (m *MockQuestSpaceStorage) CreateQuest(arg0 context.Context, arg1 *storage.CreateQuestRequest) (*storage.Quest, error) {
 	m.ctrl.T.Helper()
@@ -411,6 +426,21 @@ func NewMockUserStorage(ctrl *gomock.Controller) *MockUserStorage {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockUserStorage) EXPECT() *MockUserStorageMockRecorder {
 	return m.recorder
+}
+
+// CreateOrUpdateByEmail mocks base method.
+func (m *MockUserStorage) CreateOrUpdateByExternalID(arg0 context.Context, arg1 *storage.CreateOrUpdateRequest) (*storage.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateOrUpdateByExternalID", arg0, arg1)
+	ret0, _ := ret[0].(*storage.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateOrUpdateByEmail indicates an expected call of CreateOrUpdateByEmail.
+func (mr *MockUserStorageMockRecorder) CreateOrUpdateByEmail(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrUpdateByExternalID", reflect.TypeOf((*MockUserStorage)(nil).CreateOrUpdateByExternalID), arg0, arg1)
 }
 
 // CreateUser mocks base method.

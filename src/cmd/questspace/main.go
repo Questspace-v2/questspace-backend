@@ -7,6 +7,10 @@ import (
 	"slices"
 	"time"
 
+	"questspace/internal/handlers/auth/google"
+
+	"google.golang.org/api/idtoken"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -38,10 +42,15 @@ var config struct {
 		AllowHeaders []string `yaml:"allow-headers"`
 		AllowMethods []string `yaml:"allow-methods"`
 	} `yaml:"cors"`
-	JWT   jwt.Config   `yaml:"jwt"`
-	Teams teams.Config `yaml:"teams"`
+	JWT    jwt.Config   `yaml:"jwt"`
+	Teams  teams.Config `yaml:"teams"`
+	Google google.Config
 }
 
+// Init does all deps initialization
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
 func Init(app application.App) error {
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowOrigins = slices.Clone(config.CORS.AllowOrigins)
@@ -79,10 +88,17 @@ func Init(app application.App) error {
 
 	docs.SwaggerInfo.BasePath = "/"
 
+	tokenValidator, err := idtoken.NewValidator(context.Background())
+	if err != nil {
+		return xerrors.Errorf("create token validator: %w", err)
+	}
+	gOAuthHandler := google.NewOAuthHandler(clientFactory, tokenValidator, jwtParser, config.Google)
+
 	authGroup := app.Router().Group("/auth")
 	authHandler := auth.NewHandler(clientFactory, client, pwHasher, jwtParser)
 	authGroup.POST("/register", application.AsGinHandler(authHandler.HandleBasicSignUp))
 	authGroup.POST("/sign-in", application.AsGinHandler(authHandler.HandleBasicSignIn))
+	authGroup.POST("/google", application.AsGinHandler(gOAuthHandler.Handle))
 
 	userGroup := app.Router().Group("/user")
 

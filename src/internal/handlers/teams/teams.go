@@ -36,14 +36,16 @@ type CreateRequest struct {
 
 // HandleCreate handles POST /quest/:id/teams request
 //
-//		@Summary	Create new team
-//		@Param		quest_id	path		string						true	"Quest ID"
-//		@Param		request	body		CreateRequest	true	"Desired team information"
-//		@Success	200		{object}	storage.Team
-//		@Failure	400
-//	    @Failure    401
-//	    @Failure    406
-//		@Router		/quest/{quest_id}/teams [post]
+// @Summary		Create new team
+// @Tags		Teams
+// @Param		quest_id	path		string					true	"Quest ID"
+// @Param		request		body		CreateRequest	true	"Desired team information"
+// @Success		200			{object}	storage.Team
+// @Failure		400
+// @Failure    	401
+// @Failure    	406
+// @Router		/quest/{quest_id}/teams [post]
+// @Security 	ApiKeyAuth
 func (h *Handler) HandleCreate(c *gin.Context) error {
 	req, err := transport.UnmarshalRequestData[CreateRequest](c.Request)
 	if err != nil {
@@ -81,12 +83,14 @@ func (h *Handler) HandleCreate(c *gin.Context) error {
 
 // HandleJoin handles GET /teams/join/:path request
 //
-//		@Summary	Join team
-//		@Param		invite_path	path		string						true	"Team invite url param"
-//		@Success	200		{object}	storage.Team
-//	    @Failure    401
-//	    @Failure    406
-//		@Router		/teams/join/{invite_path} [get]
+// @Summary		Join team
+// @Tags		Teams
+// @Param		invite_path	path		string	true	"Team invite url param"
+// @Success		200			{object}	storage.Team
+// @Failure    	401
+// @Failure    	406
+// @Router		/teams/join/{invite_path} [get]
+// @Security 	ApiKeyAuth
 func (h *Handler) HandleJoin(c *gin.Context) error {
 	invitePath := c.Param("path")
 	uauth, err := jwt.GetUserFromContext(c)
@@ -115,12 +119,13 @@ func (h *Handler) HandleJoin(c *gin.Context) error {
 
 // HandleGet handles GET /teams/:id request
 //
-//		@Summary	Get team by id
-//		@Param		team_id	path		string						true	"Team id"
-//		@Success	200		{object}	storage.Team
-//	    @Failure    400
-//	    @Failure    404
-//		@Router		/teams/{team_id} [get]
+// @Summary	Get team by id
+// @Tags	Teams
+// @Param	team_id	path		string	true	"Team id"
+// @Success	200		{object}	storage.Team
+// @Failure	400
+// @Failure	404
+// @Router	/teams/{team_id} [get]
 func (h *Handler) HandleGet(c *gin.Context) error {
 	teamID := c.Param("id")
 
@@ -140,11 +145,12 @@ func (h *Handler) HandleGet(c *gin.Context) error {
 
 // HandleGetMany handles GET /quest/:id/teams request
 //
-//		@Summary	Get all teams by quest id
-//		@Param		quest_id	path		string						true	"Quest id"
-//		@Success	200		{object}	[]storage.Team
-//	    @Failure    400
-//		@Router		/quest/{quest_id}/teams [get]
+// @Summary	Get all teams by quest id
+// @Tags	Teams
+// @Param	quest_id	path		string	true	"Quest id"
+// @Success	200			{object}	[]storage.Team
+// @Failure	400
+// @Router	/quest/{quest_id}/teams [get]
 func (h *Handler) HandleGetMany(c *gin.Context) error {
 	questID := c.Param("id")
 
@@ -168,14 +174,16 @@ type UpdateRequest struct {
 
 // HandleUpdate handles POST /teams/:id request
 //
-//		@Summary	Change team information
-//		@Param		team_id	path		string						true	"Team id"
-//		@Param		request	body		UpdateRequest						true	"New information"
-//		@Success	200		{object} storage.Team
-//	    @Failure    400
-//	    @Failure    403
-//	    @Failure    404
-//		@Router		/teams/{team_id} [post]
+// @Summary		Change team information
+// @Tags		Teams
+// @Param		team_id	path		string			true	"Team id"
+// @Param		request	body		UpdateRequest	true	"New information"
+// @Success		200		{object} 	storage.Team
+// @Failure    	400
+// @Failure    	403
+// @Failure		404
+// @Router		/teams/{team_id} [post]
+// @Security 	ApiKeyAuth
 func (h *Handler) HandleUpdate(c *gin.Context) error {
 	teamID := c.Param("id")
 	req, err := transport.UnmarshalRequestData[UpdateRequest](c.Request)
@@ -203,13 +211,15 @@ func (h *Handler) HandleUpdate(c *gin.Context) error {
 
 // HandleDelete handles DELETE /teams/:id request
 //
-//		@Summary	Delete team by id
-//		@Param		team_id	path		string						true	"Team id"
-//		@Success	200
-//	    @Failure    400
-//	    @Failure    403
-//	    @Failure    404
-//		@Router		/teams/{team_id} [delete]
+// @Summary		Delete team by id
+// @Tags		Teams
+// @Param		team_id	path	string	true	"Team id"
+// @Success		200
+// @Failure    	400
+// @Failure    	403
+// @Failure    	404
+// @Router		/teams/{team_id} [delete]
+// @Security 	ApiKeyAuth
 func (h *Handler) HandleDelete(c *gin.Context) error {
 	teamID := c.Param("id")
 	uauth, err := jwt.GetUserFromContext(c)
@@ -236,14 +246,16 @@ type ChangeLeaderRequest struct {
 
 // HandleChangeLeader handles POST /teams/:id/captain request
 //
-//		@Summary	Change team captain
-//		@Param		team_id	path		string						true	"Team id"
-//		@Param		request	body		ChangeLeaderRequest						true	"Change captain request"
-//		@Success	200		{object} storage.Team
-//	    @Failure    400
-//	    @Failure    403
-//	    @Failure    404
-//		@Router		/teams/{team_id}/captain [post]
+// @Summary		Change team captain
+// @Tags		Teams
+// @Param		team_id	path		string				true	"Team id"
+// @Param		request	body		ChangeLeaderRequest	true	"Change captain request"
+// @Success		200		{object} 	storage.Team
+// @Failure    	400
+// @Failure    	403
+// @Failure    	404
+// @Router		/teams/{team_id}/captain [post]
+// @Security 	ApiKeyAuth
 func (h *Handler) HandleChangeLeader(c *gin.Context) error {
 	teamID := c.Param("id")
 	req, err := transport.UnmarshalRequestData[ChangeLeaderRequest](c.Request)
@@ -271,14 +283,16 @@ func (h *Handler) HandleChangeLeader(c *gin.Context) error {
 
 // HandleLeave handles POST /teams/:id/leave request
 //
-//		@Summary	Leave the team
-//		@Param		team_id	path		string						true	"Team id"
-//		@Param		new_captain_id	query		string						false	"New captain (if leader leaves)"
-//		@Success	200		{object} storage.Team
-//	    @Failure    400
-//	    @Failure    403
-//	    @Failure    404
-//		@Router		/teams/{team_id}/leave [post]
+// @Summary		Leave the team
+// @Tags		Teams
+// @Param		team_id			path		string	true	"Team id"
+// @Param		new_captain_id	query		string	false	"New captain (if leader leaves)"
+// @Success		200				{object} 	storage.Team
+// @Failure    	400
+// @Failure    	403
+// @Failure    	404
+// @Router		/teams/{team_id}/leave [post]
+// @Security 	ApiKeyAuth
 func (h *Handler) HandleLeave(c *gin.Context) error {
 	teamID := c.Param("id")
 	newCaptainID := c.Query("new_captain")
@@ -309,14 +323,16 @@ func (h *Handler) HandleLeave(c *gin.Context) error {
 
 // HandleRemoveUser handles DELETE /teams/:id/:user_id request
 //
-//		@Summary	Remove member from team
-//		@Param		team_id	path		string						true	"Team id"
-//		@Param		member_id	path		string						true	"Member id"
-//		@Success	200		{object} storage.Team
-//	    @Failure    400
-//	    @Failure    403
-//	    @Failure    404
-//		@Router		/teams/{team_id}/{member_id} [delete]
+// @Summary		Remove member from team
+// @Tags		Teams
+// @Param		team_id		path		string	true	"Team id"
+// @Param		member_id	path		string	true	"Member id"
+// @Success		200			{object} 	storage.Team
+// @Failure    	400
+// @Failure    	403
+// @Failure    	404
+// @Router		/teams/{team_id}/{member_id} [delete]
+// @Security 	ApiKeyAuth
 func (h *Handler) HandleRemoveUser(c *gin.Context) error {
 	teamID := c.Param("id")
 	userID := c.Param("user_id")

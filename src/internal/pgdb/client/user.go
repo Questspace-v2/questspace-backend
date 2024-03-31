@@ -121,6 +121,23 @@ func (c *Client) GetUserPasswordHash(ctx context.Context, req *storage.GetUserRe
 	return string(pw), nil
 }
 
+func (c *Client) CreateOrUpdateByExternalID(ctx context.Context, req *storage.CreateOrUpdateRequest) (*storage.User, error) {
+	sqlQuery := `INSERT INTO questspace.user (username, avatar_url, password, external_id)
+	VALUES ($1, $2, $3, $4)
+	ON CONFLICT (external_id) DO UPDATE SET avatar_url = $2
+	RETURNING id, username, avatar_url
+`
+	expr := sq.Expr(sqlQuery, req.Username, req.AvatarURL, []byte(req.ExternalID), req.ExternalID)
+
+	row := sq.QueryRowContextWith(ctx, c.runner, expr)
+	user := storage.User{}
+	if err := row.Scan(&user.ID, &user.Username, &user.AvatarURL); err != nil {
+		return nil, xerrors.Errorf("scan row: %w", err)
+	}
+
+	return &user, nil
+}
+
 func (c *Client) DeleteUser(ctx context.Context, req *storage.DeleteUserRequest) error {
 	query := sq.Delete("questspace.user").
 		Where(sq.Eq{"id": req.ID}).

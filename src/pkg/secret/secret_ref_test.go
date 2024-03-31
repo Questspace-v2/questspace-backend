@@ -44,12 +44,6 @@ func tempFile(t *testing.T, prefix string) *os.File {
 
 	tmpFile, err := os.CreateTemp(tmpDir, fmt.Sprintf("%s_*", prefix))
 	require.NoError(t, err)
-	t.Cleanup(func() {
-		err := tmpFile.Close()
-		if err != nil {
-			t.Log(err.Error())
-		}
-	})
 
 	return tmpFile
 }

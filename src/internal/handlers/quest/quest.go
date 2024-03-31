@@ -34,19 +34,18 @@ func NewHandler(cf pgdb.QuestspaceClientFactory, f http.Client) *Handler {
 
 // HandleCreate handles POST /quest request
 //
-//		@Summary	Create new quest
-//		@Param		request	body		storage.CreateQuestRequest	true	"Main quest information"
-//		@Success	200		{object}	storage.Quest
-//		@Failure	400
-//	    @Failure    401
-//		@Failure	415
-//		@Router		/quest [post]
+// @Summary		Create new quest
+// @Tags		Quests
+// @Param		request	body		storage.CreateQuestRequest	true	"Main quest information"
+// @Success		200		{object}	storage.Quest
+// @Failure		400
+// @Failure		401
+// @Failure		415
+// @Router		/quest [post]
+// @Security	ApiKeyAuth
 func (h *Handler) HandleCreate(c *gin.Context) error {
 	req, err := transport.UnmarshalRequestData[storage.CreateQuestRequest](c.Request)
 	if err != nil {
-		return xerrors.Errorf("%w", err)
-	}
-	if err := validate.ImageURL(c, h.fetcher, req.MediaLink); err != nil {
 		return xerrors.Errorf("%w", err)
 	}
 	uauth, err := jwt.GetUserFromContext(c)
@@ -54,6 +53,9 @@ func (h *Handler) HandleCreate(c *gin.Context) error {
 		return xerrors.Errorf("%w", err)
 	}
 	req.Creator = uauth
+	if err := validate.ImageURL(c, h.fetcher, req.MediaLink); err != nil {
+		return xerrors.Errorf("%w", err)
+	}
 
 	s, err := h.clientFactory.NewStorage(c, dbnode.Master)
 	if err != nil {
@@ -77,11 +79,12 @@ func (h *Handler) HandleCreate(c *gin.Context) error {
 
 // HandleGet handles GET /quest/:id request
 //
-//	@Summary	Get quest by id
-//	@Param		quest_id	path		string	true	"Quest ID"
-//	@Success	200			{object}	storage.Quest
-//	@Failure	404
-//	@Router		/quest/{quest_id} [get]
+// @Summary	Get quest by id
+// @Tags	Quests
+// @Param	quest_id	path		string	true	"Quest ID"
+// @Success	200			{object}	storage.Quest
+// @Failure	404
+// @Router	/quest/{quest_id} [get]
 func (h *Handler) HandleGet(c *gin.Context) error {
 	questId := c.Param("id")
 	req := storage.GetQuestRequest{ID: questId}
@@ -105,15 +108,16 @@ const defaultPageSize = 50
 
 // HandleGetMany handles GET /quest request
 //
-//		@Summary	Get many quests sorted by start time and finished status
-//	 @Param      fields      query       []string   false  "Fields to return"  Enums(all, registered, owned) minlength(0) maxlength(3)
-//
-// @Param   page_size     query     int        false  "Number of quests to return for each field" default(50)
-// @Param   page_id  query     string     false  "Page ID to return. Mutually exclusive to multiple fields"
-// @Success	200			{object}	quests.Quests
-// @Failure	400
-// @Failure	401
+// @Summary		Get many quests sorted by start time and finished status
+// @Tags		Quests
+// @Param      	fields		query		[]string   false  "Fields to return"  Enums(all, registered, owned) minlength(0) maxlength(3)
+// @Param		page_size	query		int        false  "Number of quests to return for each field" default(50)
+// @Param		page_id		query		string     false  "Page ID to return. Mutually exclusive to multiple fields"
+// @Success		200			{object}	quests.Quests
+// @Failure		400
+// @Failure		401
 // @Router		/quest [get]
+// @Security	ApiKeyAuth
 func (h *Handler) HandleGetMany(c *gin.Context) error {
 	uauth, err := jwt.GetUserFromContext(c)
 	if err != nil {
@@ -147,15 +151,17 @@ func (h *Handler) HandleGetMany(c *gin.Context) error {
 
 // HandleUpdate handles POST /quest/:id request
 //
-//		@Summary	Update main quest information
-//		@Param		quest_id	path		string						true	"Quest ID"
-//		@Param		request		body		storage.UpdateQuestRequest	true	"Quest information to update"
-//		@Success	200			{object}	storage.Quest
-//	    @Failure    401
-//	    @Failure    403
-//		@Failure	404
-//		@Failure	415
-//		@Router		/quest/{quest_id} [post]
+// @Summary		Update main quest information
+// @Tags 		Quests
+// @Param		quest_id	path		string						true	"Quest ID"
+// @Param		request		body		storage.UpdateQuestRequest	true	"Quest information to update"
+// @Success		200			{object}	storage.Quest
+// @Failure    	401
+// @Failure    	403
+// @Failure		404
+// @Failure		415
+// @Router		/quest/{quest_id} [post]
+// @Security	ApiKeyAuth
 func (h *Handler) HandleUpdate(c *gin.Context) error {
 	req, err := transport.UnmarshalRequestData[storage.UpdateQuestRequest](c.Request)
 	if err != nil {
@@ -195,13 +201,15 @@ func (h *Handler) HandleUpdate(c *gin.Context) error {
 
 // HandleDelete handles DELETE /quest/:id request
 //
-//		@Summary	Delete quest
-//		@Param		quest_id	path		string						true	"Quest ID"
-//		@Success	200
-//	    @Failure    401
-//	    @Failure    403
-//	    @Failure    404
-//		@Router		/quest/{quest_id} [delete]
+// @Summary		Delete quest
+// @Tags 		Quests
+// @Param		quest_id	path	string	true	"Quest ID"
+// @Success		200
+// @Failure    	401
+// @Failure    	403
+// @Failure    	404
+// @Router		/quest/{quest_id} [delete]
+// @Security 	ApiKeyAuth
 func (h *Handler) HandleDelete(c *gin.Context) error {
 	id := c.Param("id")
 	uauth, err := jwt.GetUserFromContext(c)
