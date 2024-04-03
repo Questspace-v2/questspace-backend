@@ -191,7 +191,7 @@ func (s *Service) LeaveTeam(ctx context.Context, user *storage.User, teamID, new
 			return nil, xerrors.Errorf("change captain: %w", err)
 		}
 
-		logging.InfoCtx(ctx, "new captain",
+		logging.Info(ctx, "new captain",
 			zap.String("team_id", teamID),
 			zap.String("old_captain", user.ID),
 			zap.String("new_captain", newCaptainID),

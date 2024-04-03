@@ -77,12 +77,17 @@ func (h *Handler) HandleCreate(c *gin.Context) error {
 	return nil
 }
 
+type TeamQuestResponse struct {
+	Quest *storage.Quest `json:"quest"`
+	Team  *storage.Team  `json:"team,omitempty"`
+}
+
 // HandleGet handles GET /quest/:id request
 //
 // @Summary	Get quest by id
 // @Tags	Quests
 // @Param	quest_id	path		string	true	"Quest ID"
-// @Success	200			{object}	storage.Quest
+// @Success	200			{object}	quest.TeamQuestResponse
 // @Failure	404
 // @Router	/quest/{quest_id} [get]
 func (h *Handler) HandleGet(c *gin.Context) error {
@@ -99,7 +104,23 @@ func (h *Handler) HandleGet(c *gin.Context) error {
 		}
 		return xerrors.Errorf("get quest: %w", err)
 	}
+
 	quests.SetStatus(quest)
+	resp := TeamQuestResponse{Quest: quest}
+	if uauth, err := jwt.GetUserFromContext(c); err == nil {
+		teamReq := storage.GetTeamRequest{
+			UserRegistration: &storage.UserRegistration{
+				UserID:  uauth.ID,
+				QuestID: questId,
+			},
+		}
+		team, err := s.GetTeam(c, &teamReq)
+		if err != nil && !errors.Is(err, storage.ErrNotFound) {
+			return xerrors.Errorf("get user team: %w", err)
+		}
+		resp.Team = team
+	}
+
 	c.JSON(http.StatusOK, quest)
 	return nil
 }

@@ -7,10 +7,6 @@ import (
 	"slices"
 	"time"
 
-	"questspace/internal/handlers/auth/google"
-
-	"google.golang.org/api/idtoken"
-
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -19,9 +15,11 @@ import (
 	"golang.org/x/xerrors"
 	"golang.yandex/hasql"
 	"golang.yandex/hasql/checkers"
+	"google.golang.org/api/idtoken"
 
 	"questspace/docs"
 	"questspace/internal/handlers/auth"
+	"questspace/internal/handlers/auth/google"
 	"questspace/internal/handlers/quest"
 	"questspace/internal/handlers/taskgroups"
 	"questspace/internal/handlers/teams"
@@ -47,7 +45,7 @@ var config struct {
 	Google google.Config
 }
 
-// Init does all deps initialization
+// Init godoc
 // @securityDefinitions.apikey ApiKeyAuth
 // @in header
 // @name Authorization
@@ -92,13 +90,13 @@ func Init(app application.App) error {
 	if err != nil {
 		return xerrors.Errorf("create token validator: %w", err)
 	}
-	gOAuthHandler := google.NewOAuthHandler(clientFactory, tokenValidator, jwtParser, config.Google)
+	googleOAuthHandler := google.NewOAuthHandler(clientFactory, tokenValidator, jwtParser, config.Google)
 
 	authGroup := app.Router().Group("/auth")
 	authHandler := auth.NewHandler(clientFactory, client, pwHasher, jwtParser)
 	authGroup.POST("/register", application.AsGinHandler(authHandler.HandleBasicSignUp))
 	authGroup.POST("/sign-in", application.AsGinHandler(authHandler.HandleBasicSignIn))
-	authGroup.POST("/google", application.AsGinHandler(gOAuthHandler.Handle))
+	authGroup.POST("/google", application.AsGinHandler(googleOAuthHandler.Handle))
 
 	userGroup := app.Router().Group("/user")
 
@@ -106,30 +104,30 @@ func Init(app application.App) error {
 	userGroup.GET("/:id", application.AsGinHandler(getUserHandler.Handle))
 
 	updateUserHandler := user.NewUpdateHandler(clientFactory, client, pwHasher, jwtParser)
-	userGroup.POST("/:id", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, updateUserHandler.HandleUser)))
-	userGroup.POST("/:id/password", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, updateUserHandler.HandlePassword)))
-	userGroup.DELETE("/:id", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, updateUserHandler.HandleDelete)))
+	userGroup.POST("/:id", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(updateUserHandler.HandleUser))
+	userGroup.POST("/:id/password", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(updateUserHandler.HandlePassword))
+	userGroup.DELETE("/:id", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(updateUserHandler.HandleDelete))
 
 	teamsHandler := teams.NewHandler(clientFactory, config.Teams.InviteLinkPrefix)
 
 	questGroup := app.Router().Group("/quest")
 	questHandler := quest.NewHandler(clientFactory, client)
-	questGroup.POST("", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, questHandler.HandleCreate)))
-	questGroup.GET("", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, questHandler.HandleGetMany)))
-	questGroup.GET("/:id", application.AsGinHandler(questHandler.HandleGet))
-	questGroup.POST("/:id", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, questHandler.HandleUpdate)))
-	questGroup.DELETE("/:id", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, questHandler.HandleDelete)))
-	questGroup.POST("/:id/teams", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, teamsHandler.HandleCreate)))
+	questGroup.POST("", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(questHandler.HandleCreate))
+	questGroup.GET("", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(questHandler.HandleGetMany))
+	questGroup.GET("/:id", jwt.AuthMiddleware(jwtParser), application.AsGinHandler(questHandler.HandleGet))
+	questGroup.POST("/:id", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(questHandler.HandleUpdate))
+	questGroup.DELETE("/:id", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(questHandler.HandleDelete))
+	questGroup.POST("/:id/teams", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(teamsHandler.HandleCreate))
 	questGroup.GET("/:id/teams", application.AsGinHandler(teamsHandler.HandleGetMany))
 
 	teamsGroup := app.Router().Group("/teams")
-	teamsGroup.GET("/join/:path", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, teamsHandler.HandleJoin)))
+	teamsGroup.GET("/join/:path", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(teamsHandler.HandleJoin))
 	teamsGroup.GET("/:id", application.AsGinHandler(teamsHandler.HandleGet))
-	teamsGroup.POST("/:id", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, teamsHandler.HandleUpdate)))
-	teamsGroup.DELETE("/:id", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, teamsHandler.HandleDelete)))
-	teamsGroup.POST("/:id/captain", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, teamsHandler.HandleChangeLeader)))
-	teamsGroup.POST("/:id/leave", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, teamsHandler.HandleLeave)))
-	teamsGroup.DELETE("/:id/:user_id", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, teamsHandler.HandleRemoveUser)))
+	teamsGroup.POST("/:id", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(teamsHandler.HandleUpdate))
+	teamsGroup.DELETE("/:id", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(teamsHandler.HandleDelete))
+	teamsGroup.POST("/:id/captain", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(teamsHandler.HandleChangeLeader))
+	teamsGroup.POST("/:id/leave", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(teamsHandler.HandleLeave))
+	teamsGroup.DELETE("/:id/:user_id", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(teamsHandler.HandleRemoveUser))
 
 	taskGroupHandler := taskgroups.NewHandler(clientFactory)
 	questGroup.PATCH("/:id/task-groups/bulk", application.AsGinHandler(taskGroupHandler.HandleBulkUpdate))

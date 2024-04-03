@@ -1,43 +1,36 @@
 package jwt
 
 import (
+	"context"
 	"net/http"
 	"strings"
 
-	"go.uber.org/zap"
-
-	"questspace/pkg/application/logging"
-
-	"github.com/gofrs/uuid"
-
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 
 	"questspace/pkg/application"
 	"questspace/pkg/application/httperrors"
+	"questspace/pkg/application/logging"
 	"questspace/pkg/storage"
 )
 
 const AuthCookieName = "qs_user_acc"
 
-var userCredsKey = ""
+type jwtKey struct{}
 
-func init() {
-	userCredsKey = "user-creds" + uuid.Must(uuid.NewV4()).String()
-}
-
-func WithJWTMiddleware(parser Parser, handler application.AppHandlerFunc) application.AppHandlerFunc {
-	return func(c *gin.Context) error {
-		var token string
-		if htk := getFromHeader(c); htk != "" {
-			token = htk
-		} else if ctk := getFromCookies(c); ctk != "" {
-			token = ctk
-		} else {
-			return httperrors.Errorf(http.StatusForbidden, "no auth token was provided")
+func middleware(parser Parser, strict bool) gin.HandlerFunc {
+	return application.AsGinHandler(func(c *gin.Context) error {
+		token := getTokenFromRequest(c.Request)
+		if token == "" && strict {
+			return httperrors.New(http.StatusUnauthorized, "no credentials found")
+		} else if token == "" {
+			c.Next()
+			return nil
 		}
+
 		user, err := parser.ParseToken(token)
 		if err != nil {
-			return httperrors.WrapWithCode(http.StatusForbidden, err)
+			return httperrors.WrapWithCode(http.StatusUnauthorized, err)
 		}
 
 		logging.AddFieldsToContextLogger(c, zap.Dict("user",
@@ -45,13 +38,33 @@ func WithJWTMiddleware(parser Parser, handler application.AppHandlerFunc) applic
 			zap.String("username", user.Username),
 		))
 
-		c.Set(userCredsKey, user)
-		return handler(c)
-	}
+		userCtx := context.WithValue(c.Request.Context(), jwtKey{}, user)
+		c.Request = c.Request.WithContext(userCtx)
+		c.Next()
+		return nil
+	})
 }
 
-func getFromHeader(c *gin.Context) string {
-	jwtHeader := c.GetHeader("Authorization")
+func AuthMiddlewareStrict(parser Parser) gin.HandlerFunc {
+	return middleware(parser, true)
+}
+
+func AuthMiddleware(parser Parser) gin.HandlerFunc {
+	return middleware(parser, false)
+}
+
+func getTokenFromRequest(req *http.Request) string {
+	if htk := getFromHeader(req); htk != "" {
+		return htk
+	}
+	if ctk := getFromCookies(req); ctk != "" {
+		return ctk
+	}
+	return ""
+}
+
+func getFromHeader(req *http.Request) string {
+	jwtHeader := req.Header.Get("Authorization")
 	if jwtHeader == "" {
 		return ""
 	}
@@ -65,22 +78,18 @@ func getFromHeader(c *gin.Context) string {
 	return tokenStrParts[1]
 }
 
-func getFromCookies(c *gin.Context) string {
-	cookie, err := c.Cookie(AuthCookieName)
+func getFromCookies(req *http.Request) string {
+	cookie, err := req.Cookie(AuthCookieName)
 	if err != nil {
 		return ""
 	}
-	return cookie
+	return cookie.Value
 }
 
-func GetUserFromContext(c *gin.Context) (*storage.User, error) {
-	userVal := c.Value(userCredsKey)
-	if userVal == nil {
-		return nil, httperrors.Errorf(http.StatusUnauthorized, "no credentials found")
+func GetUserFromContext(ctx context.Context) (*storage.User, error) {
+	user := ctx.Value(jwtKey{})
+	if user == nil {
+		return nil, httperrors.New(http.StatusUnauthorized, "no credentials found")
 	}
-
-	if user, ok := userVal.(*storage.User); ok {
-		return user, nil
-	}
-	return nil, httperrors.Errorf(http.StatusUnauthorized, "invalid credentials")
+	return user.(*storage.User), nil
 }

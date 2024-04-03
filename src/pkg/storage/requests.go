@@ -83,10 +83,16 @@ type CreateTeamRequest struct {
 	Creator *User
 }
 
+type UserRegistration struct {
+	UserID  string
+	QuestID string
+}
+
 type GetTeamRequest struct {
-	ID             string
-	InvitePath     string
-	IncludeMembers bool
+	ID               string
+	InvitePath       string
+	UserRegistration *UserRegistration
+	IncludeMembers   bool
 }
 
 type GetTeamsRequest struct {

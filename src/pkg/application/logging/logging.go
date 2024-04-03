@@ -3,6 +3,8 @@ package logging
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -13,7 +15,7 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-const loggerKey = "app-logger"
+type loggerKey struct{}
 
 var restrictedHeaders = map[string]struct{}{
 	"authorization": {},
@@ -36,152 +38,102 @@ func Middleware(logger *zap.Logger) gin.HandlerFunc {
 				headers = append(headers, zap.String(headerNameLower, "***"))
 				continue
 			}
-			for _, val := range values {
-				headers = append(headers, zap.String(headerNameLower, val))
-			}
+			headers = append(headers, zap.String(headerNameLower, strings.Join(values, ", ")))
 		}
+
 		fields = append(fields,
-			zap.String("uri", req.RequestURI+"?"+req.URL.RawQuery),
+			zap.String("uri", req.URL.RequestURI()),
 			zap.Dict("headers", headers...),
 		)
 
 		logger = logger.With(fields...)
-		c.Set(loggerKey, logger)
+		WithLogger(c, logger)
 		c.Next()
 	}
 }
 
-func AddFieldsToContextLogger(c *gin.Context, fields ...zap.Field) {
-	logger := c.MustGet(loggerKey).(*zap.Logger)
+func RecoveryMiddleware(c *gin.Context, err any) {
+	Error(c, "panic during handling request", zap.Any("cause", err))
+	c.Status(http.StatusInternalServerError)
+}
+
+func AddFieldsToContextLogger(ctx context.Context, fields ...zap.Field) context.Context {
+	logger := GetLogger(ctx)
+	if logger == nil {
+		_, _ = fmt.Fprintf(os.Stderr, "Logger not found. Skipping fields...\n")
+		return ctx
+	}
 	logger = logger.With(fields...)
-	c.Set(loggerKey, logger)
+	return WithLogger(ctx, logger)
 }
 
-func GetLogger(c *gin.Context) *zap.Logger {
-	return c.MustGet(loggerKey).(*zap.Logger)
+func WithLogger(ctx context.Context, logger *zap.Logger) context.Context {
+	if c, ok := ctx.(*gin.Context); ok {
+		logCtx := setCtxLogger(c.Request.Context(), logger)
+		c.Request = c.Request.WithContext(logCtx)
+		return c
+	}
+	return setCtxLogger(ctx, logger)
 }
 
-func log(c *gin.Context, lvl zapcore.Level, msg string, fields ...zap.Field) {
-	logger := c.MustGet(loggerKey).(*zap.Logger)
+func setCtxLogger(ctx context.Context, logger *zap.Logger) context.Context {
+	logCtx := context.WithValue(ctx, loggerKey{}, logger)
+	return logCtx
+}
+
+func GetLogger(ctx context.Context) *zap.Logger {
+	val := ctx.Value(loggerKey{})
+	if logger, ok := val.(*zap.Logger); ok {
+		return logger
+	}
+	return nil
+}
+
+func logMessage(ctx context.Context, lvl zapcore.Level, msg string, fields ...zap.Field) {
+	logger := GetLogger(ctx)
+	if logger == nil {
+		_, _ = fmt.Fprintf(os.Stderr, "Logger not found. Skipping message...\n")
+		return
+	}
 	logger.Log(lvl, msg, fields...)
 }
 
-func Debug(c *gin.Context, msg string, fields ...zap.Field) {
-	log(c, zap.DebugLevel, msg, fields...)
+func Debug(ctx context.Context, msg string, fields ...zap.Field) {
+	logMessage(ctx, zap.DebugLevel, msg, fields...)
 }
 
-func Info(c *gin.Context, msg string, fields ...zap.Field) {
-	log(c, zap.InfoLevel, msg, fields...)
+func Info(ctx context.Context, msg string, fields ...zap.Field) {
+	logMessage(ctx, zap.InfoLevel, msg, fields...)
 }
 
-func Warn(c *gin.Context, msg string, fields ...zap.Field) {
-	log(c, zap.WarnLevel, msg, fields...)
+func Warn(ctx context.Context, msg string, fields ...zap.Field) {
+	logMessage(ctx, zap.WarnLevel, msg, fields...)
 }
 
-func Error(c *gin.Context, msg string, fields ...zap.Field) {
-	log(c, zap.ErrorLevel, msg, fields...)
+func Error(ctx context.Context, msg string, fields ...zap.Field) {
+	logMessage(ctx, zap.ErrorLevel, msg, fields...)
 }
 
-func Panic(c *gin.Context, msg string, fields ...zap.Field) {
-	log(c, zap.PanicLevel, msg, fields...)
+func Panic(ctx context.Context, msg string, fields ...zap.Field) {
+	logMessage(ctx, zap.PanicLevel, msg, fields...)
 }
 
-func Debugf(c *gin.Context, msg string, params ...interface{}) {
-	log(c, zap.DebugLevel, fmt.Sprintf(msg, params...))
+func Debugf(ctx context.Context, msg string, params ...interface{}) {
+	logMessage(ctx, zap.DebugLevel, fmt.Sprintf(msg, params...))
 }
 
-func Infof(c *gin.Context, msg string, params ...interface{}) {
-	log(c, zap.InfoLevel, fmt.Sprintf(msg, params...))
+func Infof(ctx context.Context, msg string, params ...interface{}) {
+	logMessage(ctx, zap.InfoLevel, fmt.Sprintf(msg, params...))
 }
 
-func Warnf(c *gin.Context, msg string, params ...interface{}) {
-	log(c, zap.WarnLevel, fmt.Sprintf(msg, params...))
+func Warnf(ctx context.Context, msg string, params ...interface{}) {
+	logMessage(ctx, zap.WarnLevel, fmt.Sprintf(msg, params...))
 }
 
-func Errorf(c *gin.Context, msg string, params ...interface{}) {
-	log(c, zap.ErrorLevel, fmt.Sprintf(msg, params...))
+func Errorf(ctx context.Context, msg string, params ...interface{}) {
+	logMessage(ctx, zap.ErrorLevel, fmt.Sprintf(msg, params...))
 }
 
-func Panicf(c *gin.Context, msg string, params ...interface{}) {
-	log(c, zap.PanicLevel, fmt.Sprintf(msg, params...))
-}
-
-func DebugCtx(ctx context.Context, msg string, fields ...zap.Field) {
-	c, ok := ctx.(*gin.Context)
-	if !ok {
-		return
-	}
-	log(c, zap.DebugLevel, msg, fields...)
-}
-
-func InfoCtx(ctx context.Context, msg string, fields ...zap.Field) {
-	c, ok := ctx.(*gin.Context)
-	if !ok {
-		return
-	}
-	log(c, zap.InfoLevel, msg, fields...)
-}
-
-func WarnCtx(ctx context.Context, msg string, fields ...zap.Field) {
-	c, ok := ctx.(*gin.Context)
-	if !ok {
-		return
-	}
-	log(c, zap.WarnLevel, msg, fields...)
-}
-
-func ErrorCtx(ctx context.Context, msg string, fields ...zap.Field) {
-	c, ok := ctx.(*gin.Context)
-	if !ok {
-		return
-	}
-	log(c, zap.ErrorLevel, msg, fields...)
-}
-
-func PanicCtx(ctx context.Context, msg string, fields ...zap.Field) {
-	c, ok := ctx.(*gin.Context)
-	if !ok {
-		return
-	}
-	log(c, zap.PanicLevel, msg, fields...)
-}
-
-func DebugCtxf(ctx context.Context, msg string, params ...interface{}) {
-	c, ok := ctx.(*gin.Context)
-	if !ok {
-		return
-	}
-	log(c, zap.DebugLevel, fmt.Sprintf(msg, params...))
-}
-
-func InfoCtxf(ctx context.Context, msg string, params ...interface{}) {
-	c, ok := ctx.(*gin.Context)
-	if !ok {
-		return
-	}
-	log(c, zap.InfoLevel, fmt.Sprintf(msg, params...))
-}
-
-func WarnCtxf(ctx context.Context, msg string, params ...interface{}) {
-	c, ok := ctx.(*gin.Context)
-	if !ok {
-		return
-	}
-	log(c, zap.WarnLevel, fmt.Sprintf(msg, params...))
-}
-
-func ErrorCtxf(ctx context.Context, msg string, params ...interface{}) {
-	c, ok := ctx.(*gin.Context)
-	if !ok {
-		return
-	}
-	log(c, zap.ErrorLevel, fmt.Sprintf(msg, params...))
-}
-
-func PanicCtxf(ctx context.Context, msg string, params ...interface{}) {
-	c, ok := ctx.(*gin.Context)
-	if !ok {
-		return
-	}
-	log(c, zap.PanicLevel, fmt.Sprintf(msg, params...))
+func Panicf(ctx context.Context, msg string, params ...interface{}) {
+	logMessage(ctx, zap.PanicLevel, fmt.Sprintf(msg, params...))
 }

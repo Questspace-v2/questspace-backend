@@ -13,7 +13,6 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/spkg/ptr"
 	"github.com/stretchr/testify/require"
-	"go.uber.org/zap"
 
 	pgdb "questspace/internal/pgdb/client"
 	"questspace/pkg/application"
@@ -31,12 +30,9 @@ func TestHandleCreate(t *testing.T) {
 	factory := pgdb.NewFakeClientFactory(userStorage)
 
 	router := gin.Default()
+	router.ContextWithFallback = true
 	handler := NewHandler(factory, http.Client{})
-	router.Use(func(c *gin.Context) {
-		c.Set("app-logger", zap.NewNop())
-		c.Next()
-	})
-	router.POST("/quest", application.AsGinHandler(jwt.WithJWTMiddleware(jwtParser, handler.HandleCreate)))
+	router.POST("/quest", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(handler.HandleCreate))
 
 	now := ptr.Time(time.Unix(time.Now().Unix(), 0))
 	now = ptr.Time(now.In(time.UTC))

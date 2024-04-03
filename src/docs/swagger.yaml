@@ -18,6 +18,13 @@ definitions:
       id_token:
         type: string
     type: object
+  quest.TeamQuestResponse:
+    properties:
+      quest:
+        $ref: '#/definitions/storage.Quest'
+      team:
+        $ref: '#/definitions/storage.Team'
+    type: object
   quests.PaginatedQuestsResponse:
     properties:
       next_page_id:
@@ -429,7 +436,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/storage.Quest'
+            $ref: '#/definitions/quest.TeamQuestResponse'
         "404":
           description: Not Found
       summary: Get quest by id

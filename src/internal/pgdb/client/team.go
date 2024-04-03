@@ -7,7 +7,6 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/spkg/ptr"
 	"golang.org/x/xerrors"
 
 	"questspace/pkg/storage"
@@ -72,21 +71,19 @@ func (c *Client) GetTeam(ctx context.Context, req *storage.GetTeamRequest) (*sto
 		query = query.Where(sq.Eq{"t.id": req.ID})
 	} else if req.InvitePath != "" {
 		query = query.Where(sq.Eq{"t.invite_path": req.InvitePath})
+	} else if req.UserRegistration != nil {
+		query = query.Where(sq.Eq{"u.id": req.UserRegistration.UserID, "q.id": req.UserRegistration.QuestID})
 	} else {
 		return nil, xerrors.Errorf("no search key was provided: %w", storage.ErrValidation)
 	}
 
 	row := query.RunWith(c.runner).QueryRowContext(ctx)
 	team := &storage.Team{Quest: &storage.Quest{}, Captain: &storage.User{}}
-	var maxTeamCap sql.NullInt32
-	if err := row.Scan(&team.ID, &team.Name, &team.InviteLink, &team.Score, &maxTeamCap, &team.Captain.ID, &team.Captain.Username, &team.Captain.AvatarURL); err != nil {
+	if err := row.Scan(&team.ID, &team.Name, &team.InviteLink, &team.Score, &team.Quest.MaxTeamCap, &team.Captain.ID, &team.Captain.Username, &team.Captain.AvatarURL); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, storage.ErrNotFound
 		}
 		return nil, xerrors.Errorf("scan row: %w", err)
-	}
-	if maxTeamCap.Valid {
-		team.Quest.MaxTeamCap = ptr.Int(int(maxTeamCap.Int32))
 	}
 	if req.IncludeMembers {
 		var err error

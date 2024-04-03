@@ -6,7 +6,6 @@ import (
 	"errors"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/spkg/ptr"
 	"golang.org/x/xerrors"
 
 	"questspace/pkg/storage"
@@ -60,12 +59,10 @@ func (c *Client) GetQuest(ctx context.Context, req *storage.GetQuestRequest) (*s
 		q                     storage.Quest
 		creatorName           sql.NullString
 		userId, userAvatarURL sql.NullString
-		regDeadline, finTime  sql.NullTime
-		maxTeamCap            sql.NullInt32
 		finished              bool
 	)
-	if err := row.Scan(&q.ID, &q.Name, &q.Description, &q.MediaLink, &regDeadline,
-		&q.StartTime, &finTime, &q.Access, &maxTeamCap, &finished, &userId, &creatorName, &userAvatarURL); err != nil {
+	if err := row.Scan(&q.ID, &q.Name, &q.Description, &q.MediaLink, &q.RegistrationDeadline,
+		&q.StartTime, &q.FinishTime, &q.Access, &q.MaxTeamCap, &finished, &userId, &creatorName, &userAvatarURL); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, storage.ErrNotFound
 		}
@@ -79,15 +76,6 @@ func (c *Client) GetQuest(ctx context.Context, req *storage.GetQuestRequest) (*s
 	}
 	if q.Creator != nil && userAvatarURL.Valid {
 		q.Creator.Username = creatorName.String
-	}
-	if regDeadline.Valid {
-		q.RegistrationDeadline = &regDeadline.Time
-	}
-	if finTime.Valid {
-		q.FinishTime = &finTime.Time
-	}
-	if maxTeamCap.Valid {
-		q.MaxTeamCap = ptr.Int(int(maxTeamCap.Int32))
 	}
 	if finished {
 		q.Status = storage.StatusFinished
@@ -154,8 +142,6 @@ func (c *Client) GetQuests(ctx context.Context, req *storage.GetQuestsRequest) (
 	var (
 		username              sql.NullString
 		userId, userAvatarURL sql.NullString
-		regDeadline, finTime  sql.NullTime
-		maxTeamCap            sql.NullInt32
 		finished              bool
 	)
 
@@ -163,8 +149,8 @@ func (c *Client) GetQuests(ctx context.Context, req *storage.GetQuestsRequest) (
 		var q storage.Quest
 
 		if err := rows.Scan(
-			&q.ID, &q.Name, &q.Description, &q.Access, &regDeadline,
-			&q.StartTime, &finTime, &q.MediaLink, &maxTeamCap, &finished,
+			&q.ID, &q.Name, &q.Description, &q.Access, &q.RegistrationDeadline,
+			&q.StartTime, &q.FinishTime, &q.MediaLink, &q.MaxTeamCap, &finished,
 			&userId, &username, &userAvatarURL,
 		); err != nil {
 			return nil, xerrors.Errorf("scan row: %w", err)
@@ -180,18 +166,6 @@ func (c *Client) GetQuests(ctx context.Context, req *storage.GetQuestsRequest) (
 			q.Creator.AvatarURL = userAvatarURL.String
 		}
 
-		if regDeadline.Valid {
-			deadline := regDeadline.Time
-			q.RegistrationDeadline = &deadline
-		}
-		if finTime.Valid {
-			finish := finTime.Time
-			q.RegistrationDeadline = &finish
-		}
-		if maxTeamCap.Valid {
-			teamCap := int(maxTeamCap.Int32)
-			q.MaxTeamCap = &teamCap
-		}
 		if finished {
 			q.Status = storage.StatusFinished
 		}
@@ -243,27 +217,16 @@ func (c *Client) UpdateQuest(ctx context.Context, req *storage.UpdateQuestReques
 
 	row := query.RunWith(c.runner).QueryRowContext(ctx)
 	var (
-		q                    storage.Quest
-		creatorID            sql.NullString
-		regDeadline, finTime sql.NullTime
-		maxTeamCap           sql.NullInt32
-		finished             bool
+		q         storage.Quest
+		creatorID sql.NullString
+		finished  bool
 	)
 	if err := row.Scan(&q.ID, &q.Name, &q.Description, &q.MediaLink, &creatorID,
-		&regDeadline, &q.StartTime, &finTime, &q.Access, &maxTeamCap, &finished); err != nil {
+		&q.RegistrationDeadline, &q.StartTime, &q.FinishTime, &q.Access, &q.MaxTeamCap, &finished); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, storage.ErrNotFound
 		}
 		return nil, xerrors.Errorf("scan row: %w", err)
-	}
-	if regDeadline.Valid {
-		q.RegistrationDeadline = &regDeadline.Time
-	}
-	if finTime.Valid {
-		q.FinishTime = &finTime.Time
-	}
-	if maxTeamCap.Valid {
-		q.MaxTeamCap = ptr.Int(int(maxTeamCap.Int32))
 	}
 	if creatorID.Valid {
 		q.Creator = &storage.User{ID: creatorID.String}

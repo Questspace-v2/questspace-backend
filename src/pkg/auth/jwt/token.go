@@ -30,7 +30,7 @@ func NewTokenParser(sec []byte) *TokenParser {
 	return &TokenParser{secret: sec}
 }
 
-func (p TokenParser) ParseToken(tokenStr string) (*storage.User, error) {
+func (p *TokenParser) ParseToken(tokenStr string) (*storage.User, error) {
 	token, err := jwt.ParseWithClaims(tokenStr, &questspaceClaims{}, func(t *jwt.Token) (interface{}, error) {
 		if t.Method.Alg() != usedAlg {
 			return nil, xerrors.Errorf("unexpected signing method: %v", t.Method.Alg())
@@ -53,7 +53,7 @@ func (p TokenParser) ParseToken(tokenStr string) (*storage.User, error) {
 	return nil, xerrors.New("invalid token")
 }
 
-func (p TokenParser) CreateToken(user *storage.User) (string, error) {
+func (p *TokenParser) CreateToken(user *storage.User) (string, error) {
 	claims := questspaceClaims{
 		Admin:  false, // TODO(svayp11): Implement admin role
 		Avatar: user.AvatarURL,

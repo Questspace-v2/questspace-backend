@@ -51,6 +51,7 @@ func Run(initFunc func(app App) error, configHolder interface{}) {
 	}
 
 	app := App{context: context.Background(), engine: gin.New()}
+	app.engine.ContextWithFallback = true
 
 	_, err = os.Stat(".env")
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
@@ -67,7 +68,7 @@ func Run(initFunc func(app App) error, configHolder interface{}) {
 	}
 
 	app.logger = logger
-	app.engine.Use(logging.Middleware(logger))
+	app.engine.Use(logging.Middleware(logger), gin.CustomRecovery(logging.RecoveryMiddleware))
 
 	// liveness check
 	app.engine.GET("/ping", Ping)

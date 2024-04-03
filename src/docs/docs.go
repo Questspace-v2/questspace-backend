@@ -270,7 +270,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/storage.Quest"
+                            "$ref": "#/definitions/quest.TeamQuestResponse"
                         }
                     },
                     "404": {
@@ -865,6 +865,17 @@ const docTemplate = `{
             "properties": {
                 "id_token": {
                     "type": "string"
+                }
+            }
+        },
+        "quest.TeamQuestResponse": {
+            "type": "object",
+            "properties": {
+                "quest": {
+                    "$ref": "#/definitions/storage.Quest"
+                },
+                "team": {
+                    "$ref": "#/definitions/storage.Team"
                 }
             }
         },
