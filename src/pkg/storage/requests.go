@@ -56,7 +56,7 @@ type GetQuestsRequest struct {
 }
 
 type GetQuestsResponse struct {
-	Quests   []*Quest
+	Quests   []Quest
 	NextPage *Page
 }
 
@@ -130,26 +130,30 @@ type RemoveUserRequest struct {
 }
 
 type CreateTaskGroupRequest struct {
-	QuestID  string     `json:"-"`
-	OrderIdx int        `json:"order_idx"`
-	Name     string     `json:"name"`
-	PubTime  *time.Time `json:"pub_time,omitempty"`
+	QuestID  string              `json:"-"`
+	OrderIdx int                 `json:"order_idx"`
+	Name     string              `json:"name"`
+	PubTime  *time.Time          `json:"pub_time,omitempty"`
+	Tasks    []CreateTaskRequest `json:"tasks"`
 }
 
 type GetTaskGroupRequest struct {
-	ID string
+	ID           string
+	IncludeTasks bool
 }
 
 type GetTaskGroupsRequest struct {
-	QuestID string
+	QuestID      string
+	IncludeTasks bool
 }
 
 type UpdateTaskGroupRequest struct {
-	QuestID  string     `json:"-"`
-	ID       string     `json:"id"`
-	OrderIdx int        `json:"order_idx"`
-	Name     string     `json:"name"`
-	PubTime  *time.Time `json:"pub_time"`
+	QuestID  string                  `json:"-"`
+	ID       string                  `json:"id"`
+	OrderIdx int                     `json:"order_idx"`
+	Name     string                  `json:"name"`
+	PubTime  *time.Time              `json:"pub_time"`
+	Tasks    *TasksBulkUpdateRequest `json:"tasks"`
 }
 
 type DeleteTaskGroupRequest struct {
@@ -161,4 +165,55 @@ type TaskGroupsBulkUpdateRequest struct {
 	Create  []CreateTaskGroupRequest `json:"create"`
 	Update  []UpdateTaskGroupRequest `json:"update"`
 	Delete  []DeleteTaskGroupRequest `json:"delete"`
+}
+
+type CreateTaskRequest struct {
+	OrderIdx       int              `json:"order_idx"`
+	GroupID        string           `json:"group_id"`
+	Name           string           `json:"name"`
+	Question       string           `json:"question"`
+	Reward         int              `json:"reward"`
+	CorrectAnswers []string         `json:"correct_answers"`
+	Verification   VerificationType `json:"verification"`
+	Hints          []string         `json:"hints"`
+	PubTime        *time.Time       `json:"pub_time"`
+	MediaLink      string           `json:"media_link"`
+}
+
+type GetTaskRequest struct {
+	ID string
+}
+
+type GetTasksRequest struct {
+	GroupIDs []string
+	QuestID  string
+}
+
+type GetTasksResponse map[string][]Task
+
+type UpdateTaskRequest struct {
+	QuestID        string           `json:"-"`
+	ID             string           `json:"id"`
+	OrderIdx       int              `json:"order_idx"`
+	GroupID        string           `json:"group_id"`
+	Name           string           `json:"name"`
+	Question       string           `json:"question"`
+	Reward         int              `json:"reward"`
+	CorrectAnswers []string         `json:"correct_answers"`
+	Verification   VerificationType `json:"verification"`
+	Hints          []string         `json:"hints"`
+	PubTime        *time.Time       `json:"pub_time"`
+	MediaLink      string           `json:"media_link"`
+}
+
+type DeleteTaskRequest struct {
+	ID string `json:"id"`
+}
+
+type TasksBulkUpdateRequest struct {
+	QuestID string              `json:"-"`
+	GroupID string              `json:"-"`
+	Create  []CreateTaskRequest `json:"create"`
+	Update  []UpdateTaskRequest `json:"update"`
+	Delete  []DeleteTaskRequest `json:"delete"`
 }

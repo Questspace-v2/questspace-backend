@@ -23,8 +23,8 @@ var existingFieldsMap = map[string]struct{}{
 }
 
 type PaginatedQuestsResponse struct {
-	Quests     []*storage.Quest `json:"quests"`
-	NextPageID string           `json:"next_page_id,omitempty"`
+	Quests     []storage.Quest `json:"quests"`
+	NextPageID string          `json:"next_page_id,omitempty"`
 }
 
 type Quests struct {

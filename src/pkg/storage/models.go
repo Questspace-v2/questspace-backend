@@ -105,14 +105,14 @@ func (p *Page) ID() string {
 }
 
 type Team struct {
-	ID           string  `json:"id"`
-	Name         string  `json:"name"`
-	Quest        *Quest  `json:"-"`
-	Captain      *User   `json:"captain"`
-	Score        int     `json:"score"`
-	InviteLink   string  `json:"invite_link"`
-	InviteLinkID int64   `json:"-"`
-	Members      []*User `json:"members"`
+	ID           string `json:"id"`
+	Name         string `json:"name"`
+	Quest        *Quest `json:"-"`
+	Captain      *User  `json:"captain"`
+	Score        int    `json:"score"`
+	InviteLink   string `json:"invite_link"`
+	InviteLinkID int64  `json:"-"`
+	Members      []User `json:"members"`
 }
 
 type User struct {
@@ -123,25 +123,26 @@ type User struct {
 }
 
 type TaskGroup struct {
-	ID       string
-	OrderIdx int
-	Quest    *Quest
-	Name     string
-	PubTime  *time.Time
+	ID       string     `json:"id"`
+	OrderIdx int        `json:"order_idx"`
+	Quest    *Quest     `json:"-"`
+	Name     string     `json:"name"`
+	PubTime  *time.Time `json:"pub_time,omitempty"`
+	Tasks    []Task     `json:"tasks"`
 }
 
 type Task struct {
-	ID             string
-	OrderIdx       int
-	Group          *TaskGroup
-	Name           string
-	Question       string
-	Reward         int
-	CorrectAnswers []string
-	Verification   VerificationType
-	Hints          []string
-	PubTime        *time.Time
-	MediaUrl       string
+	ID             string           `json:"id"`
+	OrderIdx       int              `json:"order_idx"`
+	Group          *TaskGroup       `json:"-"`
+	Name           string           `json:"name"`
+	Question       string           `json:"question"`
+	Reward         int              `json:"reward"`
+	CorrectAnswers []string         `json:"correct_answers"`
+	Verification   VerificationType `json:"verification_type" enums:"auto,manual"`
+	Hints          []string         `json:"hints"`
+	PubTime        *time.Time       `json:"pub_time,omitempty"`
+	MediaLink      string           `json:"media_link"`
 }
 
 type AnswerTry struct {

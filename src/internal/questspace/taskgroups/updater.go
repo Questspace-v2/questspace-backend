@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"slices"
 
+	"questspace/internal/questspace/tasks"
+
 	"golang.org/x/xerrors"
 
 	"questspace/internal/questspace/permutations"
@@ -14,7 +16,8 @@ import (
 )
 
 type Updater struct {
-	s storage.TaskGroupStorage
+	s           storage.TaskGroupStorage
+	taskUpdater *tasks.Updater
 }
 
 type taskGroupsPacked struct {
@@ -22,8 +25,11 @@ type taskGroupsPacked struct {
 	ordered []*storage.TaskGroup
 }
 
-func NewUpdater(s storage.TaskGroupStorage) *Updater {
-	return &Updater{s: s}
+func NewUpdater(s storage.TaskGroupStorage, taskUpdater *tasks.Updater) *Updater {
+	return &Updater{
+		s:           s,
+		taskUpdater: taskUpdater,
+	}
 }
 
 func (u *Updater) getOldTaskGroups(ctx context.Context, questID string) (*taskGroupsPacked, error) {
@@ -36,13 +42,16 @@ func (u *Updater) getOldTaskGroups(ctx context.Context, questID string) (*taskGr
 	}
 
 	taskGroupIDMap := make(map[string]*storage.TaskGroup, len(oldTaskGroups))
+	ordered := make([]*storage.TaskGroup, 0, len(oldTaskGroups))
 	for _, tg := range oldTaskGroups {
-		taskGroupIDMap[tg.ID] = tg
+		tg := tg
+		taskGroupIDMap[tg.ID] = &tg
+		ordered = append(ordered, &tg)
 	}
 
 	return &taskGroupsPacked{
 		byID:    taskGroupIDMap,
-		ordered: oldTaskGroups,
+		ordered: ordered,
 	}, nil
 }
 
@@ -89,7 +98,7 @@ func (u *Updater) getOrderChanges(taskGroups *taskGroupsPacked, updateReqs []sto
 		}
 
 		if _, used := reorderTargets[updateReq.OrderIdx]; used {
-			errs = append(errs, xerrors.Errorf("two or more tassk groups replaceent into one index %d", updateReq.OrderIdx))
+			errs = append(errs, xerrors.Errorf("two or more task groups replacement into one index %d", updateReq.OrderIdx))
 			continue
 		}
 		reorderTargets[updateReq.OrderIdx] = struct{}{}
@@ -140,10 +149,11 @@ func (u *Updater) reorderUpdatedTaskGroups(taskGroups *taskGroupsPacked, updateR
 	return nil
 }
 
-func (u *Updater) updateTaskGroups(ctx context.Context, taskGroups *taskGroupsPacked, updateReqs []storage.UpdateTaskGroupRequest) error {
+func (u *Updater) updateTaskGroups(ctx context.Context, taskGroups *taskGroupsPacked, updateReqs []storage.UpdateTaskGroupRequest, questID string) error {
 	var errs []error
 	for _, updateReq := range updateReqs {
 		updateReq := updateReq
+		updateReq.QuestID = questID
 		taskGroup, err := u.s.UpdateTaskGroup(ctx, &updateReq)
 		if err != nil {
 			errs = append(errs, xerrors.Errorf("update task group %s: %w", updateReq.ID, err))
@@ -151,6 +161,14 @@ func (u *Updater) updateTaskGroups(ctx context.Context, taskGroups *taskGroupsPa
 		}
 		taskGroups.byID[taskGroup.ID] = taskGroup
 		taskGroups.ordered[taskGroup.OrderIdx] = taskGroup
+		if updateReq.Tasks != nil {
+			updateReq.Tasks.GroupID = updateReq.ID
+			updateReq.Tasks.QuestID = questID
+			taskGroup.Tasks, err = u.taskUpdater.BulkUpdate(ctx, updateReq.Tasks)
+			if err != nil {
+				errs = append(errs, xerrors.Errorf("update tasks for group %q: %w", updateReq.ID, err))
+			}
+		}
 	}
 	if len(errs) > 0 {
 		return xerrors.Errorf("%d error(s) occured during task groups update: %w", len(errs), errors.Join(errs...))
@@ -158,7 +176,7 @@ func (u *Updater) updateTaskGroups(ctx context.Context, taskGroups *taskGroupsPa
 	return nil
 }
 
-func (u *Updater) createTaskGroups(ctx context.Context, taskGroups *taskGroupsPacked, createReqs []storage.CreateTaskGroupRequest) error {
+func (u *Updater) createTaskGroups(ctx context.Context, taskGroups *taskGroupsPacked, createReqs []storage.CreateTaskGroupRequest, questID string) error {
 	var errs []error
 	for _, createReq := range createReqs {
 		if taskGroups.ordered[createReq.OrderIdx] != nil {
@@ -172,6 +190,7 @@ func (u *Updater) createTaskGroups(ctx context.Context, taskGroups *taskGroupsPa
 
 	for _, createReq := range createReqs {
 		createReq := createReq
+		createReq.QuestID = questID
 		taskGroup, err := u.s.CreateTaskGroup(ctx, &createReq)
 		if err != nil {
 			errs = append(errs, xerrors.Errorf("create task group: %w", err))
@@ -179,6 +198,16 @@ func (u *Updater) createTaskGroups(ctx context.Context, taskGroups *taskGroupsPa
 		}
 		taskGroups.byID[taskGroup.ID] = taskGroup
 		taskGroups.ordered[taskGroup.OrderIdx] = taskGroup
+		if createReq.Tasks != nil {
+			taskGroup.Tasks, err = u.taskUpdater.BulkUpdate(ctx, &storage.TasksBulkUpdateRequest{
+				QuestID: questID,
+				GroupID: taskGroup.ID,
+				Create:  createReq.Tasks,
+			})
+			if err != nil {
+				errs = append(errs, xerrors.Errorf("create tasks for group %q: %w", taskGroup.ID, err))
+			}
+		}
 	}
 	if len(errs) > 0 {
 		return xerrors.Errorf("%d error(s) occured during task groups create: %w", len(errs), errors.Join(errs...))
@@ -186,7 +215,7 @@ func (u *Updater) createTaskGroups(ctx context.Context, taskGroups *taskGroupsPa
 	return nil
 }
 
-func (u *Updater) BulkUpdateTaskGroups(ctx context.Context, req *storage.TaskGroupsBulkUpdateRequest) ([]*storage.TaskGroup, error) {
+func (u *Updater) BulkUpdateTaskGroups(ctx context.Context, req *storage.TaskGroupsBulkUpdateRequest) ([]storage.TaskGroup, error) {
 	taskGroups, err := u.getOldTaskGroups(ctx, req.QuestID)
 	if err != nil {
 		return nil, xerrors.Errorf("get old task groups: %w", err)
@@ -202,10 +231,10 @@ func (u *Updater) BulkUpdateTaskGroups(ctx context.Context, req *storage.TaskGro
 	if err := u.reorderUpdatedTaskGroups(taskGroups, req.Update); err != nil {
 		return nil, xerrors.Errorf("reorder updated task groups: %w", err)
 	}
-	if err := u.updateTaskGroups(ctx, taskGroups, req.Update); err != nil {
+	if err := u.updateTaskGroups(ctx, taskGroups, req.Update, req.QuestID); err != nil {
 		return nil, xerrors.Errorf("%w", err)
 	}
-	if err := u.createTaskGroups(ctx, taskGroups, req.Create); err != nil {
+	if err := u.createTaskGroups(ctx, taskGroups, req.Create, req.QuestID); err != nil {
 		return nil, xerrors.Errorf("%w", err)
 	}
 	taskGroups.ordered = taskGroups.ordered[:newLen]
@@ -219,7 +248,7 @@ func (u *Updater) BulkUpdateTaskGroups(ctx context.Context, req *storage.TaskGro
 		return nil, httperrors.WrapWithCode(http.StatusBadRequest, errors.Join(errs...))
 	}
 
-	newTaskGroups, err := u.s.GetTaskGroups(ctx, &storage.GetTaskGroupsRequest{QuestID: req.QuestID})
+	newTaskGroups, err := u.s.GetTaskGroups(ctx, &storage.GetTaskGroupsRequest{QuestID: req.QuestID, IncludeTasks: true})
 	if err != nil {
 		return nil, xerrors.Errorf("get all task groups: %w", err)
 	}

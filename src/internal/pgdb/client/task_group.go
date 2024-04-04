@@ -2,7 +2,6 @@ package pgdb
 
 import (
 	"context"
-	"database/sql"
 
 	sq "github.com/Masterminds/squirrel"
 	"golang.org/x/xerrors"
@@ -46,18 +45,24 @@ func (c *Client) GetTaskGroup(ctx context.Context, req *storage.GetTaskGroupRequ
 	row := query.RunWith(c.runner).QueryRowContext(ctx)
 
 	taskGroup := storage.TaskGroup{Quest: &storage.Quest{}}
-	var pubTime sql.NullTime
-	if err := row.Scan(&taskGroup.ID, &taskGroup.Name, &taskGroup.OrderIdx, &pubTime, &taskGroup.Quest.ID); err != nil {
+	if err := row.Scan(&taskGroup.ID, &taskGroup.Name, &taskGroup.OrderIdx, &taskGroup.PubTime, &taskGroup.Quest.ID); err != nil {
 		return nil, xerrors.Errorf("scan row: %w", err)
 	}
-	if pubTime.Valid {
-		taskGroup.PubTime = &pubTime.Time
+	if req.IncludeTasks {
+		tasks, err := c.GetTasks(ctx, &storage.GetTasksRequest{GroupIDs: []string{req.ID}})
+		if err != nil {
+			return nil, xerrors.Errorf("get tasks: %w", err)
+		}
+		taskGroup.Tasks = tasks[req.ID]
+		for i := range len(taskGroup.Tasks) {
+			taskGroup.Tasks[i].Group = &taskGroup
+		}
 	}
 
 	return &taskGroup, nil
 }
 
-func (c *Client) GetTaskGroups(ctx context.Context, req *storage.GetTaskGroupsRequest) ([]*storage.TaskGroup, error) {
+func (c *Client) GetTaskGroups(ctx context.Context, req *storage.GetTaskGroupsRequest) ([]storage.TaskGroup, error) {
 	query := sq.Select("id", "name", "order_idx", "pub_time").
 		From("questspace.task_group").
 		Where(sq.Eq{"quest_id": req.QuestID}).
@@ -69,20 +74,36 @@ func (c *Client) GetTaskGroups(ctx context.Context, req *storage.GetTaskGroupsRe
 	}
 	defer func() { _ = rows.Close() }()
 
-	var taskGroups []*storage.TaskGroup
+	var taskGroups []storage.TaskGroup
+	var groupIDs []string
 	for rows.Next() {
 		if err := rows.Err(); err != nil {
 			return nil, xerrors.Errorf("iter rows: %w", err)
 		}
 		taskGroup := storage.TaskGroup{Quest: &storage.Quest{ID: req.QuestID}}
-		var pubTime sql.NullTime
-		if err := rows.Scan(&taskGroup.ID, &taskGroup.Name, &taskGroup.OrderIdx, &pubTime); err != nil {
+		if err := rows.Scan(&taskGroup.ID, &taskGroup.Name, &taskGroup.OrderIdx, &taskGroup.PubTime); err != nil {
 			return nil, xerrors.Errorf("scan row: %w", err)
 		}
-		if pubTime.Valid {
-			taskGroup.PubTime = &pubTime.Time
+		taskGroups = append(taskGroups, taskGroup)
+		groupIDs = append(groupIDs, taskGroup.ID)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, xerrors.Errorf("iter rows: %w", err)
+	}
+
+	if req.IncludeTasks {
+		tasks, err := c.GetTasks(ctx, &storage.GetTasksRequest{GroupIDs: groupIDs})
+		if err != nil {
+			return nil, xerrors.Errorf("get tasks: %w", err)
 		}
-		taskGroups = append(taskGroups, &taskGroup)
+		for i := range len(taskGroups) {
+			tg := taskGroups[i]
+			taskGroups[i].Tasks = tasks[tg.ID]
+
+			for j := range len(tg.Tasks) {
+				tg.Tasks[j].Group = &tg
+			}
+		}
 	}
 
 	return taskGroups, nil
@@ -104,12 +125,8 @@ func (c *Client) UpdateTaskGroup(ctx context.Context, req *storage.UpdateTaskGro
 
 	row := query.RunWith(c.runner).QueryRowContext(ctx)
 	taskGroup := storage.TaskGroup{Quest: &storage.Quest{}}
-	var pubTime sql.NullTime
-	if err := row.Scan(&taskGroup.ID, &taskGroup.Name, &taskGroup.OrderIdx, &pubTime, &taskGroup.Quest.ID); err != nil {
+	if err := row.Scan(&taskGroup.ID, &taskGroup.Name, &taskGroup.OrderIdx, &taskGroup.PubTime, &taskGroup.Quest.ID); err != nil {
 		return nil, xerrors.Errorf("scan row: %w", err)
-	}
-	if pubTime.Valid {
-		taskGroup.PubTime = &pubTime.Time
 	}
 
 	return &taskGroup, nil

@@ -138,7 +138,7 @@ func (c *Client) GetQuests(ctx context.Context, req *storage.GetQuestsRequest) (
 	}
 	defer func() { _ = rows.Close() }()
 
-	var quests []*storage.Quest
+	var quests []storage.Quest
 	var (
 		username              sql.NullString
 		userId, userAvatarURL sql.NullString
@@ -169,7 +169,7 @@ func (c *Client) GetQuests(ctx context.Context, req *storage.GetQuestsRequest) (
 		if finished {
 			q.Status = storage.StatusFinished
 		}
-		quests = append(quests, &q)
+		quests = append(quests, q)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, xerrors.Errorf("iter rows: %w", err)

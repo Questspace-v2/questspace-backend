@@ -66,7 +66,7 @@ func TestService_CreateTeam(t *testing.T) {
 	assert.Truef(t, strings.HasPrefix(team.InviteLink, linkPrefix), "link does not start with prefix %q", linkPrefix)
 	assert.Truef(t, strings.HasSuffix(team.InviteLink, "321"), "link does not end with invite path")
 	require.Len(t, team.Members, 1)
-	assert.Equal(t, creator, *team.Members[0])
+	assert.Equal(t, creator, team.Members[0])
 }
 
 func TestTeamService_CreateTeam_AlreadyMember(t *testing.T) {
@@ -92,7 +92,7 @@ func TestTeamService_CreateTeam_AlreadyMember(t *testing.T) {
 	gomock.InOrder(
 		s.EXPECT().
 			GetTeams(ctx, &storage.GetTeamsRequest{User: &creator, QuestIDs: []string{questID}}).
-			Return([]*storage.Team{{}, {}, {}}, nil),
+			Return([]storage.Team{{}, {}, {}}, nil),
 	)
 
 	team, err := service.CreateTeam(ctx, &req)
@@ -133,7 +133,7 @@ func TestTeamService_JoinTeam(t *testing.T) {
 		},
 		InviteLink: req.InvitePath,
 		Captain:    &teamCreator,
-		Members:    []*storage.User{&teamCreator},
+		Members:    []storage.User{teamCreator},
 	}
 
 	gomock.InOrder(
@@ -152,7 +152,7 @@ func TestTeamService_JoinTeam(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, team.ID, got.ID)
 	require.Len(t, got.Members, 2)
-	assert.ElementsMatch(t, []*storage.User{&teamCreator, &newMember}, got.Members)
+	assert.ElementsMatch(t, []storage.User{teamCreator, newMember}, got.Members)
 }
 
 func TestTeamService_JoinTeam_AlreadyInvited(t *testing.T) {
@@ -185,7 +185,7 @@ func TestTeamService_JoinTeam_AlreadyInvited(t *testing.T) {
 		},
 		InviteLink: req.InvitePath,
 		Captain:    &teamCreator,
-		Members:    []*storage.User{&teamCreator, &oldMember},
+		Members:    []storage.User{teamCreator, oldMember},
 	}
 
 	gomock.InOrder(

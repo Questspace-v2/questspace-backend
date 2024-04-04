@@ -66,7 +66,7 @@ func (mr *MockQuestSpaceStorageMockRecorder) ChangeTeamName(arg0, arg1 interface
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ChangeTeamName", reflect.TypeOf((*MockQuestSpaceStorage)(nil).ChangeTeamName), arg0, arg1)
 }
 
-// CreateOrUpdateByEmail mocks base method.
+// CreateOrUpdateByExternalID mocks base method.
 func (m *MockQuestSpaceStorage) CreateOrUpdateByExternalID(arg0 context.Context, arg1 *storage.CreateOrUpdateRequest) (*storage.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateOrUpdateByExternalID", arg0, arg1)
@@ -75,8 +75,8 @@ func (m *MockQuestSpaceStorage) CreateOrUpdateByExternalID(arg0 context.Context,
 	return ret0, ret1
 }
 
-// CreateOrUpdateByEmail indicates an expected call of CreateOrUpdateByEmail.
-func (mr *MockQuestSpaceStorageMockRecorder) CreateOrUpdateByEmail(arg0, arg1 interface{}) *gomock.Call {
+// CreateOrUpdateByExternalID indicates an expected call of CreateOrUpdateByExternalID.
+func (mr *MockQuestSpaceStorageMockRecorder) CreateOrUpdateByExternalID(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrUpdateByExternalID", reflect.TypeOf((*MockQuestSpaceStorage)(nil).CreateOrUpdateByExternalID), arg0, arg1)
 }
@@ -94,6 +94,21 @@ func (m *MockQuestSpaceStorage) CreateQuest(arg0 context.Context, arg1 *storage.
 func (mr *MockQuestSpaceStorageMockRecorder) CreateQuest(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateQuest", reflect.TypeOf((*MockQuestSpaceStorage)(nil).CreateQuest), arg0, arg1)
+}
+
+// CreateTask mocks base method.
+func (m *MockQuestSpaceStorage) CreateTask(arg0 context.Context, arg1 *storage.CreateTaskRequest) (*storage.Task, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateTask", arg0, arg1)
+	ret0, _ := ret[0].(*storage.Task)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateTask indicates an expected call of CreateTask.
+func (mr *MockQuestSpaceStorageMockRecorder) CreateTask(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateTask", reflect.TypeOf((*MockQuestSpaceStorage)(nil).CreateTask), arg0, arg1)
 }
 
 // CreateTaskGroup mocks base method.
@@ -153,6 +168,20 @@ func (m *MockQuestSpaceStorage) DeleteQuest(arg0 context.Context, arg1 *storage.
 func (mr *MockQuestSpaceStorageMockRecorder) DeleteQuest(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteQuest", reflect.TypeOf((*MockQuestSpaceStorage)(nil).DeleteQuest), arg0, arg1)
+}
+
+// DeleteTask mocks base method.
+func (m *MockQuestSpaceStorage) DeleteTask(arg0 context.Context, arg1 *storage.DeleteTaskRequest) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteTask", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteTask indicates an expected call of DeleteTask.
+func (mr *MockQuestSpaceStorageMockRecorder) DeleteTask(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteTask", reflect.TypeOf((*MockQuestSpaceStorage)(nil).DeleteTask), arg0, arg1)
 }
 
 // DeleteTaskGroup mocks base method.
@@ -227,6 +256,21 @@ func (mr *MockQuestSpaceStorageMockRecorder) GetQuests(arg0, arg1 interface{}) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQuests", reflect.TypeOf((*MockQuestSpaceStorage)(nil).GetQuests), arg0, arg1)
 }
 
+// GetTask mocks base method.
+func (m *MockQuestSpaceStorage) GetTask(arg0 context.Context, arg1 *storage.GetTaskRequest) (*storage.Task, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTask", arg0, arg1)
+	ret0, _ := ret[0].(*storage.Task)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTask indicates an expected call of GetTask.
+func (mr *MockQuestSpaceStorageMockRecorder) GetTask(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTask", reflect.TypeOf((*MockQuestSpaceStorage)(nil).GetTask), arg0, arg1)
+}
+
 // GetTaskGroup mocks base method.
 func (m *MockQuestSpaceStorage) GetTaskGroup(arg0 context.Context, arg1 *storage.GetTaskGroupRequest) (*storage.TaskGroup, error) {
 	m.ctrl.T.Helper()
@@ -243,10 +287,10 @@ func (mr *MockQuestSpaceStorageMockRecorder) GetTaskGroup(arg0, arg1 interface{}
 }
 
 // GetTaskGroups mocks base method.
-func (m *MockQuestSpaceStorage) GetTaskGroups(arg0 context.Context, arg1 *storage.GetTaskGroupsRequest) ([]*storage.TaskGroup, error) {
+func (m *MockQuestSpaceStorage) GetTaskGroups(arg0 context.Context, arg1 *storage.GetTaskGroupsRequest) ([]storage.TaskGroup, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetTaskGroups", arg0, arg1)
-	ret0, _ := ret[0].([]*storage.TaskGroup)
+	ret0, _ := ret[0].([]storage.TaskGroup)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -255,6 +299,21 @@ func (m *MockQuestSpaceStorage) GetTaskGroups(arg0 context.Context, arg1 *storag
 func (mr *MockQuestSpaceStorageMockRecorder) GetTaskGroups(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTaskGroups", reflect.TypeOf((*MockQuestSpaceStorage)(nil).GetTaskGroups), arg0, arg1)
+}
+
+// GetTasks mocks base method.
+func (m *MockQuestSpaceStorage) GetTasks(arg0 context.Context, arg1 *storage.GetTasksRequest) (storage.GetTasksResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTasks", arg0, arg1)
+	ret0, _ := ret[0].(storage.GetTasksResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTasks indicates an expected call of GetTasks.
+func (mr *MockQuestSpaceStorageMockRecorder) GetTasks(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTasks", reflect.TypeOf((*MockQuestSpaceStorage)(nil).GetTasks), arg0, arg1)
 }
 
 // GetTeam mocks base method.
@@ -273,10 +332,10 @@ func (mr *MockQuestSpaceStorageMockRecorder) GetTeam(arg0, arg1 interface{}) *go
 }
 
 // GetTeams mocks base method.
-func (m *MockQuestSpaceStorage) GetTeams(arg0 context.Context, arg1 *storage.GetTeamsRequest) ([]*storage.Team, error) {
+func (m *MockQuestSpaceStorage) GetTeams(arg0 context.Context, arg1 *storage.GetTeamsRequest) ([]storage.Team, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetTeams", arg0, arg1)
-	ret0, _ := ret[0].([]*storage.Team)
+	ret0, _ := ret[0].([]storage.Team)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -375,6 +434,21 @@ func (mr *MockQuestSpaceStorageMockRecorder) UpdateQuest(arg0, arg1 interface{})
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateQuest", reflect.TypeOf((*MockQuestSpaceStorage)(nil).UpdateQuest), arg0, arg1)
 }
 
+// UpdateTask mocks base method.
+func (m *MockQuestSpaceStorage) UpdateTask(arg0 context.Context, arg1 *storage.UpdateTaskRequest) (*storage.Task, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateTask", arg0, arg1)
+	ret0, _ := ret[0].(*storage.Task)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateTask indicates an expected call of UpdateTask.
+func (mr *MockQuestSpaceStorageMockRecorder) UpdateTask(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateTask", reflect.TypeOf((*MockQuestSpaceStorage)(nil).UpdateTask), arg0, arg1)
+}
+
 // UpdateTaskGroup mocks base method.
 func (m *MockQuestSpaceStorage) UpdateTaskGroup(arg0 context.Context, arg1 *storage.UpdateTaskGroupRequest) (*storage.TaskGroup, error) {
 	m.ctrl.T.Helper()
@@ -428,7 +502,7 @@ func (m *MockUserStorage) EXPECT() *MockUserStorageMockRecorder {
 	return m.recorder
 }
 
-// CreateOrUpdateByEmail mocks base method.
+// CreateOrUpdateByExternalID mocks base method.
 func (m *MockUserStorage) CreateOrUpdateByExternalID(arg0 context.Context, arg1 *storage.CreateOrUpdateRequest) (*storage.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateOrUpdateByExternalID", arg0, arg1)
@@ -437,8 +511,8 @@ func (m *MockUserStorage) CreateOrUpdateByExternalID(arg0 context.Context, arg1 
 	return ret0, ret1
 }
 
-// CreateOrUpdateByEmail indicates an expected call of CreateOrUpdateByEmail.
-func (mr *MockUserStorageMockRecorder) CreateOrUpdateByEmail(arg0, arg1 interface{}) *gomock.Call {
+// CreateOrUpdateByExternalID indicates an expected call of CreateOrUpdateByExternalID.
+func (mr *MockUserStorageMockRecorder) CreateOrUpdateByExternalID(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrUpdateByExternalID", reflect.TypeOf((*MockUserStorage)(nil).CreateOrUpdateByExternalID), arg0, arg1)
 }
@@ -682,10 +756,10 @@ func (mr *MockTaskGroupStorageMockRecorder) GetTaskGroup(arg0, arg1 interface{})
 }
 
 // GetTaskGroups mocks base method.
-func (m *MockTaskGroupStorage) GetTaskGroups(arg0 context.Context, arg1 *storage.GetTaskGroupsRequest) ([]*storage.TaskGroup, error) {
+func (m *MockTaskGroupStorage) GetTaskGroups(arg0 context.Context, arg1 *storage.GetTaskGroupsRequest) ([]storage.TaskGroup, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetTaskGroups", arg0, arg1)
-	ret0, _ := ret[0].([]*storage.TaskGroup)
+	ret0, _ := ret[0].([]storage.TaskGroup)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -709,6 +783,103 @@ func (m *MockTaskGroupStorage) UpdateTaskGroup(arg0 context.Context, arg1 *stora
 func (mr *MockTaskGroupStorageMockRecorder) UpdateTaskGroup(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateTaskGroup", reflect.TypeOf((*MockTaskGroupStorage)(nil).UpdateTaskGroup), arg0, arg1)
+}
+
+// MockTaskStorage is a mock of TaskStorage interface.
+type MockTaskStorage struct {
+	ctrl     *gomock.Controller
+	recorder *MockTaskStorageMockRecorder
+}
+
+// MockTaskStorageMockRecorder is the mock recorder for MockTaskStorage.
+type MockTaskStorageMockRecorder struct {
+	mock *MockTaskStorage
+}
+
+// NewMockTaskStorage creates a new mock instance.
+func NewMockTaskStorage(ctrl *gomock.Controller) *MockTaskStorage {
+	mock := &MockTaskStorage{ctrl: ctrl}
+	mock.recorder = &MockTaskStorageMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockTaskStorage) EXPECT() *MockTaskStorageMockRecorder {
+	return m.recorder
+}
+
+// CreateTask mocks base method.
+func (m *MockTaskStorage) CreateTask(arg0 context.Context, arg1 *storage.CreateTaskRequest) (*storage.Task, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateTask", arg0, arg1)
+	ret0, _ := ret[0].(*storage.Task)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateTask indicates an expected call of CreateTask.
+func (mr *MockTaskStorageMockRecorder) CreateTask(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateTask", reflect.TypeOf((*MockTaskStorage)(nil).CreateTask), arg0, arg1)
+}
+
+// DeleteTask mocks base method.
+func (m *MockTaskStorage) DeleteTask(arg0 context.Context, arg1 *storage.DeleteTaskRequest) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteTask", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteTask indicates an expected call of DeleteTask.
+func (mr *MockTaskStorageMockRecorder) DeleteTask(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteTask", reflect.TypeOf((*MockTaskStorage)(nil).DeleteTask), arg0, arg1)
+}
+
+// GetTask mocks base method.
+func (m *MockTaskStorage) GetTask(arg0 context.Context, arg1 *storage.GetTaskRequest) (*storage.Task, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTask", arg0, arg1)
+	ret0, _ := ret[0].(*storage.Task)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTask indicates an expected call of GetTask.
+func (mr *MockTaskStorageMockRecorder) GetTask(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTask", reflect.TypeOf((*MockTaskStorage)(nil).GetTask), arg0, arg1)
+}
+
+// GetTasks mocks base method.
+func (m *MockTaskStorage) GetTasks(arg0 context.Context, arg1 *storage.GetTasksRequest) (storage.GetTasksResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTasks", arg0, arg1)
+	ret0, _ := ret[0].(storage.GetTasksResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTasks indicates an expected call of GetTasks.
+func (mr *MockTaskStorageMockRecorder) GetTasks(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTasks", reflect.TypeOf((*MockTaskStorage)(nil).GetTasks), arg0, arg1)
+}
+
+// UpdateTask mocks base method.
+func (m *MockTaskStorage) UpdateTask(arg0 context.Context, arg1 *storage.UpdateTaskRequest) (*storage.Task, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateTask", arg0, arg1)
+	ret0, _ := ret[0].(*storage.Task)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateTask indicates an expected call of UpdateTask.
+func (mr *MockTaskStorageMockRecorder) UpdateTask(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateTask", reflect.TypeOf((*MockTaskStorage)(nil).UpdateTask), arg0, arg1)
 }
 
 // MockTeamStorage is a mock of TeamStorage interface.
@@ -809,10 +980,10 @@ func (mr *MockTeamStorageMockRecorder) GetTeam(arg0, arg1 interface{}) *gomock.C
 }
 
 // GetTeams mocks base method.
-func (m *MockTeamStorage) GetTeams(arg0 context.Context, arg1 *storage.GetTeamsRequest) ([]*storage.Team, error) {
+func (m *MockTeamStorage) GetTeams(arg0 context.Context, arg1 *storage.GetTeamsRequest) ([]storage.Team, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetTeams", arg0, arg1)
-	ret0, _ := ret[0].([]*storage.Team)
+	ret0, _ := ret[0].([]storage.Team)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

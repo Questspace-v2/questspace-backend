@@ -35,7 +35,7 @@ func (c *Client) CreateTeam(ctx context.Context, req *storage.CreateTeamRequest)
 	return team, nil
 }
 
-func (c *Client) getTeamMembers(ctx context.Context, teamID string) ([]*storage.User, error) {
+func (c *Client) getTeamMembers(ctx context.Context, teamID string) ([]storage.User, error) {
 	query := sq.Select("u.id", "u.username", "u.avatar_url").
 		From("questspace.user u").
 		LeftJoin("questspace.registration r ON r.user_id = u.id").
@@ -48,13 +48,13 @@ func (c *Client) getTeamMembers(ctx context.Context, teamID string) ([]*storage.
 	}
 	defer func() { _ = rows.Close() }()
 
-	var members []*storage.User
+	var members []storage.User
 	for rows.Next() {
 		var member storage.User
 		if err := rows.Scan(&member.ID, &member.Username, &member.AvatarURL); err != nil {
 			return nil, xerrors.Errorf("scan row: %w", err)
 		}
-		members = append(members, &member)
+		members = append(members, member)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, xerrors.Errorf("iter rows: %w", err)
@@ -95,7 +95,7 @@ func (c *Client) GetTeam(ctx context.Context, req *storage.GetTeamRequest) (*sto
 	return team, nil
 }
 
-func (c *Client) GetTeams(ctx context.Context, req *storage.GetTeamsRequest) ([]*storage.Team, error) {
+func (c *Client) GetTeams(ctx context.Context, req *storage.GetTeamsRequest) ([]storage.Team, error) {
 	query := sq.Select("t.id", "t.name").
 		From("questspace.team t").
 		PlaceholderFormat(sq.Dollar)
@@ -115,14 +115,14 @@ func (c *Client) GetTeams(ctx context.Context, req *storage.GetTeamsRequest) ([]
 	defer func() { _ = rows.Close() }()
 
 	var (
-		teams []*storage.Team
+		teams []storage.Team
 	)
 	for rows.Next() {
 		var team storage.Team
 		if err := rows.Scan(&team.ID, &team.Name); err != nil {
 			return nil, xerrors.Errorf("scan row: %w", err)
 		}
-		teams = append(teams, &team)
+		teams = append(teams, team)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, xerrors.Errorf("iter rows: %w", err)

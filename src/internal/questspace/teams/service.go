@@ -47,7 +47,7 @@ func (s *Service) CreateTeam(ctx context.Context, req *storage.CreateTeamRequest
 		return nil, xerrors.Errorf("save invite url: %w", err)
 	}
 	team.InviteLink = s.inviteLinkPrefix + invitePath
-	team.Members = append(team.Members, req.Creator)
+	team.Members = append(team.Members, *req.Creator)
 	return team, nil
 }
 
@@ -63,7 +63,7 @@ func (s *Service) GetTeam(ctx context.Context, teamID string) (*storage.Team, er
 	return team, nil
 }
 
-func (s *Service) GetQuestTeams(ctx context.Context, questID string) ([]*storage.Team, error) {
+func (s *Service) GetQuestTeams(ctx context.Context, questID string) ([]storage.Team, error) {
 	teams, err := s.s.GetTeams(ctx, &storage.GetTeamsRequest{QuestIDs: []string{questID}})
 	if err != nil {
 		return nil, xerrors.Errorf("get teams: %w", err)
@@ -128,7 +128,7 @@ func (s *Service) JoinTeam(ctx context.Context, req *storage.JoinTeamRequest) (*
 		return nil, xerrors.Errorf("join team by link %q: %w", req.InvitePath, err)
 	}
 	team.InviteLink = s.inviteLinkPrefix + team.InviteLink
-	team.Members = append(team.Members, user)
+	team.Members = append(team.Members, *user)
 	return team, nil
 }
 
@@ -202,7 +202,7 @@ func (s *Service) LeaveTeam(ctx context.Context, user *storage.User, teamID, new
 		return nil, xerrors.Errorf("leave team: %w", err)
 	}
 
-	members := make([]*storage.User, 0, len(team.Members)-1)
+	members := make([]storage.User, 0, len(team.Members)-1)
 	for _, member := range team.Members {
 		if member.ID == user.ID {
 			continue
@@ -233,7 +233,7 @@ func (s *Service) RemoveUser(ctx context.Context, user *storage.User, req *stora
 		return nil, xerrors.Errorf("remove user: %w", err)
 	}
 
-	members := make([]*storage.User, 0, len(team.Members)-1)
+	members := make([]storage.User, 0, len(team.Members)-1)
 	for _, member := range team.Members {
 		if member.ID == req.UserID {
 			continue

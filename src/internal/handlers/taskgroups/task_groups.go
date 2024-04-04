@@ -2,6 +2,7 @@ package taskgroups
 
 import (
 	"database/sql"
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -10,6 +11,10 @@ import (
 	"questspace/internal/handlers/transport"
 	pgdb "questspace/internal/pgdb/client"
 	"questspace/internal/questspace/taskgroups"
+	"questspace/internal/questspace/taskgroups/requests"
+	"questspace/pkg/application/httperrors"
+	"questspace/pkg/auth/jwt"
+	"questspace/pkg/dbnode"
 	"questspace/pkg/storage"
 )
 
@@ -25,7 +30,7 @@ type TaskGroups []*storage.TaskGroup
 
 // HandleBulkUpdate handles PATCH quest/:id/task-groups/bulk request
 //
-// @Summary	Patch task groups by creating new ones, delete, update and reorder all ones. Returns all exising task groups.
+// @Summary	[WIP] Patch task groups by creating new ones, delete, update and reorder all ones. Returns all exising task groups.
 // @Tags	TaskGroups
 // @Param	request	body		storage.TaskGroupsBulkUpdateRequest	true	"Requests to delete/create/update task groups"
 // @Success	200		{object}	TaskGroups
@@ -34,6 +39,10 @@ type TaskGroups []*storage.TaskGroup
 // @Failure	403
 // @Router	/quest/{id}/task-groups/bulk [patch]
 func (h *Handler) HandleBulkUpdate(c *gin.Context) error {
+	c.Status(http.StatusNotImplemented)
+	return nil
+
+	//nolint:govet
 	//TODO(svayp11): add auth
 	questID := c.Param("id")
 	req, err := transport.UnmarshalRequestData[storage.TaskGroupsBulkUpdateRequest](c.Request)
@@ -48,7 +57,7 @@ func (h *Handler) HandleBulkUpdate(c *gin.Context) error {
 	}
 	defer func() { _ = tx.Rollback() }()
 
-	updater := taskgroups.NewUpdater(s)
+	updater := taskgroups.NewUpdater(s, nil)
 	tasksGroups, err := updater.BulkUpdateTaskGroups(c, req)
 	if err != nil {
 		return xerrors.Errorf("bulk update: %w", err)
@@ -58,5 +67,96 @@ func (h *Handler) HandleBulkUpdate(c *gin.Context) error {
 	}
 
 	c.JSON(http.StatusOK, tasksGroups)
+	return nil
+}
+
+// HandleCreate handles POST quest/:id/task-groups request
+//
+// @Summary	Create task groups and tasks. All previously created task groups and tasks would be deleted and overridden.
+// @Tags	TaskGroups
+// @Param	quest_id	path		string							true	"Quest ID"
+// @Param	request		body		requests.CreateFullRequest	true	"All task groups with inner tasks to create"
+// @Success	200			{object}	requests.CreateFullResponse
+// @Failure	400
+// @Failure	401
+// @Failure	403
+// @Failure 404
+// @Router	/quest/{id}/task-groups [post]
+// @Security 	ApiKeyAuth
+func (h *Handler) HandleCreate(c *gin.Context) error {
+	questID := c.Param("id")
+	req, err := transport.UnmarshalRequestData[requests.CreateFullRequest](c.Request)
+	if err != nil {
+		return xerrors.Errorf("%w", err)
+	}
+	req.QuestID = questID
+
+	uauth, err := jwt.GetUserFromContext(c)
+	if err != nil {
+		return xerrors.Errorf("%w", err)
+	}
+
+	s, tx, err := h.clientFactory.NewStorageTx(c, &sql.TxOptions{Isolation: sql.LevelReadCommitted})
+	if err != nil {
+		return xerrors.Errorf("start tx: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	q, err := s.GetQuest(c, &storage.GetQuestRequest{ID: questID})
+	if err != nil {
+		if errors.Is(err, storage.ErrNotFound) {
+			return httperrors.Errorf(http.StatusNotFound, "not found quest %q", questID)
+		}
+		return xerrors.Errorf("get quest: %w", err)
+	}
+	if q.Creator.ID != uauth.ID {
+		return httperrors.Errorf(http.StatusForbidden, "cannot change others' quests")
+	}
+	serv := taskgroups.NewService(s, s)
+	resp, err := serv.Create(c, req)
+	if err != nil {
+		return xerrors.Errorf("create taskgroups: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return xerrors.Errorf("commit tx: %w", err)
+	}
+	c.JSON(http.StatusOK, resp)
+	return nil
+}
+
+type GetResponse struct {
+	TaskGroups []storage.TaskGroup `json:"task_groups"`
+}
+
+// HandleGet handles GET quest/:id/task-groups request
+//
+// @Summary	Get task groups with tasks
+// @Tags	TaskGroups
+// @Param	quest_id	path		string		true	"Quest ID"
+// @Success	200			{object}	taskgroups.GetResponse
+// @Failure	400
+// @Failure	401
+// @Failure	403
+// @Failure 404
+// @Router	/quest/{id}/task-groups [get]
+func (h *Handler) HandleGet(c *gin.Context) error {
+	questID := c.Param("id")
+
+	s, err := h.clientFactory.NewStorage(c, dbnode.Alive)
+	if err != nil {
+		return xerrors.Errorf("get storage: %w", err)
+	}
+
+	taskGroups, err := s.GetTaskGroups(c, &storage.GetTaskGroupsRequest{QuestID: questID, IncludeTasks: true})
+	if err != nil {
+		if errors.Is(err, storage.ErrNotFound) {
+			return httperrors.Errorf(http.StatusNotFound, "not found quest %q", questID)
+		}
+		return xerrors.Errorf("get taskgroups: %w", err)
+	}
+	resp := GetResponse{TaskGroups: taskGroups}
+
+	c.JSON(http.StatusOK, resp)
 	return nil
 }

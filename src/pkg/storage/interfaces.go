@@ -7,6 +7,7 @@ type QuestSpaceStorage interface {
 	UserStorage
 	QuestStorage
 	TaskGroupStorage
+	TaskStorage
 	TeamStorage
 }
 
@@ -30,15 +31,23 @@ type QuestStorage interface {
 type TaskGroupStorage interface {
 	CreateTaskGroup(context.Context, *CreateTaskGroupRequest) (*TaskGroup, error)
 	GetTaskGroup(context.Context, *GetTaskGroupRequest) (*TaskGroup, error)
-	GetTaskGroups(context.Context, *GetTaskGroupsRequest) ([]*TaskGroup, error)
+	GetTaskGroups(context.Context, *GetTaskGroupsRequest) ([]TaskGroup, error)
 	UpdateTaskGroup(context.Context, *UpdateTaskGroupRequest) (*TaskGroup, error)
 	DeleteTaskGroup(context.Context, *DeleteTaskGroupRequest) error
+}
+
+type TaskStorage interface {
+	CreateTask(context.Context, *CreateTaskRequest) (*Task, error)
+	GetTask(context.Context, *GetTaskRequest) (*Task, error)
+	GetTasks(context.Context, *GetTasksRequest) (GetTasksResponse, error)
+	UpdateTask(context.Context, *UpdateTaskRequest) (*Task, error)
+	DeleteTask(context.Context, *DeleteTaskRequest) error
 }
 
 type TeamStorage interface {
 	CreateTeam(context.Context, *CreateTeamRequest) (*Team, error)
 	GetTeam(context.Context, *GetTeamRequest) (*Team, error)
-	GetTeams(context.Context, *GetTeamsRequest) ([]*Team, error)
+	GetTeams(context.Context, *GetTeamsRequest) ([]Team, error)
 	ChangeTeamName(context.Context, *ChangeTeamNameRequest) (*Team, error)
 	SetInviteLink(context.Context, *SetInvitePathRequest) error
 	JoinTeam(context.Context, *JoinTeamRequest) (*User, error)

@@ -43,6 +43,59 @@ definitions:
       registered:
         $ref: '#/definitions/quests.PaginatedQuestsResponse'
     type: object
+  requests.CreateFullRequest:
+    properties:
+      task_groups:
+        items:
+          $ref: '#/definitions/requests.CreateRequest'
+        type: array
+    type: object
+  requests.CreateFullResponse:
+    properties:
+      task_groups:
+        items:
+          $ref: '#/definitions/storage.TaskGroup'
+        type: array
+    type: object
+  requests.CreateRequest:
+    properties:
+      name:
+        type: string
+      pub_time:
+        type: string
+      tasks:
+        items:
+          $ref: '#/definitions/requests.CreateTaskRequest'
+        type: array
+    type: object
+  requests.CreateTaskRequest:
+    properties:
+      correct_answers:
+        items:
+          type: string
+        type: array
+      hints:
+        items:
+          maxLength: 3
+          type: string
+        type: array
+      media_link:
+        type: string
+      name:
+        type: string
+      pub_time:
+        type: string
+      question:
+        type: string
+      reward:
+        type: integer
+      verification:
+        allOf:
+        - $ref: '#/definitions/storage.VerificationType'
+        enum:
+        - auto
+        - manual
+    type: object
   storage.AccessType:
     enum:
     - public
@@ -81,6 +134,37 @@ definitions:
         type: integer
       pub_time:
         type: string
+      tasks:
+        items:
+          $ref: '#/definitions/storage.CreateTaskRequest'
+        type: array
+    type: object
+  storage.CreateTaskRequest:
+    properties:
+      correct_answers:
+        items:
+          type: string
+        type: array
+      group_id:
+        type: string
+      hints:
+        items:
+          type: string
+        type: array
+      media_link:
+        type: string
+      name:
+        type: string
+      order_idx:
+        type: integer
+      pub_time:
+        type: string
+      question:
+        type: string
+      reward:
+        type: integer
+      verification:
+        $ref: '#/definitions/storage.VerificationType'
     type: object
   storage.CreateUserRequest:
     properties:
@@ -95,6 +179,11 @@ definitions:
         type: string
     type: object
   storage.DeleteTaskGroupRequest:
+    properties:
+      id:
+        type: string
+    type: object
+  storage.DeleteTaskRequest:
     properties:
       id:
         type: string
@@ -133,18 +222,51 @@ definitions:
         - FINISHED
         type: string
     type: object
+  storage.Task:
+    properties:
+      correct_answers:
+        items:
+          type: string
+        type: array
+      hints:
+        items:
+          type: string
+        type: array
+      id:
+        type: string
+      media_link:
+        type: string
+      name:
+        type: string
+      order_idx:
+        type: integer
+      pub_time:
+        type: string
+      question:
+        type: string
+      reward:
+        type: integer
+      verification_type:
+        allOf:
+        - $ref: '#/definitions/storage.VerificationType'
+        enum:
+        - auto
+        - manual
+    type: object
   storage.TaskGroup:
     properties:
       id:
         type: string
       name:
         type: string
-      orderIdx:
+      order_idx:
         type: integer
-      pubTime:
+      pub_time:
         type: string
-      quest:
-        $ref: '#/definitions/storage.Quest'
+      tasks:
+        items:
+          $ref: '#/definitions/storage.Task'
+        type: array
     type: object
   storage.TaskGroupsBulkUpdateRequest:
     properties:
@@ -159,6 +281,21 @@ definitions:
       update:
         items:
           $ref: '#/definitions/storage.UpdateTaskGroupRequest'
+        type: array
+    type: object
+  storage.TasksBulkUpdateRequest:
+    properties:
+      create:
+        items:
+          $ref: '#/definitions/storage.CreateTaskRequest'
+        type: array
+      delete:
+        items:
+          $ref: '#/definitions/storage.DeleteTaskRequest'
+        type: array
+      update:
+        items:
+          $ref: '#/definitions/storage.UpdateTaskRequest'
         type: array
     type: object
   storage.Team:
@@ -209,6 +346,37 @@ definitions:
         type: integer
       pub_time:
         type: string
+      tasks:
+        $ref: '#/definitions/storage.TasksBulkUpdateRequest'
+    type: object
+  storage.UpdateTaskRequest:
+    properties:
+      correct_answers:
+        items:
+          type: string
+        type: array
+      group_id:
+        type: string
+      hints:
+        items:
+          type: string
+        type: array
+      id:
+        type: string
+      media_link:
+        type: string
+      name:
+        type: string
+      order_idx:
+        type: integer
+      pub_time:
+        type: string
+      question:
+        type: string
+      reward:
+        type: integer
+      verification:
+        $ref: '#/definitions/storage.VerificationType'
     type: object
   storage.User:
     properties:
@@ -218,6 +386,21 @@ definitions:
         type: string
       username:
         type: string
+    type: object
+  storage.VerificationType:
+    enum:
+    - auto
+    - manual
+    type: string
+    x-enum-varnames:
+    - VerificationAuto
+    - VerificationManual
+  taskgroups.GetResponse:
+    properties:
+      task_groups:
+        items:
+          $ref: '#/definitions/storage.TaskGroup'
+        type: array
     type: object
   teams.ChangeLeaderRequest:
     properties:
@@ -377,6 +560,62 @@ paths:
       summary: Create new quest
       tags:
       - Quests
+  /quest/{id}/task-groups:
+    get:
+      parameters:
+      - description: Quest ID
+        in: path
+        name: quest_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/taskgroups.GetResponse'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      summary: Get task groups with tasks
+      tags:
+      - TaskGroups
+    post:
+      parameters:
+      - description: Quest ID
+        in: path
+        name: quest_id
+        required: true
+        type: string
+      - description: All task groups with inner tasks to create
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/requests.CreateFullRequest'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/requests.CreateFullResponse'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - ApiKeyAuth: []
+      summary: Create task groups and tasks. All previously created task groups and
+        tasks would be deleted and overridden.
+      tags:
+      - TaskGroups
   /quest/{id}/task-groups/bulk:
     patch:
       parameters:
@@ -399,8 +638,8 @@ paths:
           description: Unauthorized
         "403":
           description: Forbidden
-      summary: Patch task groups by creating new ones, delete, update and reorder
-        all ones. Returns all exising task groups.
+      summary: '[WIP] Patch task groups by creating new ones, delete, update and reorder
+        all ones. Returns all exising task groups.'
       tags:
       - TaskGroups
   /quest/{quest_id}:

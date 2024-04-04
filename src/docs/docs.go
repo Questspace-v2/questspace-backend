@@ -212,12 +212,98 @@ const docTemplate = `{
                 }
             }
         },
+        "/quest/{id}/task-groups": {
+            "get": {
+                "tags": [
+                    "TaskGroups"
+                ],
+                "summary": "Get task groups with tasks",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Quest ID",
+                        "name": "quest_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/taskgroups.GetResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "TaskGroups"
+                ],
+                "summary": "Create task groups and tasks. All previously created task groups and tasks would be deleted and overridden.",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Quest ID",
+                        "name": "quest_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "All task groups with inner tasks to create",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/requests.CreateFullRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/requests.CreateFullResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                }
+            }
+        },
         "/quest/{id}/task-groups/bulk": {
             "patch": {
                 "tags": [
                     "TaskGroups"
                 ],
-                "summary": "Patch task groups by creating new ones, delete, update and reorder all ones. Returns all exising task groups.",
+                "summary": "[WIP] Patch task groups by creating new ones, delete, update and reorder all ones. Returns all exising task groups.",
                 "parameters": [
                     {
                         "description": "Requests to delete/create/update task groups",
@@ -907,6 +993,89 @@ const docTemplate = `{
                 }
             }
         },
+        "requests.CreateFullRequest": {
+            "type": "object",
+            "properties": {
+                "task_groups": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/requests.CreateRequest"
+                    }
+                }
+            }
+        },
+        "requests.CreateFullResponse": {
+            "type": "object",
+            "properties": {
+                "task_groups": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/storage.TaskGroup"
+                    }
+                }
+            }
+        },
+        "requests.CreateRequest": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "pub_time": {
+                    "type": "string"
+                },
+                "tasks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/requests.CreateTaskRequest"
+                    }
+                }
+            }
+        },
+        "requests.CreateTaskRequest": {
+            "type": "object",
+            "properties": {
+                "correct_answers": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "hints": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "maxLength": 3
+                    }
+                },
+                "media_link": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "pub_time": {
+                    "type": "string"
+                },
+                "question": {
+                    "type": "string"
+                },
+                "reward": {
+                    "type": "integer"
+                },
+                "verification": {
+                    "enum": [
+                        "auto",
+                        "manual"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/storage.VerificationType"
+                        }
+                    ]
+                }
+            }
+        },
         "storage.AccessType": {
             "type": "string",
             "enum": [
@@ -961,6 +1130,53 @@ const docTemplate = `{
                 },
                 "pub_time": {
                     "type": "string"
+                },
+                "tasks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/storage.CreateTaskRequest"
+                    }
+                }
+            }
+        },
+        "storage.CreateTaskRequest": {
+            "type": "object",
+            "properties": {
+                "correct_answers": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "group_id": {
+                    "type": "string"
+                },
+                "hints": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "media_link": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "order_idx": {
+                    "type": "integer"
+                },
+                "pub_time": {
+                    "type": "string"
+                },
+                "question": {
+                    "type": "string"
+                },
+                "reward": {
+                    "type": "integer"
+                },
+                "verification": {
+                    "$ref": "#/definitions/storage.VerificationType"
                 }
             }
         },
@@ -982,6 +1198,14 @@ const docTemplate = `{
             }
         },
         "storage.DeleteTaskGroupRequest": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                }
+            }
+        },
+        "storage.DeleteTaskRequest": {
             "type": "object",
             "properties": {
                 "id": {
@@ -1037,6 +1261,55 @@ const docTemplate = `{
                 }
             }
         },
+        "storage.Task": {
+            "type": "object",
+            "properties": {
+                "correct_answers": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "hints": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "id": {
+                    "type": "string"
+                },
+                "media_link": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "order_idx": {
+                    "type": "integer"
+                },
+                "pub_time": {
+                    "type": "string"
+                },
+                "question": {
+                    "type": "string"
+                },
+                "reward": {
+                    "type": "integer"
+                },
+                "verification_type": {
+                    "enum": [
+                        "auto",
+                        "manual"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/storage.VerificationType"
+                        }
+                    ]
+                }
+            }
+        },
         "storage.TaskGroup": {
             "type": "object",
             "properties": {
@@ -1046,14 +1319,17 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
-                "orderIdx": {
+                "order_idx": {
                     "type": "integer"
                 },
-                "pubTime": {
+                "pub_time": {
                     "type": "string"
                 },
-                "quest": {
-                    "$ref": "#/definitions/storage.Quest"
+                "tasks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/storage.Task"
+                    }
                 }
             }
         },
@@ -1076,6 +1352,29 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/storage.UpdateTaskGroupRequest"
+                    }
+                }
+            }
+        },
+        "storage.TasksBulkUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "create": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/storage.CreateTaskRequest"
+                    }
+                },
+                "delete": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/storage.DeleteTaskRequest"
+                    }
+                },
+                "update": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/storage.UpdateTaskRequest"
                     }
                 }
             }
@@ -1152,6 +1451,53 @@ const docTemplate = `{
                 },
                 "pub_time": {
                     "type": "string"
+                },
+                "tasks": {
+                    "$ref": "#/definitions/storage.TasksBulkUpdateRequest"
+                }
+            }
+        },
+        "storage.UpdateTaskRequest": {
+            "type": "object",
+            "properties": {
+                "correct_answers": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "group_id": {
+                    "type": "string"
+                },
+                "hints": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "id": {
+                    "type": "string"
+                },
+                "media_link": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "order_idx": {
+                    "type": "integer"
+                },
+                "pub_time": {
+                    "type": "string"
+                },
+                "question": {
+                    "type": "string"
+                },
+                "reward": {
+                    "type": "integer"
+                },
+                "verification": {
+                    "$ref": "#/definitions/storage.VerificationType"
                 }
             }
         },
@@ -1166,6 +1512,28 @@ const docTemplate = `{
                 },
                 "username": {
                     "type": "string"
+                }
+            }
+        },
+        "storage.VerificationType": {
+            "type": "string",
+            "enum": [
+                "auto",
+                "manual"
+            ],
+            "x-enum-varnames": [
+                "VerificationAuto",
+                "VerificationManual"
+            ]
+        },
+        "taskgroups.GetResponse": {
+            "type": "object",
+            "properties": {
+                "task_groups": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/storage.TaskGroup"
+                    }
                 }
             }
         },
