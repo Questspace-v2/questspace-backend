@@ -121,7 +121,7 @@ func (h *Handler) HandleGet(c *gin.Context) error {
 		resp.Team = team
 	}
 
-	c.JSON(http.StatusOK, quest)
+	c.JSON(http.StatusOK, resp)
 	return nil
 }
 
