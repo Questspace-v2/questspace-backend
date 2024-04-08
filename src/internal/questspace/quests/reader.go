@@ -48,8 +48,9 @@ func getQuestsOfType(ctx context.Context, s storage.QuestStorage, user *storage.
 	if allQuests.NextPage != nil {
 		quests.NextPageID = allQuests.NextPage.ID()
 	}
-	for _, q := range quests.Quests {
-		SetStatus(&q)
+	for i, q := range quests.Quests {
+		SetStatus(&q) //nolint:gosec
+		quests.Quests[i] = q
 	}
 	return quests, nil
 }
