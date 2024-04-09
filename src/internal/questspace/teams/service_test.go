@@ -57,14 +57,14 @@ func TestService_CreateTeam(t *testing.T) {
 		s.EXPECT().CreateTeam(ctx, &req).Return(&createdTeam, nil),
 
 		s.EXPECT().
-			SetInviteLink(ctx, &storage.SetInvitePathRequest{TeamID: createdTeam.ID, InvitePath: "321"}).
+			SetInviteLink(ctx, &storage.SetInvitePathRequest{TeamID: createdTeam.ID, InvitePath: "3210001"}).
 			Return(nil),
 	)
 
 	team, err := service.CreateTeam(ctx, &req)
 	require.NoError(t, err)
 	assert.Truef(t, strings.HasPrefix(team.InviteLink, linkPrefix), "link does not start with prefix %q", linkPrefix)
-	assert.Truef(t, strings.HasSuffix(team.InviteLink, "321"), "link does not end with invite path")
+	assert.Truef(t, strings.HasSuffix(team.InviteLink, "3210001"), "link does not end with invite path")
 	require.Len(t, team.Members, 1)
 	assert.Equal(t, creator, team.Members[0])
 }
