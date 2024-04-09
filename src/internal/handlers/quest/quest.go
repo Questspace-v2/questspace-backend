@@ -84,12 +84,13 @@ type TeamQuestResponse struct {
 
 // HandleGet handles GET /quest/:id request
 //
-// @Summary	Get quest by id
-// @Tags	Quests
-// @Param	quest_id	path		string	true	"Quest ID"
-// @Success	200			{object}	quest.TeamQuestResponse
-// @Failure	404
-// @Router	/quest/{quest_id} [get]
+// @Summary		Get quest by id
+// @Tags		Quests
+// @Param		quest_id	path		string	true	"Quest ID"
+// @Success		200			{object}	quest.TeamQuestResponse
+// @Failure		404
+// @Router		/quest/{quest_id} [get]
+// @Security 	ApiKeyAuth
 func (h *Handler) HandleGet(c *gin.Context) error {
 	questId := c.Param("id")
 	req := storage.GetQuestRequest{ID: questId}

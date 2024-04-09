@@ -6,6 +6,7 @@ import (
 	"testing"
 	"unicode/utf8"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -31,16 +32,17 @@ func TestLinkIDToPath_DecimalAlphabet(t *testing.T) {
 	setTestDecimalAlphabet(t)
 
 	id := int64(1337)
-	expected := reverse(strconv.Itoa(int(id)))
+	expected := reverse(strconv.Itoa(int(id + 1_000_000)))
 	res, err := LinkIDToPath(id)
 
 	require.NoError(t, err)
-	require.Equal(t, expected, res)
+	assert.Equal(t, expected, res)
 }
 
 func TestLinkIDToPath_IsShort(t *testing.T) {
 	id := int64(1 << 33)
 	res, err := LinkIDToPath(id)
 	require.NoError(t, err)
-	require.Less(t, len(res), 10)
+	assert.Less(t, len(res), 10)
+	assert.GreaterOrEqual(t, len(res), 6)
 }

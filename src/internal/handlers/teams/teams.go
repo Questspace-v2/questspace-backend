@@ -2,7 +2,10 @@ package teams
 
 import (
 	"database/sql"
+	"errors"
 	"net/http"
+
+	"questspace/internal/questspace/quests"
 
 	"questspace/pkg/application/httperrors"
 
@@ -11,6 +14,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"golang.org/x/xerrors"
 
+	"questspace/internal/handlers/quest"
 	"questspace/internal/handlers/transport"
 	pgdb "questspace/internal/pgdb/client"
 	"questspace/internal/questspace/teams"
@@ -355,5 +359,58 @@ func (h *Handler) HandleRemoveUser(c *gin.Context) error {
 	}
 
 	c.JSON(http.StatusOK, team)
+	return nil
+}
+
+// HandleGetQuestByTeamInvite handles GET /teams/:path/quest request
+//
+// @Summary		Get quest by its team invite path
+// @Tags		Teams
+// @Param		invite_path	path		string	true	"Team invite path"
+// @Success		200			{object}	quest.TeamQuestResponse
+// @Failure		404
+// @Router		/teams/{invite_path}/quest [get]
+// @Security 	ApiKeyAuth
+func (h *Handler) HandleGetQuestByTeamInvite(c *gin.Context) error {
+	invitePath := c.Param("path")
+	s, err := h.factory.NewStorage(c, dbnode.Alive)
+	if err != nil {
+		return xerrors.Errorf("get storage client: %w", err)
+	}
+
+	team, err := s.GetTeam(c, &storage.GetTeamRequest{InvitePath: invitePath})
+	if err != nil {
+		if errors.Is(err, storage.ErrNotFound) {
+			return xerrors.Errorf("not found team with invite path %q: %w", invitePath, err)
+		}
+		return xerrors.Errorf("get team: %w", err)
+	}
+
+	req := storage.GetQuestRequest{ID: team.Quest.ID}
+	gotQuest, err := s.GetQuest(c, &req)
+	if err != nil {
+		if errors.Is(err, storage.ErrNotFound) {
+			return httperrors.Errorf(http.StatusNotFound, "not found quest with id %q", req.ID)
+		}
+		return xerrors.Errorf("get quest: %w", err)
+	}
+
+	quests.SetStatus(gotQuest)
+	resp := quest.TeamQuestResponse{Quest: gotQuest}
+	if uauth, err := jwt.GetUserFromContext(c); err == nil {
+		teamReq := storage.GetTeamRequest{
+			UserRegistration: &storage.UserRegistration{
+				UserID:  uauth.ID,
+				QuestID: team.Quest.ID,
+			},
+		}
+		team, err := s.GetTeam(c, &teamReq)
+		if err != nil && !errors.Is(err, storage.ErrNotFound) {
+			return xerrors.Errorf("get user team: %w", err)
+		}
+		resp.Team = team
+	}
+
+	c.JSON(http.StatusOK, resp)
 	return nil
 }

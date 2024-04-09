@@ -128,6 +128,7 @@ func Init(app application.App) error {
 	teamsGroup.POST("/:id/captain", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(teamsHandler.HandleChangeLeader))
 	teamsGroup.POST("/:id/leave", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(teamsHandler.HandleLeave))
 	teamsGroup.DELETE("/:id/:user_id", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(teamsHandler.HandleRemoveUser))
+	teamsGroup.GET("/:path/quest", jwt.AuthMiddleware(jwtParser), application.AsGinHandler(teamsHandler.HandleGetQuestByTeamInvite))
 
 	taskGroupHandler := taskgroups.NewHandler(clientFactory)
 	questGroup.PATCH("/:id/task-groups/bulk", application.AsGinHandler(taskGroupHandler.HandleBulkUpdate))
