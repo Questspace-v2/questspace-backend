@@ -17,7 +17,7 @@ func LinkIDToPath(id int64) (string, error) {
 	var b strings.Builder
 	b.Grow(10)
 	// NOTE(svayp11): Cheap way to increase minimum length
-	modifier := int64(math.Pow(float64(len(alphabet)), minLength))
+	modifier := getStartConst()
 	id += modifier
 
 	for ; id > 0; id /= int64(len(alphabet)) {
@@ -27,4 +27,10 @@ func LinkIDToPath(id int64) (string, error) {
 		}
 	}
 	return b.String(), nil
+}
+
+func getStartConst() int64 {
+	initialModifier := int64(math.Pow(float64(len(alphabet)), minLength-2))
+	initialModifier = initialModifier*int64(len(alphabet)*5/6) + initialModifier*int64(len(alphabet))/9
+	return initialModifier * 31
 }

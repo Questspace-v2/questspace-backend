@@ -46,6 +46,7 @@ func Run(initFunc func(app App) error, configHolder interface{}) {
 		fmt.Printf("Failed to get logger from environment: %+v", err)
 		os.Exit(1)
 	}
+	defer func() { _ = logger.Sync() }()
 	if err := SetEnvMode(args.Environment); err != nil {
 		logger.Error("Failed to set environment mode", zap.Stringer("target_mode", &args.Environment), zap.Error(err))
 	}

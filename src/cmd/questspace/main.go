@@ -122,13 +122,13 @@ func Init(app application.App) error {
 
 	teamsGroup := app.Router().Group("/teams")
 	teamsGroup.GET("/join/:path", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(teamsHandler.HandleJoin))
+	teamsGroup.GET("/join/:path/quest", jwt.AuthMiddleware(jwtParser), application.AsGinHandler(teamsHandler.HandleGetQuestByTeamInvite))
 	teamsGroup.GET("/:id", application.AsGinHandler(teamsHandler.HandleGet))
 	teamsGroup.POST("/:id", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(teamsHandler.HandleUpdate))
 	teamsGroup.DELETE("/:id", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(teamsHandler.HandleDelete))
 	teamsGroup.POST("/:id/captain", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(teamsHandler.HandleChangeLeader))
 	teamsGroup.POST("/:id/leave", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(teamsHandler.HandleLeave))
 	teamsGroup.DELETE("/:id/:user_id", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(teamsHandler.HandleRemoveUser))
-	teamsGroup.GET("/:path/quest", jwt.AuthMiddleware(jwtParser), application.AsGinHandler(teamsHandler.HandleGetQuestByTeamInvite))
 
 	taskGroupHandler := taskgroups.NewHandler(clientFactory)
 	questGroup.PATCH("/:id/task-groups/bulk", application.AsGinHandler(taskGroupHandler.HandleBulkUpdate))
