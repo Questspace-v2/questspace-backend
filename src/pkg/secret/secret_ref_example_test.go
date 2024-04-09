@@ -10,6 +10,7 @@ import (
 
 func ExampleNewRef() {
 	_ = os.Setenv("SOME_VAR", "secret")
+	defer func() { _ = os.Unsetenv("SOME_VAR") }()
 
 	ref := NewEnvRef("SOME_VAR")
 	sec, _ := ref.Read()
@@ -20,6 +21,7 @@ func ExampleNewRef() {
 
 func ExampleRef_UnmarshalJSON() {
 	_ = os.Setenv("SOME_VAR", "secret_json")
+	defer func() { _ = os.Unsetenv("SOME_VAR") }()
 
 	type JSONConfig struct {
 		SecretVal Ref `json:"secret_val"`
@@ -39,6 +41,7 @@ func ExampleRef_UnmarshalJSON() {
 
 func ExampleRef_UnmarshalYAML() {
 	_ = os.Setenv("SOME_VAR", "secret_yaml")
+	defer func() { _ = os.Unsetenv("SOME_VAR") }()
 
 	type YAMLConfig struct {
 		SecretVal Ref `yaml:"secret-val"`

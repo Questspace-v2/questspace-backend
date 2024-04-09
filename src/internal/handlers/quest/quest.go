@@ -21,14 +21,16 @@ import (
 )
 
 type Handler struct {
-	clientFactory pgdb.QuestspaceClientFactory
-	fetcher       http.Client
+	clientFactory    pgdb.QuestspaceClientFactory
+	fetcher          http.Client
+	inviteLinkPrefix string
 }
 
-func NewHandler(cf pgdb.QuestspaceClientFactory, f http.Client) *Handler {
+func NewHandler(cf pgdb.QuestspaceClientFactory, f http.Client, p string) *Handler {
 	return &Handler{
-		clientFactory: cf,
-		fetcher:       f,
+		clientFactory:    cf,
+		fetcher:          f,
+		inviteLinkPrefix: p,
 	}
 }
 
@@ -119,6 +121,7 @@ func (h *Handler) HandleGet(c *gin.Context) error {
 		if err != nil && !errors.Is(err, storage.ErrNotFound) {
 			return xerrors.Errorf("get user team: %w", err)
 		}
+		team.InviteLink = h.inviteLinkPrefix + team.InviteLink
 		resp.Team = team
 	}
 

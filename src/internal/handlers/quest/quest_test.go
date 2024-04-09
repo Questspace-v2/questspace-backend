@@ -31,7 +31,7 @@ func TestHandleCreate(t *testing.T) {
 
 	router := gin.Default()
 	router.ContextWithFallback = true
-	handler := NewHandler(factory, http.Client{})
+	handler := NewHandler(factory, http.Client{}, "hello/")
 	router.POST("/quest", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(handler.HandleCreate))
 
 	now := ptr.Time(time.Unix(time.Now().Unix(), 0))

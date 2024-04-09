@@ -111,7 +111,7 @@ func Init(app application.App) error {
 	teamsHandler := teams.NewHandler(clientFactory, config.Teams.InviteLinkPrefix)
 
 	questGroup := app.Router().Group("/quest")
-	questHandler := quest.NewHandler(clientFactory, client)
+	questHandler := quest.NewHandler(clientFactory, client, config.Teams.InviteLinkPrefix)
 	questGroup.POST("", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(questHandler.HandleCreate))
 	questGroup.GET("", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(questHandler.HandleGetMany))
 	questGroup.GET("/:id", jwt.AuthMiddleware(jwtParser), application.AsGinHandler(questHandler.HandleGet))

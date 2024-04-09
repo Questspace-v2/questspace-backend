@@ -2,6 +2,7 @@ package secret
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"strings"
 	"sync"
@@ -10,13 +11,18 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+type secretResult struct {
+	val string
+	err error
+}
+
 // Ref is a holder for critical secret data.
 // The main purpose of ref is to hold and read config secrets without directly stating them.
 // Secrets may be read from files (default) or from environment (if "env:" prefix is present)
 type Ref struct {
 	ref  string
 	once *sync.Once
-	val  string
+	res  secretResult
 }
 
 func NewRef(refString string) *Ref {
@@ -30,6 +36,10 @@ func NewEnvRef(envKey string) *Ref {
 	return NewRef("env:" + envKey)
 }
 
+func (r *Ref) String() string {
+	return fmt.Sprintf("<hidden secret by ref %q>", r.ref)
+}
+
 func (r *Ref) UnmarshalYAML(value *yaml.Node) error {
 	var val string
 	if err := value.Decode(&val); err != nil {
@@ -39,6 +49,10 @@ func (r *Ref) UnmarshalYAML(value *yaml.Node) error {
 	r.ref = val
 	r.once = &sync.Once{}
 	return nil
+}
+
+func (r *Ref) MarshalYAML() (interface{}, error) {
+	return fmt.Sprintf("<hidden secret by ref %q>", r.ref), nil
 }
 
 func (r *Ref) UnmarshalJSON(data []byte) error {
@@ -53,16 +67,19 @@ func (r *Ref) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+func (r *Ref) MarshalJSON() ([]byte, error) {
+	return []byte(fmt.Sprintf(`"<hidden secret by ref %q>"`, r.ref)), nil
+}
+
 func (r *Ref) Read() (string, error) {
-	var err error
 	r.once.Do(func() {
-		r.val, err = r.load()
+		r.res.val, r.res.err = r.load()
 	})
-	if err != nil {
-		return "", xerrors.Errorf("load secret: %w", err)
+	if r.res.err != nil {
+		return "", xerrors.Errorf("load secret: %w", r.res.err)
 	}
 
-	return r.val, nil
+	return r.res.val, nil
 }
 
 func (r *Ref) load() (string, error) {
