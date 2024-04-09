@@ -121,7 +121,9 @@ func (h *Handler) HandleGet(c *gin.Context) error {
 		if err != nil && !errors.Is(err, storage.ErrNotFound) {
 			return xerrors.Errorf("get user team: %w", err)
 		}
-		team.InviteLink = h.inviteLinkPrefix + team.InviteLink
+		if team != nil {
+			team.InviteLink = h.inviteLinkPrefix + team.InviteLink
+		}
 		resp.Team = team
 	}
 

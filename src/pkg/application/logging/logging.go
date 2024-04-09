@@ -52,9 +52,14 @@ func Middleware(logger *zap.Logger) gin.HandlerFunc {
 	}
 }
 
-func RecoveryMiddleware(c *gin.Context, err any) {
-	Error(c, "panic during handling request", zap.Any("cause", err))
-	c.Status(http.StatusInternalServerError)
+func RecoveryMiddleware(c *gin.Context) {
+	defer func() {
+		if err := recover(); err != nil {
+			Error(c, "panic during handling request", zap.Any("cause", err))
+			c.Status(http.StatusInternalServerError)
+		}
+	}()
+	c.Next()
 }
 
 func AddFieldsToContextLogger(ctx context.Context, fields ...zap.Field) context.Context {

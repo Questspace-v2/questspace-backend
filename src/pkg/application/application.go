@@ -69,7 +69,7 @@ func Run(initFunc func(app App) error, configHolder interface{}) {
 	}
 
 	app.logger = logger
-	app.engine.Use(logging.Middleware(logger), gin.CustomRecovery(logging.RecoveryMiddleware))
+	app.engine.Use(logging.Middleware(logger), logging.RecoveryMiddleware)
 
 	// liveness check
 	app.engine.GET("/ping", Ping)
@@ -101,6 +101,7 @@ func AsGinHandler(handler func(c *gin.Context) error) gin.HandlerFunc {
 		err := handler(c)
 		if err != nil {
 			httperrors.WriteErrorResponse(c, err)
+			return
 		}
 		logging.Info(c, "new request handled")
 	}

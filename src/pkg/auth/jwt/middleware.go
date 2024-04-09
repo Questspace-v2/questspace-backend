@@ -8,7 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
-	"questspace/pkg/application"
 	"questspace/pkg/application/httperrors"
 	"questspace/pkg/application/logging"
 	"questspace/pkg/storage"
@@ -19,18 +18,20 @@ const AuthCookieName = "qs_user_acc"
 type jwtKey struct{}
 
 func middleware(parser Parser, strict bool) gin.HandlerFunc {
-	return application.AsGinHandler(func(c *gin.Context) error {
+	return func(c *gin.Context) {
 		token := getTokenFromRequest(c.Request)
 		if token == "" && strict {
-			return httperrors.New(http.StatusUnauthorized, "no credentials found")
+			httperrors.WriteErrorResponse(c, httperrors.New(http.StatusUnauthorized, "no credentials found"))
+			return
 		} else if token == "" {
 			c.Next()
-			return nil
+			return
 		}
 
 		user, err := parser.ParseToken(token)
 		if err != nil {
-			return httperrors.WrapWithCode(http.StatusUnauthorized, err)
+			httperrors.WriteErrorResponse(c, httperrors.WrapWithCode(http.StatusUnauthorized, err))
+			return
 		}
 
 		logging.AddFieldsToContextLogger(c, zap.Dict("user",
@@ -41,8 +42,7 @@ func middleware(parser Parser, strict bool) gin.HandlerFunc {
 		userCtx := context.WithValue(c.Request.Context(), jwtKey{}, user)
 		c.Request = c.Request.WithContext(userCtx)
 		c.Next()
-		return nil
-	})
+	}
 }
 
 func AuthMiddlewareStrict(parser Parser) gin.HandlerFunc {

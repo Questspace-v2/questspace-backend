@@ -377,7 +377,6 @@ func (h *Handler) HandleGetQuestByTeamInvite(c *gin.Context) error {
 	if err != nil {
 		return xerrors.Errorf("get storage client: %w", err)
 	}
-
 	team, err := s.GetTeam(c, &storage.GetTeamRequest{InvitePath: invitePath})
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
@@ -407,6 +406,9 @@ func (h *Handler) HandleGetQuestByTeamInvite(c *gin.Context) error {
 		team, err := s.GetTeam(c, &teamReq)
 		if err != nil && !errors.Is(err, storage.ErrNotFound) {
 			return xerrors.Errorf("get user team: %w", err)
+		}
+		if team != nil {
+			team.InviteLink = h.inviteLinkPrefix + team.InviteLink
 		}
 		resp.Team = team
 	}
