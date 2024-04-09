@@ -114,39 +114,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/join/{invite_path}/quest": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "tags": [
-                    "Teams"
-                ],
-                "summary": "Get quest by its team invite path",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Team invite path",
-                        "name": "invite_path",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/quest.TeamQuestResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found"
-                    }
-                }
-            }
-        },
         "/quest": {
             "get": {
                 "security": [
@@ -595,6 +562,39 @@ const docTemplate = `{
                     },
                     "406": {
                         "description": "Not Acceptable"
+                    }
+                }
+            }
+        },
+        "/teams/join/{invite_path}/quest": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "Teams"
+                ],
+                "summary": "Get quest by its team invite path",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Team invite path",
+                        "name": "invite_path",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/quest.TeamQuestResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found"
                     }
                 }
             }

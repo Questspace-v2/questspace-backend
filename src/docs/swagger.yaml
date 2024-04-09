@@ -497,26 +497,6 @@ paths:
       summary: Sign in to user account and return auth data
       tags:
       - Auth
-  /join/{invite_path}/quest:
-    get:
-      parameters:
-      - description: Team invite path
-        in: path
-        name: invite_path
-        required: true
-        type: string
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/quest.TeamQuestResponse'
-        "404":
-          description: Not Found
-      security:
-      - ApiKeyAuth: []
-      summary: Get quest by its team invite path
-      tags:
-      - Teams
   /quest:
     get:
       parameters:
@@ -960,6 +940,26 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Join team
+      tags:
+      - Teams
+  /teams/join/{invite_path}/quest:
+    get:
+      parameters:
+      - description: Team invite path
+        in: path
+        name: invite_path
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/quest.TeamQuestResponse'
+        "404":
+          description: Not Found
+      security:
+      - ApiKeyAuth: []
+      summary: Get quest by its team invite path
       tags:
       - Teams
   /user/{user_id}:

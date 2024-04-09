@@ -369,7 +369,7 @@ func (h *Handler) HandleRemoveUser(c *gin.Context) error {
 // @Param		invite_path	path		string	true	"Team invite path"
 // @Success		200			{object}	quest.TeamQuestResponse
 // @Failure		404
-// @Router		/join/{invite_path}/quest [get]
+// @Router		/teams/join/{invite_path}/quest [get]
 // @Security 	ApiKeyAuth
 func (h *Handler) HandleGetQuestByTeamInvite(c *gin.Context) error {
 	invitePath := c.Param("path")
