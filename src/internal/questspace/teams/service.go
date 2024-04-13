@@ -180,7 +180,7 @@ func (s *Service) LeaveTeam(ctx context.Context, user *storage.User, teamID, new
 	}
 	newTeam := team
 
-	if team.Captain.ID == user.ID {
+	if team.Captain.ID == user.ID && len(team.Members) > 1 {
 		if newCaptainID == "" {
 			return nil, httperrors.New(http.StatusBadRequest, "captain cannot leave team without specifying next leader")
 		}
