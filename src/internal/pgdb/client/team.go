@@ -142,8 +142,8 @@ const changeNameQuery = `
 WITH updated_team AS (
 	UPDATE questspace.team SET (name) = ($1)
 	WHERE id = $2
-	RETURNING id, name, cap_id, invite_link
-) SELECT t.id, t.name, t.invite_link, t.cap_id, u.username, u.avatar_url
+	RETURNING id, name, cap_id, invite_path
+) SELECT t.id, t.name, t.invite_path, t.cap_id, u.username, u.avatar_url
 FROM updated_team t LEFT JOIN questspace.user u ON t.cap_id = u.id
 `
 
@@ -215,8 +215,8 @@ const changeLeaderQuery = `
 WITH updated_team AS (
 	UPDATE questspace.team SET (cap_id) = ($1)
 	WHERE id = $2
-	RETURNING id, name, cap_id, invite_link
-) SELECT t.id, t.name, t.invite_link, t.cap_id, u.username, u.avatar_url
+	RETURNING id, name, cap_id, invite_path
+) SELECT t.id, t.name, t.invite_path, t.cap_id, u.username, u.avatar_url
 FROM updated_team t LEFT JOIN questspace.user u ON t.cap_id = u.id
 `
 

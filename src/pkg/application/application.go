@@ -69,7 +69,7 @@ func Run(initFunc func(app App) error, configHolder interface{}) {
 	}
 
 	app.logger = logger
-	app.engine.Use(logging.Middleware(logger), logging.RecoveryMiddleware)
+	app.engine.Use(logging.Middleware(*logger), logging.RecoveryMiddleware)
 
 	// liveness check
 	app.engine.GET("/ping", Ping)

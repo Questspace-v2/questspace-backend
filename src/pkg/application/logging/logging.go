@@ -23,7 +23,7 @@ var restrictedHeaders = map[string]struct{}{
 	"cookie2":       {},
 }
 
-func Middleware(logger *zap.Logger) gin.HandlerFunc {
+func Middleware(logger zap.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		reqId := uuid.Must(uuid.NewV4()).String() + "-" + strconv.FormatInt(time.Now().UTC().Unix(), 10)
 		fields := []zap.Field{
@@ -46,8 +46,8 @@ func Middleware(logger *zap.Logger) gin.HandlerFunc {
 			zap.Dict("headers", headers...),
 		)
 
-		logger = logger.With(fields...)
-		WithLogger(c, logger)
+		ctxLogger := logger.With(fields...)
+		WithLogger(c, ctxLogger)
 		c.Next()
 	}
 }
