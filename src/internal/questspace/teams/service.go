@@ -152,6 +152,9 @@ func (s *Service) DeleteTeam(ctx context.Context, user *storage.User, req *stora
 func (s *Service) ChangeLeader(ctx context.Context, user *storage.User, req *storage.ChangeLeaderRequest) (*storage.Team, error) {
 	team, err := s.s.GetTeam(ctx, &storage.GetTeamRequest{ID: req.ID, IncludeMembers: true})
 	if err != nil {
+		if errors.Is(err, storage.ErrNotFound) {
+			return nil, httperrors.Errorf(http.StatusNotFound, "team %q not found", req.ID)
+		}
 		return nil, xerrors.Errorf("get team: %w", err)
 	}
 	if team.Captain.ID != user.ID {
