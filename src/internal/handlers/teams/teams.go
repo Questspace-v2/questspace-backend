@@ -305,7 +305,7 @@ func (h *Handler) HandleLeave(c *gin.Context) error {
 		return xerrors.Errorf("%w", err)
 	}
 
-	s, tx, err := h.factory.NewStorageTx(c, &sql.TxOptions{Isolation: sql.LevelWriteCommitted})
+	s, tx, err := h.factory.NewStorageTx(c, &sql.TxOptions{Isolation: sql.LevelReadCommitted})
 	if err != nil {
 		return xerrors.Errorf("start tx: %w", err)
 	}

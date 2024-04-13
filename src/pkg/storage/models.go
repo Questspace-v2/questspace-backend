@@ -108,11 +108,11 @@ type Team struct {
 	ID           string `json:"id"`
 	Name         string `json:"name"`
 	Quest        *Quest `json:"-"`
-	Captain      *User  `json:"captain"`
+	Captain      *User  `json:"captain,omitempty"`
 	Score        int    `json:"score"`
 	InviteLink   string `json:"invite_link"`
 	InviteLinkID int64  `json:"-"`
-	Members      []User `json:"members"`
+	Members      []User `json:"members,omitempty"`
 }
 
 type User struct {
@@ -145,8 +145,20 @@ type Task struct {
 	MediaLink      string           `json:"media_link"`
 }
 
+//TODO(svayp11): commit the rest of play-mode
+
 type AnswerTry struct {
-	Task   *Task
-	User   *User
+	Team   *Team
+	TaskID string
 	Answer string
+}
+
+type Hint struct {
+	Text string `json:"text"`
+}
+
+type HintTake struct {
+	Team   *Team
+	TaskID string
+	Hint   Hint
 }
