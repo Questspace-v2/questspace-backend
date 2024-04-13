@@ -270,6 +270,38 @@ func TestTeamStorage_GetTeam_UserRegistration(t *testing.T) {
 	assert.NotNil(t, gotTeam)
 }
 
+func TestTeamStorage_ChangeLeader(t *testing.T) {
+	ctx := context.Background()
+	client := NewClient(pgtest.NewEmbeddedQuestspaceDB(t))
+
+	user1, err := client.CreateUser(ctx, userReq1)
+	require.NoError(t, err)
+	user2, err := client.CreateUser(ctx, userReq2)
+	require.NoError(t, err)
+
+	qReq1 := questReq1
+	qReq1.Creator = user1
+	q1, err := client.CreateQuest(ctx, &qReq1)
+	require.NoError(t, err)
+
+	tReq1 := teamReq1
+	tReq1.Creator = user1
+	tReq1.QuestID = q1.ID
+	team1, err := client.CreateTeam(ctx, &tReq1)
+	require.NoError(t, err)
+	require.NoError(t, client.SetInviteLink(ctx, &storage.SetInvitePathRequest{
+		TeamID:     team1.ID,
+		InvitePath: firstPath,
+	}))
+	team1.InviteLink = firstPath
+
+	_, err = client.JoinTeam(ctx, &storage.JoinTeamRequest{InvitePath: firstPath, User: user2})
+	require.NoError(t, err)
+
+	_, err = client.ChangeLeader(ctx, &storage.ChangeLeaderRequest{ID: team1.ID, CaptainID: user2.ID})
+	require.NoError(t, err)
+}
+
 func TestTeamStorage_GetTeam_ErrorOnEmptyRequest(t *testing.T) {
 	ctx := context.Background()
 	client := NewClient(pgtest.NewEmbeddedQuestspaceDB(t))

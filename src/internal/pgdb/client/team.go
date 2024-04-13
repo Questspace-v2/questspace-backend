@@ -140,7 +140,7 @@ func (c *Client) GetTeams(ctx context.Context, req *storage.GetTeamsRequest) ([]
 
 const changeNameQuery = `
 WITH updated_team AS (
-	UPDATE questspace.team SET (name) = ($1)
+	UPDATE questspace.team SET name = $1
 	WHERE id = $2
 	RETURNING id, name, cap_id, invite_path
 ) SELECT t.id, t.name, t.invite_path, t.cap_id, u.username, u.avatar_url
@@ -213,7 +213,7 @@ func (c *Client) DeleteTeam(ctx context.Context, req *storage.DeleteTeamRequest)
 
 const changeLeaderQuery = `
 WITH updated_team AS (
-	UPDATE questspace.team SET (cap_id) = ($1)
+	UPDATE questspace.team SET cap_id = $1
 	WHERE id = $2
 	RETURNING id, name, cap_id, invite_path
 ) SELECT t.id, t.name, t.invite_path, t.cap_id, u.username, u.avatar_url
