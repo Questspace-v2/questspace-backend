@@ -214,6 +214,11 @@ func (s *Service) LeaveTeam(ctx context.Context, user *storage.User, teamID, new
 	}
 	newTeam.Members = members
 	newTeam.InviteLink = s.inviteLinkPrefix + newTeam.InviteLink
+	if len(newTeam.Members) == 0 {
+		if err := s.s.DeleteTeam(ctx, &storage.DeleteTeamRequest{ID: teamID}); err != nil {
+			return nil, xerrors.Errorf("delete team: %w", err)
+		}
+	}
 	return newTeam, nil
 }
 

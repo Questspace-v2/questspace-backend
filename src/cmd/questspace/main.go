@@ -40,9 +40,9 @@ var config struct {
 		AllowHeaders []string `yaml:"allow-headers"`
 		AllowMethods []string `yaml:"allow-methods"`
 	} `yaml:"cors"`
-	JWT    jwt.Config   `yaml:"jwt"`
-	Teams  teams.Config `yaml:"teams"`
-	Google google.Config
+	JWT    jwt.Config    `yaml:"jwt"`
+	Teams  teams.Config  `yaml:"teams"`
+	Google google.Config `yaml:"google-oauth"`
 }
 
 // Init godoc
