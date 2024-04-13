@@ -179,7 +179,11 @@ func (s *Service) LeaveTeam(ctx context.Context, user *storage.User, teamID, new
 		return nil, xerrors.Errorf("get team: %w", err)
 	}
 	newTeam := team
-
+	logging.Info(ctx, "leaving team",
+		zap.Int("remaining", len(team.Members)),
+		zap.Bool("is_cap", team.Captain.ID == newCaptainID),
+		zap.String("user", user.Username),
+	)
 	if team.Captain.ID == user.ID && len(team.Members) > 1 {
 		if newCaptainID == "" {
 			return nil, httperrors.New(http.StatusBadRequest, "captain cannot leave team without specifying next leader")
