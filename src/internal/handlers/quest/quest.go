@@ -116,6 +116,7 @@ func (h *Handler) HandleGet(c *gin.Context) error {
 				UserID:  uauth.ID,
 				QuestID: questId,
 			},
+			IncludeMembers: true,
 		}
 		team, err := s.GetTeam(c, &teamReq)
 		if err != nil && !errors.Is(err, storage.ErrNotFound) {

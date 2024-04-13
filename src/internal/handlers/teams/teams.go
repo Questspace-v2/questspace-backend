@@ -402,6 +402,7 @@ func (h *Handler) HandleGetQuestByTeamInvite(c *gin.Context) error {
 				UserID:  uauth.ID,
 				QuestID: team.Quest.ID,
 			},
+			IncludeMembers: true,
 		}
 		team, err := s.GetTeam(c, &teamReq)
 		if err != nil && !errors.Is(err, storage.ErrNotFound) {
