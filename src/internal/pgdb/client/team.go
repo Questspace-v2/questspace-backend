@@ -65,14 +65,21 @@ func (c *Client) getTeamMembers(ctx context.Context, teamID string) ([]storage.U
 func (c *Client) GetTeam(ctx context.Context, req *storage.GetTeamRequest) (*storage.Team, error) {
 	query := sq.Select("t.id", "t.name", "t.invite_path", "t.score", "q.id", "q.max_team_cap", "u.id", "u.username", "u.avatar_url").
 		From("questspace.team t").
-		LeftJoin("questspace.quest q ON q.id = t.quest_id").LeftJoin("questspace.user u ON t.cap_id = u.id").
+		LeftJoin("questspace.quest q ON q.id = t.quest_id").
+		LeftJoin("questspace.user u ON t.cap_id = u.id").
 		PlaceholderFormat(sq.Dollar)
 	if req.ID != "" {
 		query = query.Where(sq.Eq{"t.id": req.ID})
 	} else if req.InvitePath != "" {
 		query = query.Where(sq.Eq{"t.invite_path": req.InvitePath})
 	} else if req.UserRegistration != nil {
-		query = query.Where(sq.Eq{"u.id": req.UserRegistration.UserID, "q.id": req.UserRegistration.QuestID})
+		query = query.Where(
+			sq.Expr(
+				"t.id = (SELECT re.team_id FROM questspace.registration re LEFT JOIN questspace.team te ON te.id = re.team_id WHERE re.user_id = ? AND te.quest_id = ?)",
+				req.UserRegistration.UserID,
+				req.UserRegistration.QuestID,
+			),
+		)
 	} else {
 		return nil, xerrors.Errorf("no search key was provided: %w", storage.ErrValidation)
 	}

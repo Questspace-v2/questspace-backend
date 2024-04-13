@@ -231,6 +231,45 @@ func TestTeamStorage_GetTeam(t *testing.T) {
 	assert.Equal(t, team2.Captain.AvatarURL, recvTeamByURL2.Captain.AvatarURL)
 }
 
+func TestTeamStorage_GetTeam_UserRegistration(t *testing.T) {
+	ctx := context.Background()
+	client := NewClient(pgtest.NewEmbeddedQuestspaceDB(t))
+
+	user1, err := client.CreateUser(ctx, userReq1)
+	require.NoError(t, err)
+	user2, err := client.CreateUser(ctx, userReq2)
+	require.NoError(t, err)
+
+	qReq1 := questReq1
+	qReq1.Creator = user1
+	q1, err := client.CreateQuest(ctx, &qReq1)
+	require.NoError(t, err)
+
+	tReq1 := teamReq1
+	tReq1.Creator = user1
+	tReq1.QuestID = q1.ID
+	team1, err := client.CreateTeam(ctx, &tReq1)
+	require.NoError(t, err)
+	require.NoError(t, client.SetInviteLink(ctx, &storage.SetInvitePathRequest{
+		TeamID:     team1.ID,
+		InvitePath: firstPath,
+	}))
+	team1.InviteLink = firstPath
+
+	_, err = client.JoinTeam(ctx, &storage.JoinTeamRequest{
+		InvitePath: firstPath,
+		User:       user2,
+	})
+	require.NoError(t, err)
+
+	gotTeam, err := client.GetTeam(ctx, &storage.GetTeamRequest{UserRegistration: &storage.UserRegistration{
+		UserID:  user2.ID,
+		QuestID: q1.ID,
+	}})
+	require.NoError(t, err)
+	assert.NotNil(t, gotTeam)
+}
+
 func TestTeamStorage_GetTeam_ErrorOnEmptyRequest(t *testing.T) {
 	ctx := context.Background()
 	client := NewClient(pgtest.NewEmbeddedQuestspaceDB(t))
