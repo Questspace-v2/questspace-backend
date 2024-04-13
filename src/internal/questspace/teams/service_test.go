@@ -199,3 +199,58 @@ func TestTeamService_JoinTeam_AlreadyInvited(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, team, *got)
 }
+
+func TestTeamService_LeaveTeam(t *testing.T) {
+	ctx := context.Background()
+	ctrl := gomock.NewController(t)
+
+	s := storagemock.NewMockTeamStorage(ctrl)
+	service := NewService(s, linkPrefix)
+
+	oldMember := storage.User{
+		ID:        uuid.Must(uuid.NewV4()).String(),
+		Username:  "svayp11",
+		AvatarURL: "https://ya.ru",
+	}
+
+	questID := uuid.Must(uuid.NewV4()).String()
+	teamCreator := storage.User{
+		ID:       uuid.Must(uuid.NewV4()).String(),
+		Username: "prikotletka",
+	}
+	team := storage.Team{
+		ID:   uuid.Must(uuid.NewV4()).String(),
+		Name: "team2",
+		Quest: &storage.Quest{
+			ID: questID,
+		},
+		InviteLink: "inviteme",
+		Captain:    &teamCreator,
+		Members:    []storage.User{teamCreator, oldMember},
+	}
+	updatedTeam := team
+	updatedTeam.Captain = &oldMember
+	updatedTeam.Members = nil
+
+	updatedTeamWithMembers := updatedTeam
+	updatedTeamWithMembers.Members = []storage.User{oldMember}
+
+	gomock.InOrder(
+		s.EXPECT().GetTeam(ctx, &storage.GetTeamRequest{ID: team.ID, IncludeMembers: true}).
+			Return(&team, nil),
+		s.EXPECT().ChangeLeader(ctx, &storage.ChangeLeaderRequest{ID: team.ID, CaptainID: oldMember.ID}).
+			Return(&updatedTeam, nil),
+		s.EXPECT().RemoveUser(ctx, &storage.RemoveUserRequest{ID: team.ID, UserID: teamCreator.ID}).
+			Return(nil),
+		s.EXPECT().GetTeam(ctx, &storage.GetTeamRequest{ID: team.ID, IncludeMembers: true}).
+			Return(&updatedTeamWithMembers, nil),
+		s.EXPECT().RemoveUser(ctx, &storage.RemoveUserRequest{ID: team.ID, UserID: oldMember.ID}).
+			Return(nil),
+		s.EXPECT().DeleteTeam(ctx, &storage.DeleteTeamRequest{ID: team.ID}).Return(nil),
+	)
+
+	_, err := service.LeaveTeam(ctx, &teamCreator, team.ID, oldMember.ID)
+	require.NoError(t, err)
+	_, err = service.LeaveTeam(ctx, &oldMember, team.ID, "")
+	require.NoError(t, err)
+}
