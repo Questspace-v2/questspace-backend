@@ -229,7 +229,7 @@ func TestUserStorage_CreateOrUpdateByExternalID(t *testing.T) {
 	newUser, err := client.CreateOrUpdateByExternalID(ctx, &req)
 	require.NoError(t, err)
 
-	assert.Equal(t, req.AvatarURL, newUser.AvatarURL)
+	assert.Equal(t, userReq1.AvatarURL, newUser.AvatarURL)
 }
 
 func TestUserStorage_DeleteUser(t *testing.T) {

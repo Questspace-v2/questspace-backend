@@ -124,7 +124,7 @@ func (c *Client) GetUserPasswordHash(ctx context.Context, req *storage.GetUserRe
 func (c *Client) CreateOrUpdateByExternalID(ctx context.Context, req *storage.CreateOrUpdateRequest) (*storage.User, error) {
 	sqlQuery := `INSERT INTO questspace.user (username, avatar_url, password, external_id)
 	VALUES ($1, $2, $3, $4)
-	ON CONFLICT (external_id) DO UPDATE SET avatar_url = $2
+	ON CONFLICT (external_id) DO UPDATE SET password = $3
 	RETURNING id, username, avatar_url
 `
 	expr := sq.Expr(sqlQuery, req.Username, req.AvatarURL, []byte(req.ExternalID), req.ExternalID)

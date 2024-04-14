@@ -84,11 +84,11 @@ func (c *Client) GetQuest(ctx context.Context, req *storage.GetQuestRequest) (*s
 }
 
 func (c *Client) addAllQuestsCond(query sq.SelectBuilder, userID string) sq.SelectBuilder {
-	const allExpr = `q.access = 'public' OR (q.access = 'link_only' AND EXISTS(
+	const allExpr = `(q.access = 'public' OR (q.access = 'link_only' AND EXISTS(
 	SELECT 1 FROM questspace.registration r
 		LEFT JOIN questspace.team t ON t.id = r.team_id
 		WHERE t.quest_id = q.id AND r.user_id = ?
-))`
+)))`
 	query = query.Where(sq.Expr(allExpr, userID))
 	return query
 }
