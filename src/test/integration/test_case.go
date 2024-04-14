@@ -14,10 +14,10 @@ import (
 )
 
 type RequestCase struct {
-	Method    string `yaml:"method"`
-	URI       string `yaml:"uri"`
-	Authorize bool   `yaml:"authorize,omitempty"`
-	JSONInput string `yaml:"json-input,omitempty"`
+	Method        string `yaml:"method"`
+	URI           string `yaml:"uri"`
+	Authorization string `yaml:"authorization,omitempty"`
+	JSONInput     string `yaml:"json-input,omitempty"`
 
 	ExpectedStatus int    `yaml:"expected-status"`
 	ExpectedJSON   string `yaml:"expected-json,omitempty"`

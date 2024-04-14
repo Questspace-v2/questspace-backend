@@ -70,6 +70,7 @@ func TestTestRunner_SetVariable(t *testing.T) {
 
 func TestTestRunner_SetVariables(t *testing.T) {
 	uri := "/quest/$ID"
+	auth := ""
 	json := `{"quest": {"id": "$ID", "another_val": 123, "some": "$ANY$"}}`
 
 	runner := TestRunner{
@@ -77,9 +78,10 @@ func TestTestRunner_SetVariables(t *testing.T) {
 			"ID": "123-456-789-123",
 		},
 	}
-	newURI, newJSON := runner.setVariables(t, uri, json)
-	t.Log(newURI, newJSON)
+	newURI, newAuth, newJSON := runner.setVariables(t, uri, auth, json)
+	t.Log(newURI, newAuth, newJSON)
 	assert.Contains(t, newURI, runner.variables["ID"].(string))
+	assert.Empty(t, newAuth)
 	assert.Contains(t, newJSON, runner.variables["ID"].(string))
 	assert.Contains(t, newJSON, anySign)
 }

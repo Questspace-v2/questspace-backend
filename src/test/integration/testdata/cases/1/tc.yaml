@@ -12,7 +12,7 @@ requests:
     expected-status: 200
     expected-json: >
       {
-        "access_token": "$ANY$",
+        "access_token": "$SET$:SVAYP11_TOKEN",
         "user": {
           "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
           "username": "svayp11", 
@@ -30,3 +30,9 @@ requests:
         "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
         "username": "svayp11"
       }
+
+  - method: DELETE
+    uri: /user/$USER_ID
+    authorization: $SVAYP11_TOKEN
+
+    expected-status: 200

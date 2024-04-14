@@ -27,7 +27,7 @@ func TestQuestspace(t *testing.T) {
 			runner := NewTestRunner(testutils.ServerURL)
 
 			for _, req := range tc.Requests {
-				code, body := runner.Fetch(t, req.Method, req.URI, req.Authorize, req.JSONInput)
+				code, body := runner.Fetch(t, req.Method, req.URI, req.Authorization, req.JSONInput)
 				if assert.Equal(t, req.ExpectedStatus, code) {
 					if len(req.ExpectedJSON) > 0 {
 						runner.VerifyData(t, req.ExpectedJSON, body)

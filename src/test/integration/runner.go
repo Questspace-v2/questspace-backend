@@ -27,7 +27,6 @@ const (
 type TestRunner struct {
 	serverURL string
 	client    *http.Client
-	authToken string
 
 	variables map[string]interface{}
 }
@@ -40,27 +39,20 @@ func NewTestRunner(serverURL string) *TestRunner {
 	}
 }
 
-type tokenHolder struct {
-	AccessToken string `json:"access_token"`
-}
-
-func (r *TestRunner) Fetch(t *testing.T, method, uri string, authorize bool, JSONData string) (code int, data string) {
+func (r *TestRunner) Fetch(t *testing.T, method, uri string, authorization string, JSONData string) (code int, data string) {
 	t.Helper()
 
-	if authorize && r.authToken == "" {
-		t.Errorf("Could not get auth token before request %q", uri)
-	}
 	var body io.Reader = http.NoBody
 
-	uri, JSONData = r.setVariables(t, uri, JSONData)
+	uri, authorization, JSONData = r.setVariables(t, uri, authorization, JSONData)
 
 	if JSONData != "" {
 		body = bytes.NewBuffer([]byte(JSONData))
 	}
 	req, err := http.NewRequestWithContext(context.Background(), method, r.serverURL+uri, body)
 	require.NoError(t, err)
-	if authorize {
-		req.Header.Set("Authorization", "Bearer "+r.authToken)
+	if authorization != "" {
+		req.Header.Set("Authorization", "Bearer "+authorization)
 	}
 
 	resp, err := r.client.Do(req)
@@ -70,17 +62,14 @@ func (r *TestRunner) Fetch(t *testing.T, method, uri string, authorize bool, JSO
 	jsonData, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
 
-	tokenHolder := tokenHolder{}
-	if err := json.Unmarshal(jsonData, &tokenHolder); err == nil {
-		r.authToken = tokenHolder.AccessToken
-	}
 	return status, string(jsonData)
 }
 
-func (r *TestRunner) setVariables(t *testing.T, uri string, JSONData string) (newURI, newJSONData string) {
+func (r *TestRunner) setVariables(t *testing.T, uri string, auth string, JSONData string) (newURI, newAuth, newJSONData string) {
 	t.Helper()
 
 	newURI = r.setVariable(uri)
+	newAuth = r.setVariable(auth)
 	var data []byte
 	if JSONData != "" {
 		var err error
@@ -91,7 +80,7 @@ func (r *TestRunner) setVariables(t *testing.T, uri string, JSONData string) (ne
 		require.NoError(t, err)
 	}
 
-	return newURI, string(data)
+	return newURI, newAuth, string(data)
 }
 
 func (r *TestRunner) setJSONVariables(json interface{}) interface{} {
@@ -138,7 +127,7 @@ func (r *TestRunner) setVariable(s string) string {
 			continue
 		}
 
-		if ('A' <= rn && rn <= 'Z') || rn == '_' {
+		if ('A' <= rn && rn <= 'Z') || ('0' <= rn && rn <= '9') || rn == '_' {
 			continue
 		} else {
 			end = i
