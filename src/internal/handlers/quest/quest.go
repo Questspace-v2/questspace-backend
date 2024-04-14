@@ -216,7 +216,7 @@ func (h *Handler) HandleUpdate(c *gin.Context) error {
 		}
 		return xerrors.Errorf("failed to update quest: %w", err)
 	}
-	if quest.Creator == nil || quest.Creator.Username != uauth.Username {
+	if quest.Creator == nil || quest.Creator.ID != uauth.ID {
 		return httperrors.New(http.StatusForbidden, "only creator can update their quest")
 	}
 	if err := tx.Commit(); err != nil {
