@@ -11,8 +11,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/stretchr/testify/require"
 )
 
@@ -278,5 +276,5 @@ func (r *TestRunner) VerifyData(t *testing.T, expected, actual string) {
 	needGot, err := json.Marshal(*gotData)
 	require.NoError(t, err)
 
-	assert.JSONEq(t, string(needExp), string(needGot))
+	require.JSONEq(t, string(needExp), string(needGot))
 }
