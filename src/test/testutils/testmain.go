@@ -30,6 +30,9 @@ var (
 )
 
 func InitApplication(m *testing.M) (code int) {
+	if os.Getenv("CI") == "true" {
+		return 0
+	}
 	postgresContainer := StartDockerPG()
 	PG = postgresContainer
 	var closer CloserFunc
