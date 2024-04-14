@@ -9,7 +9,7 @@ ALTER TABLE questspace.team ADD COLUMN cap_id uuid REFERENCES questspace.user ON
 
 ALTER TABLE questspace.team ADD CONSTRAINT unique_quest_id_name_constraint UNIQUE (quest_id, name);
 
-CREATE FUNCTION register_cap() RETURNS TRIGGER AS $reg_cap_fn$
+CREATE FUNCTION questspace.register_cap() RETURNS TRIGGER AS $reg_cap_fn$
     BEGIN
         INSERT INTO questspace.registration (user_id, team_id) VALUES (NEW.cap_id, NEW.id);
         RETURN NEW;
@@ -19,9 +19,9 @@ CREATE TRIGGER register_cap_trigger
     AFTER INSERT
     ON questspace.team
     FOR EACH ROW
-    EXECUTE FUNCTION register_cap();
+    EXECUTE FUNCTION questspace.register_cap();
 
-CREATE FUNCTION check_under_capacity() RETURNS TRIGGER AS $check_und_cap$
+CREATE FUNCTION questspace.check_under_capacity() RETURNS TRIGGER AS $check_und_cap$
     DECLARE
         member_count integer;
         max_cap integer;
@@ -52,4 +52,4 @@ CREATE TRIGGER check_team_under_cap_trigger
     BEFORE INSERT
     ON questspace.registration
     FOR EACH ROW
-    EXECUTE FUNCTION check_under_capacity();
+    EXECUTE FUNCTION questspace.check_under_capacity();

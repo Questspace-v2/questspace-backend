@@ -19,6 +19,11 @@ jobs:
     runs-on: ubuntu-22.04
     container:
       image: golang:1.22.1-alpine3.19
+    services:
+      dind:
+        image: docker:23.0-rc-dind-rootless
+        ports:
+          - 2375:2375
     steps:
     - uses: actions/checkout@v4
 

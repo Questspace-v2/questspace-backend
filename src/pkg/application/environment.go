@@ -40,8 +40,10 @@ func GetAddrFromEnvironment(env Environment) string {
 	}
 }
 
+const AppEnvironmentEnvKey = "ENVIRONMENT"
+
 func GetEnvironmentFromSystem() (Environment, error) {
-	env, ok := os.LookupEnv("ENVIRONMENT")
+	env, ok := os.LookupEnv(AppEnvironmentEnvKey)
 	if !ok {
 		return Development, nil
 	}
