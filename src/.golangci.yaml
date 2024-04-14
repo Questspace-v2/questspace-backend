@@ -7,6 +7,9 @@ issues:
       linters:
         - gosec
         - noctx
+    - path: test/.*
+      linters:
+        - gosec
 linters:
   disable-all: true
   enable:

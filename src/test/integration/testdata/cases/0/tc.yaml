@@ -1,0 +1,4 @@
+name: ping
+method: GET
+uri: /ping
+expected-status: 200
