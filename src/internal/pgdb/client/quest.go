@@ -196,6 +196,9 @@ func (c *Client) UpdateQuest(ctx context.Context, req *storage.UpdateQuestReques
 	if req.Name != "" {
 		query = query.Set("name", req.Name)
 	}
+	if req.MediaLink != "" {
+		query = query.Set("media_link", req.MediaLink)
+	}
 	if req.Description != "" {
 		query = query.Set("description", req.Description)
 	}
