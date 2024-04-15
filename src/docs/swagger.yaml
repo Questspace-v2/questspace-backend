@@ -319,8 +319,6 @@ definitions:
     properties:
       access:
         $ref: '#/definitions/storage.AccessType'
-      creator_name:
-        type: string
       description:
         type: string
       finish_time:
@@ -397,10 +395,14 @@ definitions:
     - VerificationManual
   taskgroups.GetResponse:
     properties:
+      quest:
+        $ref: '#/definitions/storage.Quest'
       task_groups:
         items:
           $ref: '#/definitions/storage.TaskGroup'
         type: array
+      team:
+        $ref: '#/definitions/storage.Team'
     type: object
   teams.ChangeLeaderRequest:
     properties:
@@ -581,6 +583,10 @@ paths:
           description: Forbidden
         "404":
           description: Not Found
+        "406":
+          description: Not Acceptable
+      security:
+      - ApiKeyAuth: []
       summary: Get task groups with tasks
       tags:
       - TaskGroups
@@ -902,7 +908,7 @@ paths:
         type: string
       - description: New captain (if leader leaves)
         in: query
-        name: new_captain_id
+        name: new_captain
         type: string
       responses:
         "200":

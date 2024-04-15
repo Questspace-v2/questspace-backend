@@ -290,7 +290,7 @@ func (h *Handler) HandleChangeLeader(c *gin.Context) error {
 // @Summary		Leave the team
 // @Tags		Teams
 // @Param		team_id			path		string	true	"Team id"
-// @Param		new_captain_id	query		string	false	"New captain (if leader leaves)"
+// @Param		new_captain		query		string	false	"New captain (if leader leaves)"
 // @Success		200				{object} 	storage.Team
 // @Failure    	400
 // @Failure    	403

@@ -133,7 +133,7 @@ func Init(app application.App) error {
 	taskGroupHandler := taskgroups.NewHandler(clientFactory)
 	questGroup.PATCH("/:id/task-groups/bulk", application.AsGinHandler(taskGroupHandler.HandleBulkUpdate))
 	questGroup.POST("/:id/task-groups", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(taskGroupHandler.HandleCreate))
-	questGroup.GET("/:id/task-groups", application.AsGinHandler(taskGroupHandler.HandleGet))
+	questGroup.GET("/:id/task-groups", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(taskGroupHandler.HandleGet))
 
 	app.Router().GET("/swagger/*any", ginswagger.WrapHandler(swaggerfiles.Handler))
 	return nil

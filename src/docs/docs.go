@@ -214,6 +214,11 @@ const docTemplate = `{
         },
         "/quest/{id}/task-groups": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "tags": [
                     "TaskGroups"
                 ],
@@ -245,6 +250,9 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found"
+                    },
+                    "406": {
+                        "description": "Not Acceptable"
                     }
                 }
             },
@@ -780,7 +788,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "New captain (if leader leaves)",
-                        "name": "new_captain_id",
+                        "name": "new_captain",
                         "in": "query"
                     }
                 ],
@@ -1449,9 +1457,6 @@ const docTemplate = `{
                 "access": {
                     "$ref": "#/definitions/storage.AccessType"
                 },
-                "creator_name": {
-                    "type": "string"
-                },
                 "description": {
                     "type": "string"
                 },
@@ -1567,11 +1572,17 @@ const docTemplate = `{
         "taskgroups.GetResponse": {
             "type": "object",
             "properties": {
+                "quest": {
+                    "$ref": "#/definitions/storage.Quest"
+                },
                 "task_groups": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/storage.TaskGroup"
                     }
+                },
+                "team": {
+                    "$ref": "#/definitions/storage.Team"
                 }
             }
         },
