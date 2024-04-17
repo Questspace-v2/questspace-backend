@@ -216,3 +216,28 @@ type TasksBulkUpdateRequest struct {
 	Update  []UpdateTaskRequest `json:"update"`
 	Delete  []DeleteTaskRequest `json:"delete"`
 }
+
+type GetHintTakesRequest struct {
+	TeamID  string
+	QuestID string
+	TaskID  string
+}
+
+type TakeHintRequest struct {
+	TeamID string
+	TaskID string
+	Index  int
+}
+
+type GetAcceptedTasksRequest struct {
+	TeamID  string
+	QuestID string
+}
+
+type CreateAnswerTryRequest struct {
+	TeamID   string
+	TaskID   string
+	Text     string
+	Accepted bool
+	Score    int
+}

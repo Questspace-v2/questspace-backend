@@ -212,6 +212,108 @@ const docTemplate = `{
                 }
             }
         },
+        "/quest/{id}/answer": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "PlayMode"
+                ],
+                "summary": "Answer task in play-mode",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Quest ID",
+                        "name": "quest_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Answer data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/play.TryAnswerRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/game.TryAnswerResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "406": {
+                        "description": "Not Acceptable"
+                    }
+                }
+            }
+        },
+        "/quest/{id}/hint": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "PlayMode"
+                ],
+                "summary": "Take hint for task in play-mode",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Quest ID",
+                        "name": "quest_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Take hint request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/play.TakeHintRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/storage.Hint"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "406": {
+                        "description": "Not Acceptable"
+                    }
+                }
+            }
+        },
         "/quest/{id}/play": {
             "get": {
                 "security": [
@@ -236,7 +338,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/play.GetResponse"
+                            "$ref": "#/definitions/game.AnswerDataResponse"
                         }
                     },
                     "400": {
@@ -1034,15 +1136,7 @@ const docTemplate = `{
                 }
             }
         },
-        "google.OAuthRequest": {
-            "type": "object",
-            "properties": {
-                "id_token": {
-                    "type": "string"
-                }
-            }
-        },
-        "play.GetResponse": {
+        "game.AnswerDataResponse": {
             "type": "object",
             "properties": {
                 "quest": {
@@ -1051,11 +1145,135 @@ const docTemplate = `{
                 "task_groups": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/storage.TaskGroup"
+                        "$ref": "#/definitions/game.AnswerTaskGroup"
                     }
                 },
                 "team": {
                     "$ref": "#/definitions/storage.Team"
+                }
+            }
+        },
+        "game.AnswerTask": {
+            "type": "object",
+            "properties": {
+                "accepted": {
+                    "type": "boolean"
+                },
+                "hints": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/game.AnswerTaskHint"
+                    }
+                },
+                "id": {
+                    "type": "string"
+                },
+                "media_link": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "order_idx": {
+                    "type": "integer"
+                },
+                "pub_time": {
+                    "type": "string"
+                },
+                "question": {
+                    "type": "string"
+                },
+                "reward": {
+                    "type": "integer"
+                },
+                "verification_type": {
+                    "enum": [
+                        "auto",
+                        "manual"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/storage.VerificationType"
+                        }
+                    ]
+                }
+            }
+        },
+        "game.AnswerTaskGroup": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "order_idx": {
+                    "type": "integer"
+                },
+                "pub_time": {
+                    "type": "string"
+                },
+                "tasks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/game.AnswerTask"
+                    }
+                }
+            }
+        },
+        "game.AnswerTaskHint": {
+            "type": "object",
+            "properties": {
+                "taken": {
+                    "type": "boolean"
+                },
+                "text": {
+                    "type": "string"
+                }
+            }
+        },
+        "game.TryAnswerResponse": {
+            "type": "object",
+            "properties": {
+                "accepted": {
+                    "type": "boolean"
+                },
+                "score": {
+                    "type": "integer"
+                },
+                "text": {
+                    "type": "string"
+                }
+            }
+        },
+        "google.OAuthRequest": {
+            "type": "object",
+            "properties": {
+                "id_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "play.TakeHintRequest": {
+            "type": "object",
+            "properties": {
+                "index": {
+                    "type": "integer"
+                },
+                "task_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "play.TryAnswerRequest": {
+            "type": "object",
+            "properties": {
+                "taskID": {
+                    "type": "string"
+                },
+                "text": {
+                    "type": "string"
                 }
             }
         },
@@ -1314,6 +1532,17 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "id": {
+                    "type": "string"
+                }
+            }
+        },
+        "storage.Hint": {
+            "type": "object",
+            "properties": {
+                "index": {
+                    "type": "integer"
+                },
+                "text": {
                     "type": "string"
                 }
             }

@@ -4,6 +4,10 @@ import (
 	"errors"
 	"net/http"
 
+	"questspace/internal/handlers/transport"
+
+	"questspace/internal/questspace/game"
+
 	"github.com/gin-gonic/gin"
 	"golang.org/x/xerrors"
 
@@ -36,7 +40,7 @@ type GetResponse struct {
 // @Summary	Get task groups with tasks for play-mode
 // @Tags	PlayMode
 // @Param	quest_id	path		string		true	"Quest ID"
-// @Success	200			{object}	play.GetResponse
+// @Success	200			{object}	game.AnswerDataResponse
 // @Failure	400
 // @Failure	401
 // @Failure 404
@@ -80,8 +84,136 @@ func (h *Handler) HandleGet(c *gin.Context) error {
 		}
 		return xerrors.Errorf("get team: %w", err)
 	}
-	resp := GetResponse{Quest: quest, TaskGroups: taskGroups, Team: userTeam}
+
+	service := game.NewService(s, s, s)
+	req := game.AnswerDataRequest{Quest: quest, Team: userTeam, TaskGroups: taskGroups}
+	resp, err := service.FillAnswerData(c, &req)
+	if err != nil {
+		return xerrors.Errorf("fill answer data: %w", err)
+	}
 
 	c.JSON(http.StatusOK, resp)
+	return nil
+}
+
+type TakeHintRequest struct {
+	TaskID string `json:"task_id"`
+	Index  int    `json:"index"`
+}
+
+// HandleTakeHint handles POST quest/:id/hint request
+//
+// @Summary	Take hint for task in play-mode
+// @Tags	PlayMode
+// @Param	quest_id	path		string					true	"Quest ID"
+// @Param	request		body		play.TakeHintRequest	true	"Take hint request"
+// @Success	200			{object}	storage.Hint
+// @Failure	400
+// @Failure	401
+// @Failure 404
+// @Failure 406
+// @Router	/quest/{id}/hint [post]
+// @Security 	ApiKeyAuth
+func (h *Handler) HandleTakeHint(c *gin.Context) error {
+	questID := c.Param("id")
+	req, err := transport.UnmarshalRequestData[TakeHintRequest](c.Request)
+	if err != nil {
+		return xerrors.Errorf("%w", err)
+	}
+	uauth, err := jwt.GetUserFromContext(c)
+	if err != nil {
+		return xerrors.Errorf("%w", err)
+	}
+
+	s, tx, err := h.clientFactory.NewStorageTx(c, nil)
+	if err != nil {
+		return xerrors.Errorf("start tx: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	quest, err := s.GetQuest(c, &storage.GetQuestRequest{ID: questID})
+	if err != nil {
+		if errors.Is(err, storage.ErrNotFound) {
+			return httperrors.Errorf(http.StatusNotFound, "quest %q not found", questID)
+		}
+		return xerrors.Errorf("get quest: %w", err)
+	}
+	quests.SetStatus(quest)
+	if quest.Status != storage.StatusRunning {
+		return httperrors.New(http.StatusNotAcceptable, "cannot take hints before quest start")
+	}
+
+	srv := game.NewService(s, s, s)
+	srvReq := game.TakeHintRequest{QuestID: questID, TaskID: req.TaskID, Index: req.Index}
+	hint, err := srv.TakeHint(c, uauth, &srvReq)
+	if err != nil {
+		return xerrors.Errorf("hint error: %v", err)
+	}
+	if err = tx.Commit(); err != nil {
+		return xerrors.Errorf("commit tx: %w", err)
+	}
+
+	c.JSON(http.StatusOK, hint)
+	return nil
+}
+
+type TryAnswerRequest struct {
+	TaskID string
+	Text   string
+}
+
+// HandleTryAnswer handles POST quest/:id/answer request
+//
+// @Summary	Answer task in play-mode
+// @Tags	PlayMode
+// @Param	quest_id	path		string					true	"Quest ID"
+// @Param	request		body		play.TryAnswerRequest	true	"Answer data"
+// @Success	200			{object}	game.TryAnswerResponse
+// @Failure	400
+// @Failure	401
+// @Failure 404
+// @Failure 406
+// @Router	/quest/{id}/answer [post]
+// @Security 	ApiKeyAuth
+func (h *Handler) HandleTryAnswer(c *gin.Context) error {
+	questID := c.Param("id")
+	req, err := transport.UnmarshalRequestData[TryAnswerRequest](c.Request)
+	if err != nil {
+		return xerrors.Errorf("%w", err)
+	}
+	uauth, err := jwt.GetUserFromContext(c)
+	if err != nil {
+		return xerrors.Errorf("%w", err)
+	}
+
+	s, tx, err := h.clientFactory.NewStorageTx(c, nil)
+	if err != nil {
+		return xerrors.Errorf("start tx: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	quest, err := s.GetQuest(c, &storage.GetQuestRequest{ID: questID})
+	if err != nil {
+		if errors.Is(err, storage.ErrNotFound) {
+			return httperrors.Errorf(http.StatusNotFound, "quest %q not found", questID)
+		}
+		return xerrors.Errorf("get quest: %w", err)
+	}
+	quests.SetStatus(quest)
+	if quest.Status != storage.StatusRunning {
+		return httperrors.New(http.StatusNotAcceptable, "cannot take hints before quest start")
+	}
+
+	srv := game.NewService(s, s, s)
+	srvReq := game.TryAnswerRequest{TaskID: req.TaskID, Text: req.Text, QuestID: questID}
+	try, err := srv.TryAnswer(c, uauth, &srvReq)
+	if err != nil {
+		return xerrors.Errorf("try answer: %w", err)
+	}
+	if err = tx.Commit(); err != nil {
+		return xerrors.Errorf("commit tx: %w", err)
+	}
+
+	c.JSON(http.StatusOK, try)
 	return nil
 }

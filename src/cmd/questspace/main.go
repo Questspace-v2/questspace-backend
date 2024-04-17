@@ -138,6 +138,8 @@ func Init(app application.App) error {
 
 	playHandler := play.NewHandler(clientFactory)
 	questGroup.GET("/:id/play", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(playHandler.HandleGet))
+	questGroup.POST("/:id/hint", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(playHandler.HandleTakeHint))
+	questGroup.POST("/:id/answer", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(playHandler.HandleTryAnswer))
 
 	app.Router().GET("/swagger/*any", ginswagger.WrapHandler(swaggerfiles.Handler))
 	return nil

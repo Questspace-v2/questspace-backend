@@ -148,17 +148,22 @@ type Task struct {
 //TODO(svayp11): commit the rest of play-mode
 
 type AnswerTry struct {
-	Team   *Team
-	TaskID string
-	Answer string
+	Team       *Team
+	TaskID     string
+	Answer     string
+	AnswerTime *time.Time
 }
 
 type Hint struct {
-	Text string `json:"text"`
+	Index int    `json:"index"`
+	Text  string `json:"text,omitempty"`
 }
 
 type HintTake struct {
-	Team   *Team
 	TaskID string
 	Hint   Hint
 }
+
+type HintTakes map[string][]HintTake
+
+type AcceptedTasks map[string]struct{}
