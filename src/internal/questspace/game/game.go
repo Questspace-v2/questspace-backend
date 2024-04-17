@@ -112,6 +112,7 @@ func (s *Service) FillAnswerData(ctx context.Context, req *AnswerDataRequest) (*
 			}
 			newTg.Tasks = append(newTg.Tasks, newT)
 		}
+		taskGroups = append(taskGroups, newTg)
 	}
 
 	resp := &AnswerDataResponse{
