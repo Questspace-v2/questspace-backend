@@ -241,3 +241,7 @@ type CreateAnswerTryRequest struct {
 	Accepted bool
 	Score    int
 }
+
+type GetResultsRequest struct {
+	QuestID string
+}

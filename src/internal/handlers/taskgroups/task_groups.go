@@ -74,16 +74,16 @@ func (h *Handler) HandleBulkUpdate(c *gin.Context) error {
 
 // HandleCreate handles POST quest/:id/task-groups request
 //
-// @Summary	Create task groups and tasks. All previously created task groups and tasks would be deleted and overridden.
-// @Tags	TaskGroups
-// @Param	quest_id	path		string							true	"Quest ID"
-// @Param	request		body		requests.CreateFullRequest	true	"All task groups with inner tasks to create"
-// @Success	200			{object}	requests.CreateFullResponse
-// @Failure	400
-// @Failure	401
-// @Failure	403
-// @Failure 404
-// @Router	/quest/{id}/task-groups [post]
+// @Summary		Create task groups and tasks. All previously created task groups and tasks would be deleted and overridden.
+// @Tags		TaskGroups
+// @Param		quest_id	path		string						true	"Quest ID"
+// @Param		request		body		requests.CreateFullRequest	true	"All task groups with inner tasks to create"
+// @Success		200			{object}	requests.CreateFullResponse
+// @Failure		400
+// @Failure		401
+// @Failure		403
+// @Failure 	404
+// @Router		/quest/{id}/task-groups [post]
 // @Security 	ApiKeyAuth
 func (h *Handler) HandleCreate(c *gin.Context) error {
 	questID := c.Param("id")
@@ -134,16 +134,16 @@ type GetResponse struct {
 
 // HandleGet handles GET quest/:id/task-groups request
 //
-// @Summary	Get task groups with tasks for quest creator
-// @Tags	TaskGroups
-// @Param	quest_id	path		string		true	"Quest ID"
-// @Success	200			{object}	taskgroups.GetResponse
-// @Failure	400
-// @Failure	401
-// @Failure	403
-// @Failure 404
-// @Failure 406
-// @Router	/quest/{id}/task-groups [get]
+// @Summary		Get task groups with tasks for quest creator
+// @Tags		TaskGroups
+// @Param		quest_id	path		string		true	"Quest ID"
+// @Success		200			{object}	taskgroups.GetResponse
+// @Failure		400
+// @Failure		401
+// @Failure		403
+// @Failure 	404
+// @Failure 	406
+// @Router		/quest/{id}/task-groups [get]
 // @Security 	ApiKeyAuth
 func (h *Handler) HandleGet(c *gin.Context) error {
 	questID := c.Param("id")

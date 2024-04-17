@@ -154,15 +154,47 @@ func (c *Client) GetAcceptedTasks(ctx context.Context, req *storage.GetAcceptedT
 
 func (c *Client) CreateAnswerTry(ctx context.Context, req *storage.CreateAnswerTryRequest) error {
 	query := sq.Insert("questspace.answer_try").
-		Columns("team_id", "task_id", "answer", "accepted").
-		Values(req.TeamID, req.TaskID, req.Text, req.Accepted).
+		Columns("team_id", "task_id", "answer", "accepted", "score").
+		Values(req.TeamID, req.TaskID, req.Text, req.Accepted, req.Score).
 		PlaceholderFormat(sq.Dollar)
-	if req.Score > 0 {
-		query = query.Columns("score").Values(req.Score)
-	}
 
 	if _, err := query.RunWith(c.runner).ExecContext(ctx); err != nil {
 		return xerrors.Errorf("exec query: %w", err)
 	}
 	return nil
+}
+
+func (c *Client) GetScoreResults(ctx context.Context, req *storage.GetResultsRequest) (storage.ScoreResults, error) {
+	query := sq.Select("tm.id", "tm.name", "tg.id", "tg.name", "t.id", "t.name", "at.score", "at.try_time").
+		From("questspace.team tm").
+		LeftJoin("questspace.answer_try at ON at.team_id = tm.id").
+		LeftJoin("questspace.task t ON at.task_id = t.id").
+		LeftJoin("questspace.task_group tg ON t.group_id = tg.id").
+		Where(sq.Eq{"tg.quest_id": req.QuestID, "at.accepted": true}).
+		PlaceholderFormat(sq.Dollar)
+
+	rows, err := query.RunWith(c.runner).QueryContext(ctx)
+	if err != nil {
+		return nil, xerrors.Errorf("query rows: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+
+	scoreRes := make(storage.ScoreResults)
+	for rows.Next() {
+		var res storage.SingleTaskResult
+		if err = rows.Scan(&res.TeamID, &res.TeamName, &res.GroupID, &res.GroupName, &res.TaskID, &res.TaskName, &res.Score, &res.ScoreTime); err != nil {
+			return nil, xerrors.Errorf("scan row: %w", err)
+		}
+		taskRes := scoreRes[res.TeamID]
+		if taskRes == nil {
+			taskRes = make(map[string]storage.SingleTaskResult)
+		}
+		taskRes[res.TaskID] = res
+		scoreRes[res.TeamID] = taskRes
+	}
+	if err := rows.Err(); err != nil {
+		return nil, xerrors.Errorf("iter rows: %w", err)
+	}
+
+	return scoreRes, nil
 }

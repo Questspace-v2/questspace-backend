@@ -4,14 +4,12 @@ import (
 	"errors"
 	"net/http"
 
-	"questspace/internal/handlers/transport"
-
-	"questspace/internal/questspace/game"
-
 	"github.com/gin-gonic/gin"
 	"golang.org/x/xerrors"
 
+	"questspace/internal/handlers/transport"
 	pgdb "questspace/internal/pgdb/client"
+	"questspace/internal/questspace/game"
 	"questspace/internal/questspace/quests"
 	"questspace/pkg/application/httperrors"
 	"questspace/pkg/auth/jwt"
@@ -37,15 +35,15 @@ type GetResponse struct {
 
 // HandleGet handles GET quest/:id/play request
 //
-// @Summary	Get task groups with tasks for play-mode
-// @Tags	PlayMode
-// @Param	quest_id	path		string		true	"Quest ID"
-// @Success	200			{object}	game.AnswerDataResponse
-// @Failure	400
-// @Failure	401
-// @Failure 404
-// @Failure 406
-// @Router	/quest/{id}/play [get]
+// @Summary		Get task groups with tasks for play-mode
+// @Tags		PlayMode
+// @Param		quest_id	path		string		true	"Quest ID"
+// @Success		200			{object}	game.AnswerDataResponse
+// @Failure		400
+// @Failure		401
+// @Failure 	404
+// @Failure 	406
+// @Router		/quest/{id}/play [get]
 // @Security 	ApiKeyAuth
 func (h *Handler) HandleGet(c *gin.Context) error {
 	questID := c.Param("id")
@@ -85,7 +83,7 @@ func (h *Handler) HandleGet(c *gin.Context) error {
 		return xerrors.Errorf("get team: %w", err)
 	}
 
-	service := game.NewService(s, s, s)
+	service := game.NewService(s, s, s, s)
 	req := game.AnswerDataRequest{Quest: quest, Team: userTeam, TaskGroups: taskGroups}
 	resp, err := service.FillAnswerData(c, &req)
 	if err != nil {
@@ -103,16 +101,16 @@ type TakeHintRequest struct {
 
 // HandleTakeHint handles POST quest/:id/hint request
 //
-// @Summary	Take hint for task in play-mode
-// @Tags	PlayMode
-// @Param	quest_id	path		string					true	"Quest ID"
-// @Param	request		body		play.TakeHintRequest	true	"Take hint request"
-// @Success	200			{object}	storage.Hint
-// @Failure	400
-// @Failure	401
-// @Failure 404
-// @Failure 406
-// @Router	/quest/{id}/hint [post]
+// @Summary		Take hint for task in play-mode
+// @Tags		PlayMode
+// @Param		quest_id	path		string					true	"Quest ID"
+// @Param		request		body		play.TakeHintRequest	true	"Take hint request"
+// @Success		200			{object}	storage.Hint
+// @Failure		400
+// @Failure		401
+// @Failure 	404
+// @Failure 	406
+// @Router		/quest/{id}/hint [post]
 // @Security 	ApiKeyAuth
 func (h *Handler) HandleTakeHint(c *gin.Context) error {
 	questID := c.Param("id")
@@ -143,7 +141,7 @@ func (h *Handler) HandleTakeHint(c *gin.Context) error {
 		return httperrors.New(http.StatusNotAcceptable, "cannot take hints before quest start")
 	}
 
-	srv := game.NewService(s, s, s)
+	srv := game.NewService(s, s, s, s)
 	srvReq := game.TakeHintRequest{QuestID: questID, TaskID: req.TaskID, Index: req.Index}
 	hint, err := srv.TakeHint(c, uauth, &srvReq)
 	if err != nil {
@@ -164,16 +162,16 @@ type TryAnswerRequest struct {
 
 // HandleTryAnswer handles POST quest/:id/answer request
 //
-// @Summary	Answer task in play-mode
-// @Tags	PlayMode
-// @Param	quest_id	path		string					true	"Quest ID"
-// @Param	request		body		play.TryAnswerRequest	true	"Answer data"
-// @Success	200			{object}	game.TryAnswerResponse
-// @Failure	400
-// @Failure	401
-// @Failure 404
-// @Failure 406
-// @Router	/quest/{id}/answer [post]
+// @Summary		Answer task in play-mode
+// @Tags		PlayMode
+// @Param		quest_id	path		string					true	"Quest ID"
+// @Param		request		body		play.TryAnswerRequest	true	"Answer data"
+// @Success		200			{object}	game.TryAnswerResponse
+// @Failure		400
+// @Failure		401
+// @Failure 	404
+// @Failure 	406
+// @Router		/quest/{id}/answer [post]
 // @Security 	ApiKeyAuth
 func (h *Handler) HandleTryAnswer(c *gin.Context) error {
 	questID := c.Param("id")
@@ -204,7 +202,7 @@ func (h *Handler) HandleTryAnswer(c *gin.Context) error {
 		return httperrors.New(http.StatusNotAcceptable, "cannot take hints before quest start")
 	}
 
-	srv := game.NewService(s, s, s)
+	srv := game.NewService(s, s, s, s)
 	srvReq := game.TryAnswerRequest{TaskID: req.TaskID, Text: req.Text, QuestID: questID}
 	try, err := srv.TryAnswer(c, uauth, &srvReq)
 	if err != nil {
@@ -215,5 +213,49 @@ func (h *Handler) HandleTryAnswer(c *gin.Context) error {
 	}
 
 	c.JSON(http.StatusOK, try)
+	return nil
+}
+
+// HandleGetTableResults handles GET quest/:id/table request
+//
+// @Summary		Get leaderboard table during quest
+// @Tags		PlayMode
+// @Param		quest_id	path		string		true	"Quest ID"
+// @Success		200			{object}	game.TeamResults
+// @Failure		400
+// @Failure		401
+// @Failure 	403
+// @Failure 	404
+// @Router		/quest/{id}/table [get]
+// @Security 	ApiKeyAuth
+func (h *Handler) HandleGetTableResults(c *gin.Context) error {
+	questID := c.Param("id")
+	uauth, err := jwt.GetUserFromContext(c)
+	if err != nil {
+		return xerrors.Errorf("%w", err)
+	}
+
+	s, err := h.clientFactory.NewStorage(c, dbnode.Alive)
+	if err != nil {
+		return xerrors.Errorf("get storage: %w", err)
+	}
+	quest, err := s.GetQuest(c, &storage.GetQuestRequest{ID: questID})
+	if err != nil {
+		if errors.Is(err, storage.ErrNotFound) {
+			return httperrors.Errorf(http.StatusNotFound, "quest %q not found", questID)
+		}
+		return xerrors.Errorf("get quest: %w", err)
+	}
+	if quest.Creator.ID != uauth.ID {
+		return httperrors.New(http.StatusForbidden, "only creator can view leaderboard during quest time")
+	}
+
+	srv := game.NewService(s, s, s, s)
+	leaderBoard, err := srv.GetResults(c, questID)
+	if err != nil {
+		return xerrors.Errorf("get results: %w", err)
+	}
+
+	c.JSON(http.StatusOK, leaderBoard)
 	return nil
 }

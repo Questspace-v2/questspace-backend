@@ -4,7 +4,12 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"sort"
 	"time"
+
+	"go.uber.org/zap"
+
+	"questspace/pkg/application/logging"
 
 	"golang.org/x/xerrors"
 
@@ -12,20 +17,17 @@ import (
 	"questspace/pkg/storage"
 )
 
-type AHStorage interface {
-	storage.AnswerStorage
-	storage.HintStorage
-}
-
 type Service struct {
 	ts  storage.TaskStorage
+	tgs storage.TaskGroupStorage
 	tms storage.TeamStorage
-	ah  AHStorage
+	ah  storage.AnswerHintStorage
 }
 
-func NewService(ts storage.TaskStorage, tms storage.TeamStorage, ah AHStorage) *Service {
+func NewService(ts storage.TaskStorage, tgs storage.TaskGroupStorage, tms storage.TeamStorage, ah storage.AnswerHintStorage) *Service {
 	return &Service{
 		ts:  ts,
+		tgs: tgs,
 		tms: tms,
 		ah:  ah,
 	}
@@ -120,6 +122,92 @@ func (s *Service) FillAnswerData(ctx context.Context, req *AnswerDataRequest) (*
 	return resp, nil
 }
 
+type TaskResult struct {
+	TaskID   string `json:"id"`
+	TaskName string `json:"name"`
+	Score    int    `json:"score"`
+}
+
+type TaskGroupResult struct {
+	GroupID   string       `json:"id"`
+	GroupName string       `json:"name"`
+	Tasks     []TaskResult `json:"tasks"`
+}
+
+type TeamResult struct {
+	TeamID                string            `json:"id"`
+	TeamName              string            `json:"name"`
+	TotalScore            int               `json:"total_score"`
+	TaskGroups            []TaskGroupResult `json:"task_groups"`
+	lastCorrectAnswerTime *time.Time
+}
+
+type TeamResults struct {
+	Results []TeamResult `json:"results"`
+}
+
+func (s *Service) GetResults(ctx context.Context, questID string) (*TeamResults, error) {
+	teams, err := s.tms.GetTeams(ctx, &storage.GetTeamsRequest{QuestIDs: []string{questID}})
+	if err != nil {
+		if errors.Is(err, storage.ErrNotFound) {
+			return nil, httperrors.Errorf(http.StatusNotFound, "quest %q not found", questID)
+		}
+		return nil, xerrors.Errorf("get teams: %w", err)
+	}
+	taskGroups, err := s.tgs.GetTaskGroups(ctx, &storage.GetTaskGroupsRequest{QuestID: questID, IncludeTasks: true})
+	if err != nil {
+		return nil, xerrors.Errorf("get task groups: %w", err)
+	}
+	results, err := s.ah.GetScoreResults(ctx, &storage.GetResultsRequest{QuestID: questID})
+	if err != nil {
+		return nil, xerrors.Errorf("get results: %w", err)
+	}
+
+	var res TeamResults
+	for _, team := range teams {
+		teamScore := results[team.ID]
+		teamRes := TeamResult{
+			TeamID:   team.ID,
+			TeamName: team.Name,
+		}
+		for _, tg := range taskGroups {
+			tgRes := TaskGroupResult{
+				GroupID:   tg.ID,
+				GroupName: tg.Name,
+			}
+			for _, task := range tg.Tasks {
+				taskRes := TaskResult{
+					TaskID:   task.ID,
+					TaskName: task.Name,
+				}
+				if scoreRes, ok := teamScore[task.ID]; ok {
+					taskRes.Score = scoreRes.Score
+					teamRes.TotalScore += scoreRes.Score
+					if teamRes.lastCorrectAnswerTime == nil {
+						teamRes.lastCorrectAnswerTime = scoreRes.ScoreTime
+					} else if teamRes.lastCorrectAnswerTime.Before(*scoreRes.ScoreTime) {
+						teamRes.lastCorrectAnswerTime = scoreRes.ScoreTime
+					}
+				}
+				tgRes.Tasks = append(tgRes.Tasks, taskRes)
+			}
+			teamRes.TaskGroups = append(teamRes.TaskGroups, tgRes)
+		}
+		res.Results = append(res.Results, teamRes)
+	}
+
+	sort.Slice(res.Results, func(i, j int) bool {
+		if res.Results[i].TotalScore != res.Results[j].TotalScore {
+			return res.Results[i].TotalScore < res.Results[j].TotalScore
+		}
+		if res.Results[i].lastCorrectAnswerTime != nil && res.Results[j].lastCorrectAnswerTime != nil {
+			return res.Results[i].lastCorrectAnswerTime.After(*res.Results[j].lastCorrectAnswerTime)
+		}
+		return res.Results[i].TeamName < res.Results[j].TeamName
+	})
+	return &res, nil
+}
+
 type TakeHintRequest struct {
 	QuestID string `json:"-"`
 	TaskID  string `json:"task_id"`
@@ -193,7 +281,15 @@ func (s *Service) TryAnswer(ctx context.Context, user *storage.User, req *TryAns
 		TeamID: team.ID,
 		Text:   req.Text,
 	}
-	if !accepted {
+
+	logging.Info(ctx, "answer try",
+		zap.String("team_id", team.ID),
+		zap.String("team_id", team.Name),
+		zap.String("task_id", req.TaskID),
+		zap.String("text", req.Text),
+	)
+
+	if !accepted || answerData.Verification == storage.VerificationManual {
 		if err := s.ah.CreateAnswerTry(ctx, &tryReq); err != nil {
 			return nil, xerrors.Errorf("create answer try: %w", err)
 		}

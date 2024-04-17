@@ -75,6 +75,46 @@ definitions:
       text:
         type: string
     type: object
+  game.TaskGroupResult:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      tasks:
+        items:
+          $ref: '#/definitions/game.TaskResult'
+        type: array
+    type: object
+  game.TaskResult:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      score:
+        type: integer
+    type: object
+  game.TeamResult:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      task_groups:
+        items:
+          $ref: '#/definitions/game.TaskGroupResult'
+        type: array
+      total_score:
+        type: integer
+    type: object
+  game.TeamResults:
+    properties:
+      results:
+        items:
+          $ref: '#/definitions/game.TeamResult'
+        type: array
+    type: object
   game.TryAnswerResponse:
     properties:
       accepted:
@@ -740,6 +780,32 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Get task groups with tasks for play-mode
+      tags:
+      - PlayMode
+  /quest/{id}/table:
+    get:
+      parameters:
+      - description: Quest ID
+        in: path
+        name: quest_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/game.TeamResults'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - ApiKeyAuth: []
+      summary: Get leaderboard table during quest
       tags:
       - PlayMode
   /quest/{id}/task-groups:

@@ -133,3 +133,40 @@ func TestAnswerHintStorage_CreateAnswerTry(t *testing.T) {
 	require.Len(t, tasks, 1)
 	assert.Contains(t, tasks, tryReq.TaskID)
 }
+
+func TestAnswerHintStorage_GetScoreResults(t *testing.T) {
+	ctx := context.Background()
+	client := NewClient(pgtest.NewEmbeddedQuestspaceDB(t))
+
+	quest := createTestQuest(t, ctx, client, "svayp11", "quest1")
+	tg, err := client.CreateTaskGroup(ctx, &storage.CreateTaskGroupRequest{
+		Name:     "tg1",
+		OrderIdx: 0,
+		QuestID:  quest.ID,
+	})
+	require.NoError(t, err)
+
+	taskReq1 := taskReq
+	taskReq1.GroupID = tg.ID
+	task, err := client.CreateTask(ctx, &taskReq1)
+	require.NoError(t, err)
+	assert.NotEmpty(t, task.ID)
+
+	team, _ := createTestTeam(t, ctx, client, quest, "svayp22", "team1")
+	team2, _ := createTestTeam(t, ctx, client, quest, "svayp222", "team2")
+	tryReq := storage.CreateAnswerTryRequest{
+		Text:     task.CorrectAnswers[0],
+		Accepted: true,
+		Score:    task.Reward / 2,
+		TaskID:   task.ID,
+		TeamID:   team.ID,
+	}
+
+	require.NoError(t, client.CreateAnswerTry(ctx, &tryReq))
+	results, err := client.GetScoreResults(ctx, &storage.GetResultsRequest{QuestID: quest.ID})
+	require.NoError(t, err)
+	assert.Len(t, results, 1)
+	assert.Len(t, results[team.ID], 1)
+	assert.Equal(t, tryReq.Score, results[team.ID][task.ID].Score)
+	assert.Nil(t, results[team2.ID])
+}

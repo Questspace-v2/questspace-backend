@@ -71,4 +71,5 @@ type HintStorage interface {
 type AnswerStorage interface {
 	GetAcceptedTasks(context.Context, *GetAcceptedTasksRequest) (AcceptedTasks, error)
 	CreateAnswerTry(context.Context, *CreateAnswerTryRequest) error
+	GetScoreResults(context.Context, *GetResultsRequest) (ScoreResults, error)
 }

@@ -167,3 +167,17 @@ type HintTake struct {
 type HintTakes map[string][]HintTake
 
 type AcceptedTasks map[string]struct{}
+
+type SingleTaskResult struct {
+	TeamID    string
+	TeamName  string
+	GroupID   string
+	GroupName string
+	TaskID    string
+	TaskName  string
+	Score     int
+	ScoreTime *time.Time
+}
+
+// ScoreResults [team_id] -> [task_id] -> Result
+type ScoreResults map[string]map[string]SingleTaskResult
