@@ -5,6 +5,8 @@ import (
 	"errors"
 	"net/http"
 
+	"questspace/internal/questspace/quests"
+
 	"github.com/gin-gonic/gin"
 	"golang.org/x/xerrors"
 
@@ -162,6 +164,10 @@ func (h *Handler) HandleGet(c *gin.Context) error {
 			return httperrors.Errorf(http.StatusNotFound, "not found quest %q", questID)
 		}
 		return xerrors.Errorf("get quest: %w", err)
+	}
+	quests.SetStatus(quest)
+	if quest.Status != storage.StatusRunning {
+		return httperrors.New(http.StatusNotAcceptable, "cannot get tasks before quest start")
 	}
 	taskGroups, err := s.GetTaskGroups(c, &storage.GetTaskGroupsRequest{QuestID: questID, IncludeTasks: true})
 	if err != nil {
