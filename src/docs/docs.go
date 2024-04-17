@@ -212,6 +212,48 @@ const docTemplate = `{
                 }
             }
         },
+        "/quest/{id}/play": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "PlayMode"
+                ],
+                "summary": "Get task groups with tasks for play-mode",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Quest ID",
+                        "name": "quest_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/play.GetResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "406": {
+                        "description": "Not Acceptable"
+                    }
+                }
+            }
+        },
         "/quest/{id}/task-groups": {
             "get": {
                 "security": [
@@ -222,7 +264,7 @@ const docTemplate = `{
                 "tags": [
                     "TaskGroups"
                 ],
-                "summary": "Get task groups with tasks",
+                "summary": "Get task groups with tasks for quest creator",
                 "parameters": [
                     {
                         "type": "string",
@@ -1000,6 +1042,23 @@ const docTemplate = `{
                 }
             }
         },
+        "play.GetResponse": {
+            "type": "object",
+            "properties": {
+                "quest": {
+                    "$ref": "#/definitions/storage.Quest"
+                },
+                "task_groups": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/storage.TaskGroup"
+                    }
+                },
+                "team": {
+                    "$ref": "#/definitions/storage.Team"
+                }
+            }
+        },
         "quest.TeamQuestResponse": {
             "type": "object",
             "properties": {
@@ -1580,9 +1639,6 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/storage.TaskGroup"
                     }
-                },
-                "team": {
-                    "$ref": "#/definitions/storage.Team"
                 }
             }
         },

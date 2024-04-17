@@ -18,6 +18,17 @@ definitions:
       id_token:
         type: string
     type: object
+  play.GetResponse:
+    properties:
+      quest:
+        $ref: '#/definitions/storage.Quest'
+      task_groups:
+        items:
+          $ref: '#/definitions/storage.TaskGroup'
+        type: array
+      team:
+        $ref: '#/definitions/storage.Team'
+    type: object
   quest.TeamQuestResponse:
     properties:
       quest:
@@ -401,8 +412,6 @@ definitions:
         items:
           $ref: '#/definitions/storage.TaskGroup'
         type: array
-      team:
-        $ref: '#/definitions/storage.Team'
     type: object
   teams.ChangeLeaderRequest:
     properties:
@@ -562,6 +571,32 @@ paths:
       summary: Create new quest
       tags:
       - Quests
+  /quest/{id}/play:
+    get:
+      parameters:
+      - description: Quest ID
+        in: path
+        name: quest_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/play.GetResponse'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+        "406":
+          description: Not Acceptable
+      security:
+      - ApiKeyAuth: []
+      summary: Get task groups with tasks for play-mode
+      tags:
+      - PlayMode
   /quest/{id}/task-groups:
     get:
       parameters:
@@ -587,7 +622,7 @@ paths:
           description: Not Acceptable
       security:
       - ApiKeyAuth: []
-      summary: Get task groups with tasks
+      summary: Get task groups with tasks for quest creator
       tags:
       - TaskGroups
     post:

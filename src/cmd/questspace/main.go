@@ -20,6 +20,7 @@ import (
 	"questspace/docs"
 	"questspace/internal/handlers/auth"
 	"questspace/internal/handlers/auth/google"
+	"questspace/internal/handlers/play"
 	"questspace/internal/handlers/quest"
 	"questspace/internal/handlers/taskgroups"
 	"questspace/internal/handlers/teams"
@@ -134,6 +135,9 @@ func Init(app application.App) error {
 	questGroup.PATCH("/:id/task-groups/bulk", application.AsGinHandler(taskGroupHandler.HandleBulkUpdate))
 	questGroup.POST("/:id/task-groups", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(taskGroupHandler.HandleCreate))
 	questGroup.GET("/:id/task-groups", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(taskGroupHandler.HandleGet))
+
+	playHandler := play.NewHandler(clientFactory)
+	questGroup.GET("/:id/play", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(playHandler.HandleGet))
 
 	app.Router().GET("/swagger/*any", ginswagger.WrapHandler(swaggerfiles.Handler))
 	return nil
