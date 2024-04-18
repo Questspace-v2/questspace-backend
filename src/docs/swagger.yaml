@@ -13,9 +13,134 @@ definitions:
       username:
         type: string
     type: object
+  game.AnswerDataResponse:
+    properties:
+      quest:
+        $ref: '#/definitions/storage.Quest'
+      task_groups:
+        items:
+          $ref: '#/definitions/game.AnswerTaskGroup'
+        type: array
+      team:
+        $ref: '#/definitions/storage.Team'
+    type: object
+  game.AnswerTask:
+    properties:
+      accepted:
+        type: boolean
+      hints:
+        items:
+          $ref: '#/definitions/game.AnswerTaskHint'
+        type: array
+      id:
+        type: string
+      media_link:
+        type: string
+      name:
+        type: string
+      order_idx:
+        type: integer
+      pub_time:
+        type: string
+      question:
+        type: string
+      reward:
+        type: integer
+      verification_type:
+        allOf:
+        - $ref: '#/definitions/storage.VerificationType'
+        enum:
+        - auto
+        - manual
+    type: object
+  game.AnswerTaskGroup:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      order_idx:
+        type: integer
+      pub_time:
+        type: string
+      tasks:
+        items:
+          $ref: '#/definitions/game.AnswerTask'
+        type: array
+    type: object
+  game.AnswerTaskHint:
+    properties:
+      taken:
+        type: boolean
+      text:
+        type: string
+    type: object
+  game.TaskGroupResult:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      tasks:
+        items:
+          $ref: '#/definitions/game.TaskResult'
+        type: array
+    type: object
+  game.TaskResult:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      score:
+        type: integer
+    type: object
+  game.TeamResult:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      task_groups:
+        items:
+          $ref: '#/definitions/game.TaskGroupResult'
+        type: array
+      total_score:
+        type: integer
+    type: object
+  game.TeamResults:
+    properties:
+      results:
+        items:
+          $ref: '#/definitions/game.TeamResult'
+        type: array
+    type: object
+  game.TryAnswerResponse:
+    properties:
+      accepted:
+        type: boolean
+      score:
+        type: integer
+      text:
+        type: string
+    type: object
   google.OAuthRequest:
     properties:
       id_token:
+        type: string
+    type: object
+  play.TakeHintRequest:
+    properties:
+      index:
+        type: integer
+      task_id:
+        type: string
+    type: object
+  play.TryAnswerRequest:
+    properties:
+      taskID:
+        type: string
+      text:
         type: string
     type: object
   quest.TeamQuestResponse:
@@ -188,6 +313,13 @@ definitions:
       id:
         type: string
     type: object
+  storage.Hint:
+    properties:
+      index:
+        type: integer
+      text:
+        type: string
+    type: object
   storage.Quest:
     properties:
       access:
@@ -319,8 +451,6 @@ definitions:
     properties:
       access:
         $ref: '#/definitions/storage.AccessType'
-      creator_name:
-        type: string
       description:
         type: string
       finish_time:
@@ -397,6 +527,8 @@ definitions:
     - VerificationManual
   taskgroups.GetResponse:
     properties:
+      quest:
+        $ref: '#/definitions/storage.Quest'
       task_groups:
         items:
           $ref: '#/definitions/storage.TaskGroup'
@@ -560,6 +692,122 @@ paths:
       summary: Create new quest
       tags:
       - Quests
+  /quest/{id}/answer:
+    post:
+      parameters:
+      - description: Quest ID
+        in: path
+        name: quest_id
+        required: true
+        type: string
+      - description: Answer data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/play.TryAnswerRequest'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/game.TryAnswerResponse'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+        "406":
+          description: Not Acceptable
+      security:
+      - ApiKeyAuth: []
+      summary: Answer task in play-mode
+      tags:
+      - PlayMode
+  /quest/{id}/hint:
+    post:
+      parameters:
+      - description: Quest ID
+        in: path
+        name: quest_id
+        required: true
+        type: string
+      - description: Take hint request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/play.TakeHintRequest'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/storage.Hint'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+        "406":
+          description: Not Acceptable
+      security:
+      - ApiKeyAuth: []
+      summary: Take hint for task in play-mode
+      tags:
+      - PlayMode
+  /quest/{id}/play:
+    get:
+      parameters:
+      - description: Quest ID
+        in: path
+        name: quest_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/game.AnswerDataResponse'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+        "406":
+          description: Not Acceptable
+      security:
+      - ApiKeyAuth: []
+      summary: Get task groups with tasks for play-mode
+      tags:
+      - PlayMode
+  /quest/{id}/table:
+    get:
+      parameters:
+      - description: Quest ID
+        in: path
+        name: quest_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/game.TeamResults'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - ApiKeyAuth: []
+      summary: Get leaderboard table during quest
+      tags:
+      - PlayMode
   /quest/{id}/task-groups:
     get:
       parameters:
@@ -581,7 +829,11 @@ paths:
           description: Forbidden
         "404":
           description: Not Found
-      summary: Get task groups with tasks
+        "406":
+          description: Not Acceptable
+      security:
+      - ApiKeyAuth: []
+      summary: Get task groups with tasks for quest creator
       tags:
       - TaskGroups
     post:
@@ -902,7 +1154,7 @@ paths:
         type: string
       - description: New captain (if leader leaves)
         in: query
-        name: new_captain_id
+        name: new_captain
         type: string
       responses:
         "200":

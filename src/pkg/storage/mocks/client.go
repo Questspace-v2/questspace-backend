@@ -66,6 +66,20 @@ func (mr *MockQuestSpaceStorageMockRecorder) ChangeTeamName(arg0, arg1 interface
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ChangeTeamName", reflect.TypeOf((*MockQuestSpaceStorage)(nil).ChangeTeamName), arg0, arg1)
 }
 
+// CreateAnswerTry mocks base method.
+func (m *MockQuestSpaceStorage) CreateAnswerTry(arg0 context.Context, arg1 *storage.CreateAnswerTryRequest) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateAnswerTry", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateAnswerTry indicates an expected call of CreateAnswerTry.
+func (mr *MockQuestSpaceStorageMockRecorder) CreateAnswerTry(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAnswerTry", reflect.TypeOf((*MockQuestSpaceStorage)(nil).CreateAnswerTry), arg0, arg1)
+}
+
 // CreateOrUpdateByExternalID mocks base method.
 func (m *MockQuestSpaceStorage) CreateOrUpdateByExternalID(arg0 context.Context, arg1 *storage.CreateOrUpdateRequest) (*storage.User, error) {
 	m.ctrl.T.Helper()
@@ -226,6 +240,51 @@ func (mr *MockQuestSpaceStorageMockRecorder) DeleteUser(arg0, arg1 interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUser", reflect.TypeOf((*MockQuestSpaceStorage)(nil).DeleteUser), arg0, arg1)
 }
 
+// GetAcceptedTasks mocks base method.
+func (m *MockQuestSpaceStorage) GetAcceptedTasks(arg0 context.Context, arg1 *storage.GetAcceptedTasksRequest) (storage.AcceptedTasks, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAcceptedTasks", arg0, arg1)
+	ret0, _ := ret[0].(storage.AcceptedTasks)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAcceptedTasks indicates an expected call of GetAcceptedTasks.
+func (mr *MockQuestSpaceStorageMockRecorder) GetAcceptedTasks(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAcceptedTasks", reflect.TypeOf((*MockQuestSpaceStorage)(nil).GetAcceptedTasks), arg0, arg1)
+}
+
+// GetAnswerData mocks base method.
+func (m *MockQuestSpaceStorage) GetAnswerData(arg0 context.Context, arg1 *storage.GetTaskRequest) (*storage.Task, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAnswerData", arg0, arg1)
+	ret0, _ := ret[0].(*storage.Task)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAnswerData indicates an expected call of GetAnswerData.
+func (mr *MockQuestSpaceStorageMockRecorder) GetAnswerData(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAnswerData", reflect.TypeOf((*MockQuestSpaceStorage)(nil).GetAnswerData), arg0, arg1)
+}
+
+// GetHintTakes mocks base method.
+func (m *MockQuestSpaceStorage) GetHintTakes(arg0 context.Context, arg1 *storage.GetHintTakesRequest) (storage.HintTakes, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetHintTakes", arg0, arg1)
+	ret0, _ := ret[0].(storage.HintTakes)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetHintTakes indicates an expected call of GetHintTakes.
+func (mr *MockQuestSpaceStorageMockRecorder) GetHintTakes(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHintTakes", reflect.TypeOf((*MockQuestSpaceStorage)(nil).GetHintTakes), arg0, arg1)
+}
+
 // GetQuest mocks base method.
 func (m *MockQuestSpaceStorage) GetQuest(arg0 context.Context, arg1 *storage.GetQuestRequest) (*storage.Quest, error) {
 	m.ctrl.T.Helper()
@@ -254,6 +313,21 @@ func (m *MockQuestSpaceStorage) GetQuests(arg0 context.Context, arg1 *storage.Ge
 func (mr *MockQuestSpaceStorageMockRecorder) GetQuests(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetQuests", reflect.TypeOf((*MockQuestSpaceStorage)(nil).GetQuests), arg0, arg1)
+}
+
+// GetScoreResults mocks base method.
+func (m *MockQuestSpaceStorage) GetScoreResults(arg0 context.Context, arg1 *storage.GetResultsRequest) (storage.ScoreResults, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetScoreResults", arg0, arg1)
+	ret0, _ := ret[0].(storage.ScoreResults)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetScoreResults indicates an expected call of GetScoreResults.
+func (mr *MockQuestSpaceStorageMockRecorder) GetScoreResults(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetScoreResults", reflect.TypeOf((*MockQuestSpaceStorage)(nil).GetScoreResults), arg0, arg1)
 }
 
 // GetTask mocks base method.
@@ -417,6 +491,21 @@ func (m *MockQuestSpaceStorage) SetInviteLink(arg0 context.Context, arg1 *storag
 func (mr *MockQuestSpaceStorageMockRecorder) SetInviteLink(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetInviteLink", reflect.TypeOf((*MockQuestSpaceStorage)(nil).SetInviteLink), arg0, arg1)
+}
+
+// TakeHint mocks base method.
+func (m *MockQuestSpaceStorage) TakeHint(arg0 context.Context, arg1 *storage.TakeHintRequest) (*storage.Hint, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "TakeHint", arg0, arg1)
+	ret0, _ := ret[0].(*storage.Hint)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TakeHint indicates an expected call of TakeHint.
+func (mr *MockQuestSpaceStorageMockRecorder) TakeHint(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TakeHint", reflect.TypeOf((*MockQuestSpaceStorage)(nil).TakeHint), arg0, arg1)
 }
 
 // UpdateQuest mocks base method.
@@ -837,6 +926,21 @@ func (mr *MockTaskStorageMockRecorder) DeleteTask(arg0, arg1 interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteTask", reflect.TypeOf((*MockTaskStorage)(nil).DeleteTask), arg0, arg1)
 }
 
+// GetAnswerData mocks base method.
+func (m *MockTaskStorage) GetAnswerData(arg0 context.Context, arg1 *storage.GetTaskRequest) (*storage.Task, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAnswerData", arg0, arg1)
+	ret0, _ := ret[0].(*storage.Task)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAnswerData indicates an expected call of GetAnswerData.
+func (mr *MockTaskStorageMockRecorder) GetAnswerData(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAnswerData", reflect.TypeOf((*MockTaskStorage)(nil).GetAnswerData), arg0, arg1)
+}
+
 // GetTask mocks base method.
 func (m *MockTaskStorage) GetTask(arg0 context.Context, arg1 *storage.GetTaskRequest) (*storage.Task, error) {
 	m.ctrl.T.Helper()
@@ -1035,4 +1139,221 @@ func (m *MockTeamStorage) SetInviteLink(arg0 context.Context, arg1 *storage.SetI
 func (mr *MockTeamStorageMockRecorder) SetInviteLink(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetInviteLink", reflect.TypeOf((*MockTeamStorage)(nil).SetInviteLink), arg0, arg1)
+}
+
+// MockAnswerHintStorage is a mock of AnswerHintStorage interface.
+type MockAnswerHintStorage struct {
+	ctrl     *gomock.Controller
+	recorder *MockAnswerHintStorageMockRecorder
+}
+
+// MockAnswerHintStorageMockRecorder is the mock recorder for MockAnswerHintStorage.
+type MockAnswerHintStorageMockRecorder struct {
+	mock *MockAnswerHintStorage
+}
+
+// NewMockAnswerHintStorage creates a new mock instance.
+func NewMockAnswerHintStorage(ctrl *gomock.Controller) *MockAnswerHintStorage {
+	mock := &MockAnswerHintStorage{ctrl: ctrl}
+	mock.recorder = &MockAnswerHintStorageMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockAnswerHintStorage) EXPECT() *MockAnswerHintStorageMockRecorder {
+	return m.recorder
+}
+
+// CreateAnswerTry mocks base method.
+func (m *MockAnswerHintStorage) CreateAnswerTry(arg0 context.Context, arg1 *storage.CreateAnswerTryRequest) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateAnswerTry", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateAnswerTry indicates an expected call of CreateAnswerTry.
+func (mr *MockAnswerHintStorageMockRecorder) CreateAnswerTry(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAnswerTry", reflect.TypeOf((*MockAnswerHintStorage)(nil).CreateAnswerTry), arg0, arg1)
+}
+
+// GetAcceptedTasks mocks base method.
+func (m *MockAnswerHintStorage) GetAcceptedTasks(arg0 context.Context, arg1 *storage.GetAcceptedTasksRequest) (storage.AcceptedTasks, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAcceptedTasks", arg0, arg1)
+	ret0, _ := ret[0].(storage.AcceptedTasks)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAcceptedTasks indicates an expected call of GetAcceptedTasks.
+func (mr *MockAnswerHintStorageMockRecorder) GetAcceptedTasks(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAcceptedTasks", reflect.TypeOf((*MockAnswerHintStorage)(nil).GetAcceptedTasks), arg0, arg1)
+}
+
+// GetHintTakes mocks base method.
+func (m *MockAnswerHintStorage) GetHintTakes(arg0 context.Context, arg1 *storage.GetHintTakesRequest) (storage.HintTakes, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetHintTakes", arg0, arg1)
+	ret0, _ := ret[0].(storage.HintTakes)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetHintTakes indicates an expected call of GetHintTakes.
+func (mr *MockAnswerHintStorageMockRecorder) GetHintTakes(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHintTakes", reflect.TypeOf((*MockAnswerHintStorage)(nil).GetHintTakes), arg0, arg1)
+}
+
+// GetScoreResults mocks base method.
+func (m *MockAnswerHintStorage) GetScoreResults(arg0 context.Context, arg1 *storage.GetResultsRequest) (storage.ScoreResults, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetScoreResults", arg0, arg1)
+	ret0, _ := ret[0].(storage.ScoreResults)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetScoreResults indicates an expected call of GetScoreResults.
+func (mr *MockAnswerHintStorageMockRecorder) GetScoreResults(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetScoreResults", reflect.TypeOf((*MockAnswerHintStorage)(nil).GetScoreResults), arg0, arg1)
+}
+
+// TakeHint mocks base method.
+func (m *MockAnswerHintStorage) TakeHint(arg0 context.Context, arg1 *storage.TakeHintRequest) (*storage.Hint, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "TakeHint", arg0, arg1)
+	ret0, _ := ret[0].(*storage.Hint)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TakeHint indicates an expected call of TakeHint.
+func (mr *MockAnswerHintStorageMockRecorder) TakeHint(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TakeHint", reflect.TypeOf((*MockAnswerHintStorage)(nil).TakeHint), arg0, arg1)
+}
+
+// MockHintStorage is a mock of HintStorage interface.
+type MockHintStorage struct {
+	ctrl     *gomock.Controller
+	recorder *MockHintStorageMockRecorder
+}
+
+// MockHintStorageMockRecorder is the mock recorder for MockHintStorage.
+type MockHintStorageMockRecorder struct {
+	mock *MockHintStorage
+}
+
+// NewMockHintStorage creates a new mock instance.
+func NewMockHintStorage(ctrl *gomock.Controller) *MockHintStorage {
+	mock := &MockHintStorage{ctrl: ctrl}
+	mock.recorder = &MockHintStorageMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockHintStorage) EXPECT() *MockHintStorageMockRecorder {
+	return m.recorder
+}
+
+// GetHintTakes mocks base method.
+func (m *MockHintStorage) GetHintTakes(arg0 context.Context, arg1 *storage.GetHintTakesRequest) (storage.HintTakes, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetHintTakes", arg0, arg1)
+	ret0, _ := ret[0].(storage.HintTakes)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetHintTakes indicates an expected call of GetHintTakes.
+func (mr *MockHintStorageMockRecorder) GetHintTakes(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHintTakes", reflect.TypeOf((*MockHintStorage)(nil).GetHintTakes), arg0, arg1)
+}
+
+// TakeHint mocks base method.
+func (m *MockHintStorage) TakeHint(arg0 context.Context, arg1 *storage.TakeHintRequest) (*storage.Hint, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "TakeHint", arg0, arg1)
+	ret0, _ := ret[0].(*storage.Hint)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TakeHint indicates an expected call of TakeHint.
+func (mr *MockHintStorageMockRecorder) TakeHint(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TakeHint", reflect.TypeOf((*MockHintStorage)(nil).TakeHint), arg0, arg1)
+}
+
+// MockAnswerStorage is a mock of AnswerStorage interface.
+type MockAnswerStorage struct {
+	ctrl     *gomock.Controller
+	recorder *MockAnswerStorageMockRecorder
+}
+
+// MockAnswerStorageMockRecorder is the mock recorder for MockAnswerStorage.
+type MockAnswerStorageMockRecorder struct {
+	mock *MockAnswerStorage
+}
+
+// NewMockAnswerStorage creates a new mock instance.
+func NewMockAnswerStorage(ctrl *gomock.Controller) *MockAnswerStorage {
+	mock := &MockAnswerStorage{ctrl: ctrl}
+	mock.recorder = &MockAnswerStorageMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockAnswerStorage) EXPECT() *MockAnswerStorageMockRecorder {
+	return m.recorder
+}
+
+// CreateAnswerTry mocks base method.
+func (m *MockAnswerStorage) CreateAnswerTry(arg0 context.Context, arg1 *storage.CreateAnswerTryRequest) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateAnswerTry", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateAnswerTry indicates an expected call of CreateAnswerTry.
+func (mr *MockAnswerStorageMockRecorder) CreateAnswerTry(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAnswerTry", reflect.TypeOf((*MockAnswerStorage)(nil).CreateAnswerTry), arg0, arg1)
+}
+
+// GetAcceptedTasks mocks base method.
+func (m *MockAnswerStorage) GetAcceptedTasks(arg0 context.Context, arg1 *storage.GetAcceptedTasksRequest) (storage.AcceptedTasks, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAcceptedTasks", arg0, arg1)
+	ret0, _ := ret[0].(storage.AcceptedTasks)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAcceptedTasks indicates an expected call of GetAcceptedTasks.
+func (mr *MockAnswerStorageMockRecorder) GetAcceptedTasks(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAcceptedTasks", reflect.TypeOf((*MockAnswerStorage)(nil).GetAcceptedTasks), arg0, arg1)
+}
+
+// GetScoreResults mocks base method.
+func (m *MockAnswerStorage) GetScoreResults(arg0 context.Context, arg1 *storage.GetResultsRequest) (storage.ScoreResults, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetScoreResults", arg0, arg1)
+	ret0, _ := ret[0].(storage.ScoreResults)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetScoreResults indicates an expected call of GetScoreResults.
+func (mr *MockAnswerStorageMockRecorder) GetScoreResults(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetScoreResults", reflect.TypeOf((*MockAnswerStorage)(nil).GetScoreResults), arg0, arg1)
 }

@@ -20,6 +20,7 @@ import (
 	"questspace/docs"
 	"questspace/internal/handlers/auth"
 	"questspace/internal/handlers/auth/google"
+	"questspace/internal/handlers/play"
 	"questspace/internal/handlers/quest"
 	"questspace/internal/handlers/taskgroups"
 	"questspace/internal/handlers/teams"
@@ -133,7 +134,13 @@ func Init(app application.App) error {
 	taskGroupHandler := taskgroups.NewHandler(clientFactory)
 	questGroup.PATCH("/:id/task-groups/bulk", application.AsGinHandler(taskGroupHandler.HandleBulkUpdate))
 	questGroup.POST("/:id/task-groups", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(taskGroupHandler.HandleCreate))
-	questGroup.GET("/:id/task-groups", application.AsGinHandler(taskGroupHandler.HandleGet))
+	questGroup.GET("/:id/task-groups", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(taskGroupHandler.HandleGet))
+
+	playHandler := play.NewHandler(clientFactory)
+	questGroup.GET("/:id/play", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(playHandler.HandleGet))
+	questGroup.POST("/:id/hint", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(playHandler.HandleTakeHint))
+	questGroup.POST("/:id/answer", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(playHandler.HandleTryAnswer))
+	questGroup.GET("/:id/table", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(playHandler.HandleGetTableResults))
 
 	app.Router().GET("/swagger/*any", ginswagger.WrapHandler(swaggerfiles.Handler))
 	return nil

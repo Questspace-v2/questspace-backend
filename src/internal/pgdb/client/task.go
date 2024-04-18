@@ -72,6 +72,25 @@ func (c *Client) GetTask(ctx context.Context, req *storage.GetTaskRequest) (*sto
 	return &task, nil
 }
 
+func (c *Client) GetAnswerData(ctx context.Context, req *storage.GetTaskRequest) (*storage.Task, error) {
+	query := sq.Select("correct_answers", "reward", "verification_type", "hints").
+		From("questspace.task").
+		Where(sq.Eq{"id": req.ID}).
+		PlaceholderFormat(sq.Dollar)
+
+	row := query.RunWith(c.runner).QueryRowContext(ctx)
+	task := storage.Task{ID: req.ID}
+	pgMap := pgtype.NewMap()
+	if err := row.Scan(pgMap.SQLScanner(&task.CorrectAnswers), &task.Reward, &task.Verification, pgMap.SQLScanner(&task.Hints)); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, storage.ErrNotFound
+		}
+		return nil, xerrors.Errorf("scan row: %w", err)
+	}
+
+	return &task, nil
+}
+
 func (c *Client) GetTasks(ctx context.Context, req *storage.GetTasksRequest) (storage.GetTasksResponse, error) {
 	query := sq.Select(
 		"t.id", "t.order_idx", "t.name", "t.question", "t.reward", "t.group_id",

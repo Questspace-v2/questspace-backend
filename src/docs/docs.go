@@ -212,12 +212,203 @@ const docTemplate = `{
                 }
             }
         },
+        "/quest/{id}/answer": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "PlayMode"
+                ],
+                "summary": "Answer task in play-mode",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Quest ID",
+                        "name": "quest_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Answer data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/play.TryAnswerRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/game.TryAnswerResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "406": {
+                        "description": "Not Acceptable"
+                    }
+                }
+            }
+        },
+        "/quest/{id}/hint": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "PlayMode"
+                ],
+                "summary": "Take hint for task in play-mode",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Quest ID",
+                        "name": "quest_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Take hint request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/play.TakeHintRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/storage.Hint"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "406": {
+                        "description": "Not Acceptable"
+                    }
+                }
+            }
+        },
+        "/quest/{id}/play": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "PlayMode"
+                ],
+                "summary": "Get task groups with tasks for play-mode",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Quest ID",
+                        "name": "quest_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/game.AnswerDataResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "406": {
+                        "description": "Not Acceptable"
+                    }
+                }
+            }
+        },
+        "/quest/{id}/table": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "PlayMode"
+                ],
+                "summary": "Get leaderboard table during quest",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Quest ID",
+                        "name": "quest_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/game.TeamResults"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                }
+            }
+        },
         "/quest/{id}/task-groups": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "tags": [
                     "TaskGroups"
                 ],
-                "summary": "Get task groups with tasks",
+                "summary": "Get task groups with tasks for quest creator",
                 "parameters": [
                     {
                         "type": "string",
@@ -245,6 +436,9 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found"
+                    },
+                    "406": {
+                        "description": "Not Acceptable"
                     }
                 }
             },
@@ -780,7 +974,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "New captain (if leader leaves)",
-                        "name": "new_captain_id",
+                        "name": "new_captain",
                         "in": "query"
                     }
                 ],
@@ -984,10 +1178,205 @@ const docTemplate = `{
                 }
             }
         },
+        "game.AnswerDataResponse": {
+            "type": "object",
+            "properties": {
+                "quest": {
+                    "$ref": "#/definitions/storage.Quest"
+                },
+                "task_groups": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/game.AnswerTaskGroup"
+                    }
+                },
+                "team": {
+                    "$ref": "#/definitions/storage.Team"
+                }
+            }
+        },
+        "game.AnswerTask": {
+            "type": "object",
+            "properties": {
+                "accepted": {
+                    "type": "boolean"
+                },
+                "hints": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/game.AnswerTaskHint"
+                    }
+                },
+                "id": {
+                    "type": "string"
+                },
+                "media_link": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "order_idx": {
+                    "type": "integer"
+                },
+                "pub_time": {
+                    "type": "string"
+                },
+                "question": {
+                    "type": "string"
+                },
+                "reward": {
+                    "type": "integer"
+                },
+                "verification_type": {
+                    "enum": [
+                        "auto",
+                        "manual"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/storage.VerificationType"
+                        }
+                    ]
+                }
+            }
+        },
+        "game.AnswerTaskGroup": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "order_idx": {
+                    "type": "integer"
+                },
+                "pub_time": {
+                    "type": "string"
+                },
+                "tasks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/game.AnswerTask"
+                    }
+                }
+            }
+        },
+        "game.AnswerTaskHint": {
+            "type": "object",
+            "properties": {
+                "taken": {
+                    "type": "boolean"
+                },
+                "text": {
+                    "type": "string"
+                }
+            }
+        },
+        "game.TaskGroupResult": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "tasks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/game.TaskResult"
+                    }
+                }
+            }
+        },
+        "game.TaskResult": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "score": {
+                    "type": "integer"
+                }
+            }
+        },
+        "game.TeamResult": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "task_groups": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/game.TaskGroupResult"
+                    }
+                },
+                "total_score": {
+                    "type": "integer"
+                }
+            }
+        },
+        "game.TeamResults": {
+            "type": "object",
+            "properties": {
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/game.TeamResult"
+                    }
+                }
+            }
+        },
+        "game.TryAnswerResponse": {
+            "type": "object",
+            "properties": {
+                "accepted": {
+                    "type": "boolean"
+                },
+                "score": {
+                    "type": "integer"
+                },
+                "text": {
+                    "type": "string"
+                }
+            }
+        },
         "google.OAuthRequest": {
             "type": "object",
             "properties": {
                 "id_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "play.TakeHintRequest": {
+            "type": "object",
+            "properties": {
+                "index": {
+                    "type": "integer"
+                },
+                "task_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "play.TryAnswerRequest": {
+            "type": "object",
+            "properties": {
+                "taskID": {
+                    "type": "string"
+                },
+                "text": {
                     "type": "string"
                 }
             }
@@ -1251,6 +1640,17 @@ const docTemplate = `{
                 }
             }
         },
+        "storage.Hint": {
+            "type": "object",
+            "properties": {
+                "index": {
+                    "type": "integer"
+                },
+                "text": {
+                    "type": "string"
+                }
+            }
+        },
         "storage.Quest": {
             "type": "object",
             "properties": {
@@ -1449,9 +1849,6 @@ const docTemplate = `{
                 "access": {
                     "$ref": "#/definitions/storage.AccessType"
                 },
-                "creator_name": {
-                    "type": "string"
-                },
                 "description": {
                     "type": "string"
                 },
@@ -1567,6 +1964,9 @@ const docTemplate = `{
         "taskgroups.GetResponse": {
             "type": "object",
             "properties": {
+                "quest": {
+                    "$ref": "#/definitions/storage.Quest"
+                },
                 "task_groups": {
                     "type": "array",
                     "items": {

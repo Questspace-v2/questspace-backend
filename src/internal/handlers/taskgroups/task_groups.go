@@ -5,6 +5,8 @@ import (
 	"errors"
 	"net/http"
 
+	"questspace/internal/questspace/quests"
+
 	"github.com/gin-gonic/gin"
 	"golang.org/x/xerrors"
 
@@ -72,16 +74,16 @@ func (h *Handler) HandleBulkUpdate(c *gin.Context) error {
 
 // HandleCreate handles POST quest/:id/task-groups request
 //
-// @Summary	Create task groups and tasks. All previously created task groups and tasks would be deleted and overridden.
-// @Tags	TaskGroups
-// @Param	quest_id	path		string							true	"Quest ID"
-// @Param	request		body		requests.CreateFullRequest	true	"All task groups with inner tasks to create"
-// @Success	200			{object}	requests.CreateFullResponse
-// @Failure	400
-// @Failure	401
-// @Failure	403
-// @Failure 404
-// @Router	/quest/{id}/task-groups [post]
+// @Summary		Create task groups and tasks. All previously created task groups and tasks would be deleted and overridden.
+// @Tags		TaskGroups
+// @Param		quest_id	path		string						true	"Quest ID"
+// @Param		request		body		requests.CreateFullRequest	true	"All task groups with inner tasks to create"
+// @Success		200			{object}	requests.CreateFullResponse
+// @Failure		400
+// @Failure		401
+// @Failure		403
+// @Failure 	404
+// @Router		/quest/{id}/task-groups [post]
 // @Security 	ApiKeyAuth
 func (h *Handler) HandleCreate(c *gin.Context) error {
 	questID := c.Param("id")
@@ -126,28 +128,46 @@ func (h *Handler) HandleCreate(c *gin.Context) error {
 }
 
 type GetResponse struct {
+	Quest      *storage.Quest      `json:"quest"`
 	TaskGroups []storage.TaskGroup `json:"task_groups"`
 }
 
 // HandleGet handles GET quest/:id/task-groups request
 //
-// @Summary	Get task groups with tasks
-// @Tags	TaskGroups
-// @Param	quest_id	path		string		true	"Quest ID"
-// @Success	200			{object}	taskgroups.GetResponse
-// @Failure	400
-// @Failure	401
-// @Failure	403
-// @Failure 404
-// @Router	/quest/{id}/task-groups [get]
+// @Summary		Get task groups with tasks for quest creator
+// @Tags		TaskGroups
+// @Param		quest_id	path		string		true	"Quest ID"
+// @Success		200			{object}	taskgroups.GetResponse
+// @Failure		400
+// @Failure		401
+// @Failure		403
+// @Failure 	404
+// @Failure 	406
+// @Router		/quest/{id}/task-groups [get]
+// @Security 	ApiKeyAuth
 func (h *Handler) HandleGet(c *gin.Context) error {
 	questID := c.Param("id")
+	uauth, err := jwt.GetUserFromContext(c)
+	if err != nil {
+		return xerrors.Errorf("%w", err)
+	}
 
 	s, err := h.clientFactory.NewStorage(c, dbnode.Alive)
 	if err != nil {
 		return xerrors.Errorf("get storage: %w", err)
 	}
 
+	quest, err := s.GetQuest(c, &storage.GetQuestRequest{ID: questID})
+	if err != nil {
+		if errors.Is(err, storage.ErrNotFound) {
+			return httperrors.Errorf(http.StatusNotFound, "not found quest %q", questID)
+		}
+		return xerrors.Errorf("get quest: %w", err)
+	}
+	if quest.Creator.ID != uauth.ID {
+		return httperrors.Errorf(http.StatusForbidden, "only creator can get tasks outside of playmode", questID)
+	}
+	quests.SetStatus(quest)
 	taskGroups, err := s.GetTaskGroups(c, &storage.GetTaskGroupsRequest{QuestID: questID, IncludeTasks: true})
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
@@ -155,7 +175,7 @@ func (h *Handler) HandleGet(c *gin.Context) error {
 		}
 		return xerrors.Errorf("get taskgroups: %w", err)
 	}
-	resp := GetResponse{TaskGroups: taskGroups}
+	resp := GetResponse{Quest: quest, TaskGroups: taskGroups}
 
 	c.JSON(http.StatusOK, resp)
 	return nil
