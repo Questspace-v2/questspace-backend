@@ -1,0 +1,23 @@
+name: register-already-exists
+requests:
+  - method: POST
+    uri: /auth/register
+    json-input: >
+      {
+        "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+        "username": "svayp11",
+        "password": "password"
+      }
+
+    expected-status: 200
+
+  - method: POST
+    uri: /auth/register
+    json-input: >
+      {
+        "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+        "username": "svayp11",
+        "password": "qwerty"
+      }
+
+    expected-status: 400

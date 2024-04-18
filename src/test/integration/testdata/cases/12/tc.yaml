@@ -1,0 +1,31 @@
+name: update-wrong-type
+requests:
+  - method: POST
+    uri: /auth/register
+    json-input: >
+      {
+        "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+        "username": "svayp11",
+        "password": "password"
+      }
+
+    expected-status: 200
+    expected-json: >
+      {
+        "access_token": "$SET$:SVAYP11_TOKEN",
+        "user": {
+          "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+          "username": "svayp11",
+          "id": "$SET$:USER_ID"
+        }
+      }
+  - method: POST
+    uri: /user/$USER_ID
+    authorization: $SVAYP11_TOKEN
+    json-input: >
+      {
+        "avatar_url": "https://freetestdata.com/wp-content/uploads/2021/09/Free_Test_Data_100KB_MP3.mp3",
+        "username": "pyavs22"
+      }
+
+    expected-status: 415

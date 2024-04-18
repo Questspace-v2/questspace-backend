@@ -1,0 +1,22 @@
+name: sign-in-wrong-password
+requests:
+  - method: POST
+    uri: /auth/register
+    json-input: >
+      {
+        "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+        "username": "svayp11",
+        "password": "password"
+      }
+
+    expected-status: 200
+
+  - method: POST
+    uri: /auth/sign-in
+    json-input: >
+      {
+        "password": "qwerty",
+        "username": "svayp11"
+      }
+
+    expected-status: 403

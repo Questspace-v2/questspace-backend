@@ -1,0 +1,10 @@
+name: sign-in-not-found
+method: POST
+uri: /auth/sign-in
+json-input: >
+  {
+    "password": "password",
+    "username": "svayp11"
+  }
+
+expected-status: 404
