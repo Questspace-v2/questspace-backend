@@ -102,7 +102,7 @@ func (c *Client) TakeHint(ctx context.Context, req *storage.TakeHintRequest) (*s
 	sqlQuery := `
 WITH inserted_hint AS (
     INSERT INTO questspace.hint_take (team_id, task_id, index) VALUES ($1, $2, $3)
-        ON CONFLICT (task_id, team_id, index) DO NOTHING
+        ON CONFLICT (task_id, team_id, index) DO UPDATE SET index = $3
         RETURNING task_id, index
 ) SELECT t.hints, inserted_hint.index FROM inserted_hint
     LEFT JOIN questspace.task t ON inserted_hint.task_id = t.id
