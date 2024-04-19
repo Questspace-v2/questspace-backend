@@ -145,7 +145,7 @@ func (h *Handler) HandleTakeHint(c *gin.Context) error {
 	srvReq := game.TakeHintRequest{QuestID: questID, TaskID: req.TaskID, Index: req.Index}
 	hint, err := srv.TakeHint(c, uauth, &srvReq)
 	if err != nil {
-		return xerrors.Errorf("hint error: %v", err)
+		return xerrors.Errorf("hint error: %w", err)
 	}
 	if err = tx.Commit(); err != nil {
 		return xerrors.Errorf("commit tx: %w", err)

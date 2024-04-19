@@ -73,6 +73,34 @@ func TestTaskStorage_GetTask(t *testing.T) {
 	assert.Equal(t, expected, *got)
 }
 
+func TestTaskStorage_GetAnswerData(t *testing.T) {
+	ctx := context.Background()
+	client := NewClient(pgtest.NewEmbeddedQuestspaceDB(t))
+
+	quest := createTestQuest(t, ctx, client, "svayp11", "quest1")
+	tg, err := client.CreateTaskGroup(ctx, &storage.CreateTaskGroupRequest{
+		Name:     "tg1",
+		OrderIdx: 0,
+		QuestID:  quest.ID,
+	})
+	require.NoError(t, err)
+
+	taskReq1 := taskReq
+	taskReq1.GroupID = tg.ID
+	task, err := client.CreateTask(ctx, &taskReq1)
+	require.NoError(t, err)
+	assert.NotEmpty(t, task.ID)
+
+	got, err := client.GetAnswerData(ctx, &storage.GetTaskRequest{ID: task.ID})
+	require.NoError(t, err)
+
+	assert.NotEmpty(t, got.ID)
+	assert.Equal(t, task.CorrectAnswers, got.CorrectAnswers)
+	assert.Equal(t, task.Reward, got.Reward)
+	assert.Equal(t, task.Verification, got.Verification)
+	assert.Equal(t, task.Hints, got.Hints)
+}
+
 func TestTaskStorage_GetTasks(t *testing.T) {
 	ctx := context.Background()
 	client := NewClient(pgtest.NewEmbeddedQuestspaceDB(t))

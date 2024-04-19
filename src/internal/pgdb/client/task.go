@@ -73,7 +73,7 @@ func (c *Client) GetTask(ctx context.Context, req *storage.GetTaskRequest) (*sto
 }
 
 func (c *Client) GetAnswerData(ctx context.Context, req *storage.GetTaskRequest) (*storage.Task, error) {
-	query := sq.Select("correct_answers", "reward", "verification_type", "hints").
+	query := sq.Select("correct_answers", "reward", "verification", "hints").
 		From("questspace.task").
 		Where(sq.Eq{"id": req.ID}).
 		PlaceholderFormat(sq.Dollar)

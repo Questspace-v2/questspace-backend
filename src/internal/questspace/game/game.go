@@ -8,12 +8,10 @@ import (
 	"time"
 
 	"go.uber.org/zap"
-
-	"questspace/pkg/application/logging"
-
 	"golang.org/x/xerrors"
 
 	"questspace/pkg/application/httperrors"
+	"questspace/pkg/application/logging"
 	"questspace/pkg/storage"
 )
 
@@ -228,6 +226,7 @@ func (s *Service) TakeHint(ctx context.Context, user *storage.User, req *TakeHin
 		if errors.Is(err, storage.ErrNotFound) {
 			return nil, httperrors.Errorf(http.StatusNotFound, "task %q not found", req.TaskID)
 		}
+		return nil, xerrors.Errorf("get answer data: %w", err)
 	}
 	if len(answerData.Hints) <= req.Index {
 		return nil, httperrors.Errorf(http.StatusBadRequest, "index %d out of hints range", req.Index)
