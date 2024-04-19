@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"sort"
+	"strings"
 	"time"
 
 	"go.uber.org/zap"
@@ -273,7 +274,7 @@ func (s *Service) TryAnswer(ctx context.Context, user *storage.User, req *TryAns
 	}
 	accepted := false
 	for _, correctAnswer := range answerData.CorrectAnswers {
-		if req.Text == correctAnswer {
+		if strings.EqualFold(req.Text, correctAnswer) {
 			accepted = true
 			break
 		}
@@ -286,7 +287,7 @@ func (s *Service) TryAnswer(ctx context.Context, user *storage.User, req *TryAns
 
 	logging.Info(ctx, "answer try",
 		zap.String("team_id", team.ID),
-		zap.String("team_id", team.Name),
+		zap.String("team_name", team.Name),
 		zap.String("task_id", req.TaskID),
 		zap.String("text", req.Text),
 	)
