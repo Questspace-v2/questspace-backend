@@ -28,6 +28,8 @@ definitions:
     properties:
       accepted:
         type: boolean
+      answer:
+        type: string
       hints:
         items:
           $ref: '#/definitions/game.AnswerTaskHint'

@@ -51,6 +51,7 @@ type AnswerTask struct {
 	Verification storage.VerificationType `json:"verification_type" enums:"auto,manual"`
 	Hints        []AnswerTaskHint         `json:"hints"`
 	Accepted     bool                     `json:"accepted"`
+	Answer       string                   `json:"answer,omitempty"`
 	PubTime      *time.Time               `json:"pub_time,omitempty"`
 	MediaLink    string                   `json:"media_link"`
 }
@@ -101,8 +102,9 @@ func (s *Service) FillAnswerData(ctx context.Context, req *AnswerDataRequest) (*
 				PubTime:      t.PubTime,
 				MediaLink:    t.MediaLink,
 			}
-			if _, ok := acceptedTasks[t.ID]; ok {
+			if ans, ok := acceptedTasks[t.ID]; ok {
 				newT.Accepted = true
+				newT.Answer = ans
 			}
 			for _, h := range tookHints[newT.ID] {
 				newT.Hints[h.Hint.Index].Taken = true

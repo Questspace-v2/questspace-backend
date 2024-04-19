@@ -166,7 +166,7 @@ type HintTake struct {
 
 type HintTakes map[string][]HintTake
 
-type AcceptedTasks map[string]struct{}
+type AcceptedTasks map[string]string
 
 type SingleTaskResult struct {
 	TeamID    string

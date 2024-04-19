@@ -1201,6 +1201,9 @@ const docTemplate = `{
                 "accepted": {
                     "type": "boolean"
                 },
+                "answer": {
+                    "type": "string"
+                },
                 "hints": {
                     "type": "array",
                     "items": {
