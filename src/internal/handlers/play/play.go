@@ -259,3 +259,43 @@ func (h *Handler) HandleGetTableResults(c *gin.Context) error {
 	c.JSON(http.StatusOK, leaderBoard)
 	return nil
 }
+
+// HandleLeaderboard handles GET quest/:id/leaderboard request
+//
+// @Summary		Get leaderboard table with final results
+// @Tags		PlayMode
+// @Param		quest_id	path		string		true	"Quest ID"
+// @Success		200			{object}	game.LeaderboardResponse
+// @Failure		400
+// @Failure		401
+// @Failure 	403
+// @Failure 	404
+// @Router		/quest/{id}/leaderboard [get]
+func (h *Handler) HandleLeaderboard(c *gin.Context) error {
+	questID := c.Param("id")
+
+	s, err := h.clientFactory.NewStorage(c, dbnode.Alive)
+	if err != nil {
+		return xerrors.Errorf("get storage: %w", err)
+	}
+	quest, err := s.GetQuest(c, &storage.GetQuestRequest{ID: questID})
+	if err != nil {
+		if errors.Is(err, storage.ErrNotFound) {
+			return httperrors.Errorf(http.StatusNotFound, "quest %q not found", questID)
+		}
+		return xerrors.Errorf("get quest: %w", err)
+	}
+	quests.SetStatus(quest)
+	if quest.Status != storage.StatusFinished {
+		return httperrors.New(http.StatusNotFound, "leaderboard not ready yet")
+	}
+
+	srv := game.NewService(s, s, s, s)
+	leaderBoard, err := srv.GetLeaderboard(c, questID)
+	if err != nil {
+		return xerrors.Errorf("get leaderboard: %w", err)
+	}
+
+	c.JSON(http.StatusOK, leaderBoard)
+	return nil
+}

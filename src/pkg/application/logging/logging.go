@@ -43,6 +43,7 @@ func Middleware(logger zap.Logger) gin.HandlerFunc {
 
 		fields = append(fields,
 			zap.String("uri", req.URL.RequestURI()),
+			zap.String("method", req.Method),
 			zap.Dict("headers", headers...),
 		)
 

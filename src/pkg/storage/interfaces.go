@@ -27,6 +27,7 @@ type QuestStorage interface {
 	GetQuests(context.Context, *GetQuestsRequest) (*GetQuestsResponse, error)
 	UpdateQuest(context.Context, *UpdateQuestRequest) (*Quest, error)
 	DeleteQuest(context.Context, *DeleteQuestRequest) error
+	FinishQuest(context.Context, *FinishQuestRequest) error
 }
 
 type TaskGroupStorage interface {
@@ -61,6 +62,7 @@ type TeamStorage interface {
 type AnswerHintStorage interface {
 	AnswerStorage
 	HintStorage
+	PenaltyStorage
 }
 
 type HintStorage interface {
@@ -72,4 +74,9 @@ type AnswerStorage interface {
 	GetAcceptedTasks(context.Context, *GetAcceptedTasksRequest) (AcceptedTasks, error)
 	CreateAnswerTry(context.Context, *CreateAnswerTryRequest) error
 	GetScoreResults(context.Context, *GetResultsRequest) (ScoreResults, error)
+}
+
+type PenaltyStorage interface {
+	GetPenalties(context.Context, *GetPenaltiesRequest) (TeamPenalties, error)
+	CreatePenalty(context.Context, *CreatePenaltyRequest) error
 }

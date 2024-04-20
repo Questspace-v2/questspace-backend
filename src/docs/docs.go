@@ -314,6 +314,43 @@ const docTemplate = `{
                 }
             }
         },
+        "/quest/{id}/leaderboard": {
+            "get": {
+                "tags": [
+                    "PlayMode"
+                ],
+                "summary": "Get leaderboard table with final results",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Quest ID",
+                        "name": "quest_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/game.LeaderboardResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                }
+            }
+        },
         "/quest/{id}/play": {
             "get": {
                 "security": [
@@ -622,6 +659,42 @@ const docTemplate = `{
                     "Quests"
                 ],
                 "summary": "Delete quest",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Quest ID",
+                        "name": "quest_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                }
+            }
+        },
+        "/quest/{quest_id}/finish": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "Quests"
+                ],
+                "summary": "Finish quest",
                 "parameters": [
                     {
                         "type": "string",
@@ -1278,6 +1351,31 @@ const docTemplate = `{
                 }
             }
         },
+        "game.LeaderboardResponse": {
+            "type": "object",
+            "properties": {
+                "rows": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/game.LeaderboardRow"
+                    }
+                }
+            }
+        },
+        "game.LeaderboardRow": {
+            "type": "object",
+            "properties": {
+                "score": {
+                    "type": "integer"
+                },
+                "team_id": {
+                    "type": "string"
+                },
+                "team_name": {
+                    "type": "string"
+                }
+            }
+        },
         "game.TaskGroupResult": {
             "type": "object",
             "properties": {
@@ -1317,6 +1415,9 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                },
+                "penalty": {
+                    "type": "integer"
                 },
                 "task_groups": {
                     "type": "array",

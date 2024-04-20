@@ -251,3 +251,15 @@ func (c *Client) DeleteQuest(ctx context.Context, req *storage.DeleteQuestReques
 	}
 	return nil
 }
+
+func (c *Client) FinishQuest(ctx context.Context, req *storage.FinishQuestRequest) error {
+	query := sq.Update("questspace.quest").
+		Set("finished", true).
+		Where(sq.Eq{"id": req.ID}).
+		PlaceholderFormat(sq.Dollar)
+
+	if _, err := query.RunWith(c.runner).ExecContext(ctx); err != nil {
+		return xerrors.Errorf("exec query: %w", err)
+	}
+	return nil
+}

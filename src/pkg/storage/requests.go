@@ -76,6 +76,10 @@ type DeleteQuestRequest struct {
 	ID string
 }
 
+type FinishQuestRequest struct {
+	ID string
+}
+
 type CreateTeamRequest struct {
 	Name    string
 	QuestID string
@@ -244,4 +248,14 @@ type CreateAnswerTryRequest struct {
 
 type GetResultsRequest struct {
 	QuestID string
+}
+
+type GetPenaltiesRequest struct {
+	TeamIDs []string
+	QuestID string
+}
+
+type CreatePenaltyRequest struct {
+	TeamID  string
+	Penalty int
 }

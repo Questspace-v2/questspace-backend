@@ -95,6 +95,20 @@ func (mr *MockQuestSpaceStorageMockRecorder) CreateOrUpdateByExternalID(arg0, ar
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateOrUpdateByExternalID", reflect.TypeOf((*MockQuestSpaceStorage)(nil).CreateOrUpdateByExternalID), arg0, arg1)
 }
 
+// CreatePenalty mocks base method.
+func (m *MockQuestSpaceStorage) CreatePenalty(arg0 context.Context, arg1 *storage.CreatePenaltyRequest) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreatePenalty", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreatePenalty indicates an expected call of CreatePenalty.
+func (mr *MockQuestSpaceStorageMockRecorder) CreatePenalty(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatePenalty", reflect.TypeOf((*MockQuestSpaceStorage)(nil).CreatePenalty), arg0, arg1)
+}
+
 // CreateQuest mocks base method.
 func (m *MockQuestSpaceStorage) CreateQuest(arg0 context.Context, arg1 *storage.CreateQuestRequest) (*storage.Quest, error) {
 	m.ctrl.T.Helper()
@@ -240,6 +254,20 @@ func (mr *MockQuestSpaceStorageMockRecorder) DeleteUser(arg0, arg1 interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUser", reflect.TypeOf((*MockQuestSpaceStorage)(nil).DeleteUser), arg0, arg1)
 }
 
+// FinishQuest mocks base method.
+func (m *MockQuestSpaceStorage) FinishQuest(arg0 context.Context, arg1 *storage.FinishQuestRequest) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FinishQuest", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// FinishQuest indicates an expected call of FinishQuest.
+func (mr *MockQuestSpaceStorageMockRecorder) FinishQuest(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FinishQuest", reflect.TypeOf((*MockQuestSpaceStorage)(nil).FinishQuest), arg0, arg1)
+}
+
 // GetAcceptedTasks mocks base method.
 func (m *MockQuestSpaceStorage) GetAcceptedTasks(arg0 context.Context, arg1 *storage.GetAcceptedTasksRequest) (storage.AcceptedTasks, error) {
 	m.ctrl.T.Helper()
@@ -283,6 +311,21 @@ func (m *MockQuestSpaceStorage) GetHintTakes(arg0 context.Context, arg1 *storage
 func (mr *MockQuestSpaceStorageMockRecorder) GetHintTakes(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHintTakes", reflect.TypeOf((*MockQuestSpaceStorage)(nil).GetHintTakes), arg0, arg1)
+}
+
+// GetPenalties mocks base method.
+func (m *MockQuestSpaceStorage) GetPenalties(arg0 context.Context, arg1 *storage.GetPenaltiesRequest) (storage.TeamPenalties, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPenalties", arg0, arg1)
+	ret0, _ := ret[0].(storage.TeamPenalties)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPenalties indicates an expected call of GetPenalties.
+func (mr *MockQuestSpaceStorageMockRecorder) GetPenalties(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPenalties", reflect.TypeOf((*MockQuestSpaceStorage)(nil).GetPenalties), arg0, arg1)
 }
 
 // GetQuest mocks base method.
@@ -732,6 +775,20 @@ func (mr *MockQuestStorageMockRecorder) DeleteQuest(arg0, arg1 interface{}) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteQuest", reflect.TypeOf((*MockQuestStorage)(nil).DeleteQuest), arg0, arg1)
 }
 
+// FinishQuest mocks base method.
+func (m *MockQuestStorage) FinishQuest(arg0 context.Context, arg1 *storage.FinishQuestRequest) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FinishQuest", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// FinishQuest indicates an expected call of FinishQuest.
+func (mr *MockQuestStorageMockRecorder) FinishQuest(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FinishQuest", reflect.TypeOf((*MockQuestStorage)(nil).FinishQuest), arg0, arg1)
+}
+
 // GetQuest mocks base method.
 func (m *MockQuestStorage) GetQuest(arg0 context.Context, arg1 *storage.GetQuestRequest) (*storage.Quest, error) {
 	m.ctrl.T.Helper()
@@ -1178,6 +1235,20 @@ func (mr *MockAnswerHintStorageMockRecorder) CreateAnswerTry(arg0, arg1 interfac
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateAnswerTry", reflect.TypeOf((*MockAnswerHintStorage)(nil).CreateAnswerTry), arg0, arg1)
 }
 
+// CreatePenalty mocks base method.
+func (m *MockAnswerHintStorage) CreatePenalty(arg0 context.Context, arg1 *storage.CreatePenaltyRequest) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreatePenalty", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreatePenalty indicates an expected call of CreatePenalty.
+func (mr *MockAnswerHintStorageMockRecorder) CreatePenalty(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatePenalty", reflect.TypeOf((*MockAnswerHintStorage)(nil).CreatePenalty), arg0, arg1)
+}
+
 // GetAcceptedTasks mocks base method.
 func (m *MockAnswerHintStorage) GetAcceptedTasks(arg0 context.Context, arg1 *storage.GetAcceptedTasksRequest) (storage.AcceptedTasks, error) {
 	m.ctrl.T.Helper()
@@ -1206,6 +1277,21 @@ func (m *MockAnswerHintStorage) GetHintTakes(arg0 context.Context, arg1 *storage
 func (mr *MockAnswerHintStorageMockRecorder) GetHintTakes(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHintTakes", reflect.TypeOf((*MockAnswerHintStorage)(nil).GetHintTakes), arg0, arg1)
+}
+
+// GetPenalties mocks base method.
+func (m *MockAnswerHintStorage) GetPenalties(arg0 context.Context, arg1 *storage.GetPenaltiesRequest) (storage.TeamPenalties, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPenalties", arg0, arg1)
+	ret0, _ := ret[0].(storage.TeamPenalties)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPenalties indicates an expected call of GetPenalties.
+func (mr *MockAnswerHintStorageMockRecorder) GetPenalties(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPenalties", reflect.TypeOf((*MockAnswerHintStorage)(nil).GetPenalties), arg0, arg1)
 }
 
 // GetScoreResults mocks base method.
@@ -1356,4 +1442,56 @@ func (m *MockAnswerStorage) GetScoreResults(arg0 context.Context, arg1 *storage.
 func (mr *MockAnswerStorageMockRecorder) GetScoreResults(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetScoreResults", reflect.TypeOf((*MockAnswerStorage)(nil).GetScoreResults), arg0, arg1)
+}
+
+// MockPenaltyStorage is a mock of PenaltyStorage interface.
+type MockPenaltyStorage struct {
+	ctrl     *gomock.Controller
+	recorder *MockPenaltyStorageMockRecorder
+}
+
+// MockPenaltyStorageMockRecorder is the mock recorder for MockPenaltyStorage.
+type MockPenaltyStorageMockRecorder struct {
+	mock *MockPenaltyStorage
+}
+
+// NewMockPenaltyStorage creates a new mock instance.
+func NewMockPenaltyStorage(ctrl *gomock.Controller) *MockPenaltyStorage {
+	mock := &MockPenaltyStorage{ctrl: ctrl}
+	mock.recorder = &MockPenaltyStorageMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockPenaltyStorage) EXPECT() *MockPenaltyStorageMockRecorder {
+	return m.recorder
+}
+
+// CreatePenalty mocks base method.
+func (m *MockPenaltyStorage) CreatePenalty(arg0 context.Context, arg1 *storage.CreatePenaltyRequest) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreatePenalty", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreatePenalty indicates an expected call of CreatePenalty.
+func (mr *MockPenaltyStorageMockRecorder) CreatePenalty(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatePenalty", reflect.TypeOf((*MockPenaltyStorage)(nil).CreatePenalty), arg0, arg1)
+}
+
+// GetPenalties mocks base method.
+func (m *MockPenaltyStorage) GetPenalties(arg0 context.Context, arg1 *storage.GetPenaltiesRequest) (storage.TeamPenalties, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPenalties", arg0, arg1)
+	ret0, _ := ret[0].(storage.TeamPenalties)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPenalties indicates an expected call of GetPenalties.
+func (mr *MockPenaltyStorageMockRecorder) GetPenalties(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPenalties", reflect.TypeOf((*MockPenaltyStorage)(nil).GetPenalties), arg0, arg1)
 }
