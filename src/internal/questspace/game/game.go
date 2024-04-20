@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"sort"
+	"strings"
 	"time"
 
 	"go.uber.org/zap"
@@ -51,6 +52,7 @@ type AnswerTask struct {
 	Verification storage.VerificationType `json:"verification_type" enums:"auto,manual"`
 	Hints        []AnswerTaskHint         `json:"hints"`
 	Accepted     bool                     `json:"accepted"`
+	Answer       string                   `json:"answer,omitempty"`
 	PubTime      *time.Time               `json:"pub_time,omitempty"`
 	MediaLink    string                   `json:"media_link"`
 }
@@ -101,8 +103,9 @@ func (s *Service) FillAnswerData(ctx context.Context, req *AnswerDataRequest) (*
 				PubTime:      t.PubTime,
 				MediaLink:    t.MediaLink,
 			}
-			if _, ok := acceptedTasks[t.ID]; ok {
+			if ans, ok := acceptedTasks[t.ID]; ok {
 				newT.Accepted = true
+				newT.Answer = ans
 			}
 			for _, h := range tookHints[newT.ID] {
 				newT.Hints[h.Hint.Index].Taken = true
@@ -137,6 +140,7 @@ type TeamResult struct {
 	TeamID                string            `json:"id"`
 	TeamName              string            `json:"name"`
 	TotalScore            int               `json:"total_score"`
+	Penalty               int               `json:"penalty"`
 	TaskGroups            []TaskGroupResult `json:"task_groups"`
 	lastCorrectAnswerTime *time.Time
 }
@@ -161,10 +165,15 @@ func (s *Service) GetResults(ctx context.Context, questID string) (*TeamResults,
 	if err != nil {
 		return nil, xerrors.Errorf("get results: %w", err)
 	}
+	penalties, err := s.ah.GetPenalties(ctx, &storage.GetPenaltiesRequest{QuestID: questID})
+	if err != nil {
+		return nil, xerrors.Errorf("get penalties: %w", err)
+	}
 
 	var res TeamResults
 	for _, team := range teams {
 		teamScore := results[team.ID]
+		teamPenalties := penalties[team.ID]
 		teamRes := TeamResult{
 			TeamID:   team.ID,
 			TeamName: team.Name,
@@ -192,17 +201,81 @@ func (s *Service) GetResults(ctx context.Context, questID string) (*TeamResults,
 			}
 			teamRes.TaskGroups = append(teamRes.TaskGroups, tgRes)
 		}
+		for _, p := range teamPenalties {
+			teamRes.Penalty += p.Value
+		}
 		res.Results = append(res.Results, teamRes)
 	}
 
 	sort.Slice(res.Results, func(i, j int) bool {
-		if res.Results[i].TotalScore != res.Results[j].TotalScore {
-			return res.Results[i].TotalScore < res.Results[j].TotalScore
+		resScoreL, resScoreR := res.Results[i].TotalScore-res.Results[i].Penalty, res.Results[j].TotalScore-res.Results[j].Penalty
+		if resScoreL != resScoreR {
+			return resScoreL < resScoreR
 		}
 		if res.Results[i].lastCorrectAnswerTime != nil && res.Results[j].lastCorrectAnswerTime != nil {
 			return res.Results[i].lastCorrectAnswerTime.After(*res.Results[j].lastCorrectAnswerTime)
 		}
 		return res.Results[i].TeamName < res.Results[j].TeamName
+	})
+	return &res, nil
+}
+
+type LeaderboardRow struct {
+	TeamID                string `json:"team_id"`
+	TeamName              string `json:"team_name"`
+	Score                 int    `json:"score"`
+	lastCorrectAnswerTime *time.Time
+}
+
+type LeaderboardResponse struct {
+	Rows []LeaderboardRow `json:"rows"`
+}
+
+func (s *Service) GetLeaderboard(ctx context.Context, questID string) (*LeaderboardResponse, error) {
+	teams, err := s.tms.GetTeams(ctx, &storage.GetTeamsRequest{QuestIDs: []string{questID}})
+	if err != nil {
+		if errors.Is(err, storage.ErrNotFound) {
+			return nil, httperrors.Errorf(http.StatusNotFound, "quest %q not found", questID)
+		}
+		return nil, xerrors.Errorf("get teams: %w", err)
+	}
+	results, err := s.ah.GetScoreResults(ctx, &storage.GetResultsRequest{QuestID: questID})
+	if err != nil {
+		return nil, xerrors.Errorf("get results: %w", err)
+	}
+	penalties, err := s.ah.GetPenalties(ctx, &storage.GetPenaltiesRequest{QuestID: questID})
+	if err != nil {
+		return nil, xerrors.Errorf("get penalties: %w", err)
+	}
+	var res LeaderboardResponse
+	for _, team := range teams {
+		teamScore := results[team.ID]
+		teamPenalties := penalties[team.ID]
+		teamRes := LeaderboardRow{
+			TeamID:   team.ID,
+			TeamName: team.Name,
+		}
+		for _, taskRes := range teamScore {
+			teamRes.Score += taskRes.Score
+			if teamRes.lastCorrectAnswerTime == nil {
+				teamRes.lastCorrectAnswerTime = taskRes.ScoreTime
+			} else if teamRes.lastCorrectAnswerTime.Before(*taskRes.ScoreTime) {
+				teamRes.lastCorrectAnswerTime = taskRes.ScoreTime
+			}
+		}
+		for _, p := range teamPenalties {
+			teamRes.Score -= p.Value
+		}
+		res.Rows = append(res.Rows, teamRes)
+	}
+	sort.Slice(res.Rows, func(i, j int) bool {
+		if res.Rows[i].Score != res.Rows[j].Score {
+			return res.Rows[i].Score < res.Rows[j].Score
+		}
+		if res.Rows[i].lastCorrectAnswerTime != nil && res.Rows[j].lastCorrectAnswerTime != nil {
+			return res.Rows[i].lastCorrectAnswerTime.After(*res.Rows[j].lastCorrectAnswerTime)
+		}
+		return res.Rows[i].TeamName < res.Rows[j].TeamName
 	})
 	return &res, nil
 }
@@ -271,7 +344,9 @@ func (s *Service) TryAnswer(ctx context.Context, user *storage.User, req *TryAns
 	}
 	accepted := false
 	for _, correctAnswer := range answerData.CorrectAnswers {
-		if req.Text == correctAnswer {
+		trimmedCorrect := strings.TrimSpace(correctAnswer)
+		trimmedAnswer := strings.TrimSpace(req.Text)
+		if strings.EqualFold(trimmedCorrect, trimmedAnswer) {
 			accepted = true
 			break
 		}
@@ -284,7 +359,7 @@ func (s *Service) TryAnswer(ctx context.Context, user *storage.User, req *TryAns
 
 	logging.Info(ctx, "answer try",
 		zap.String("team_id", team.ID),
-		zap.String("team_id", team.Name),
+		zap.String("team_name", team.Name),
 		zap.String("task_id", req.TaskID),
 		zap.String("text", req.Text),
 	)

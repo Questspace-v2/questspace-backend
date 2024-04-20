@@ -118,10 +118,11 @@ func Init(app application.App) error {
 	questGroup.GET("/:id", jwt.AuthMiddleware(jwtParser), application.AsGinHandler(questHandler.HandleGet))
 	questGroup.POST("/:id", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(questHandler.HandleUpdate))
 	questGroup.DELETE("/:id", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(questHandler.HandleDelete))
-	questGroup.POST("/:id/teams", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(teamsHandler.HandleCreate))
-	questGroup.GET("/:id/teams", application.AsGinHandler(teamsHandler.HandleGetMany))
+	questGroup.POST("/:id/finish", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(questHandler.HandleFinish))
 
 	teamsGroup := app.Router().Group("/teams")
+	questGroup.POST("/:id/teams", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(teamsHandler.HandleCreate))
+	questGroup.GET("/:id/teams", application.AsGinHandler(teamsHandler.HandleGetMany))
 	teamsGroup.GET("/join/:path", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(teamsHandler.HandleJoin))
 	teamsGroup.GET("/join/:path/quest", jwt.AuthMiddleware(jwtParser), application.AsGinHandler(teamsHandler.HandleGetQuestByTeamInvite))
 	teamsGroup.GET("/:id", application.AsGinHandler(teamsHandler.HandleGet))
@@ -141,6 +142,7 @@ func Init(app application.App) error {
 	questGroup.POST("/:id/hint", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(playHandler.HandleTakeHint))
 	questGroup.POST("/:id/answer", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(playHandler.HandleTryAnswer))
 	questGroup.GET("/:id/table", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(playHandler.HandleGetTableResults))
+	questGroup.GET("/:id/leaderboard", application.AsGinHandler(playHandler.HandleLeaderboard))
 
 	app.Router().GET("/swagger/*any", ginswagger.WrapHandler(swaggerfiles.Handler))
 	return nil

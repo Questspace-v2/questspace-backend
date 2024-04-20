@@ -252,7 +252,7 @@ func (h *Handler) HandleDelete(c *gin.Context) error {
 	q, err := s.GetQuest(c, &storage.GetQuestRequest{ID: id})
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
-			return httperrors.Errorf(http.StatusNotFound, "quest not found")
+			return httperrors.Errorf(http.StatusNotFound, "quest %q not found", id)
 		}
 		return xerrors.Errorf("get quest: %w", err)
 	}
@@ -262,6 +262,45 @@ func (h *Handler) HandleDelete(c *gin.Context) error {
 
 	if err := s.DeleteQuest(c, &storage.DeleteQuestRequest{ID: id}); err != nil {
 		return xerrors.Errorf("%w", err)
+	}
+	return nil
+}
+
+// HandleFinish handles POST /quest/:id/finish request
+//
+// @Summary		Finish quest
+// @Tags 		Quests
+// @Param		quest_id	path	string	true	"Quest ID"
+// @Success		200
+// @Failure    	401
+// @Failure    	403
+// @Failure    	404
+// @Router		/quest/{quest_id}/finish [post]
+// @Security 	ApiKeyAuth
+func (h *Handler) HandleFinish(c *gin.Context) error {
+	id := c.Param("id")
+	uauth, err := jwt.GetUserFromContext(c)
+	if err != nil {
+		return xerrors.Errorf("%w", err)
+	}
+	s, err := h.clientFactory.NewStorage(c, dbnode.Master)
+	if err != nil {
+		return xerrors.Errorf("get storage client: %w", err)
+	}
+
+	q, err := s.GetQuest(c, &storage.GetQuestRequest{ID: id})
+	if err != nil {
+		if errors.Is(err, storage.ErrNotFound) {
+			return httperrors.Errorf(http.StatusNotFound, "quest %q not found", id)
+		}
+		return xerrors.Errorf("get quest: %w", err)
+	}
+	if q.Creator == nil || q.Creator.ID != uauth.ID {
+		return httperrors.New(http.StatusForbidden, "only creator can finish their quests")
+	}
+
+	if err = s.FinishQuest(c, &storage.FinishQuestRequest{ID: id}); err != nil {
+		return xerrors.Errorf("finish quest: %w", err)
 	}
 	return nil
 }

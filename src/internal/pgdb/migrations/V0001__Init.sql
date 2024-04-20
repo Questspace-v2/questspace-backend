@@ -21,7 +21,7 @@ CREATE TABLE questspace.quest
 CREATE TABLE questspace.team
 (
     id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-    name varchar(26) NOT NULL CHECK ( length(name) > 2 ),
+    name varchar NOT NULL CHECK ( length(name) > 2 ),
     quest_id uuid NOT NULL,
     capitan varchar,
     score integer DEFAULT 0,

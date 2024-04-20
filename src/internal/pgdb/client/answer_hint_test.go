@@ -170,3 +170,35 @@ func TestAnswerHintStorage_GetScoreResults(t *testing.T) {
 	assert.Equal(t, tryReq.Score, results[team.ID][task.ID].Score)
 	assert.Nil(t, results[team2.ID])
 }
+func TestAnswerHintStorage_Penalties(t *testing.T) {
+	ctx := context.Background()
+	client := NewClient(pgtest.NewEmbeddedQuestspaceDB(t))
+
+	quest := createTestQuest(t, ctx, client, "svayp11", "quest1")
+	tg, err := client.CreateTaskGroup(ctx, &storage.CreateTaskGroupRequest{
+		Name:     "tg1",
+		OrderIdx: 0,
+		QuestID:  quest.ID,
+	})
+	require.NoError(t, err)
+
+	taskReq1 := taskReq
+	taskReq1.GroupID = tg.ID
+	task, err := client.CreateTask(ctx, &taskReq1)
+	require.NoError(t, err)
+	assert.NotEmpty(t, task.ID)
+
+	team, _ := createTestTeam(t, ctx, client, quest, "svayp22", "team1")
+	team2, _ := createTestTeam(t, ctx, client, quest, "svayp222", "team2")
+	penaltyReq := storage.CreatePenaltyRequest{
+		TeamID:  team.ID,
+		Penalty: 5000,
+	}
+	require.NoError(t, client.CreatePenalty(ctx, &penaltyReq))
+	results, err := client.GetPenalties(ctx, &storage.GetPenaltiesRequest{QuestID: quest.ID})
+	require.NoError(t, err)
+	assert.Len(t, results, 1)
+	assert.Len(t, results[team.ID], 1)
+	assert.Equal(t, penaltyReq.Penalty, results[team.ID][0].Value)
+	assert.Nil(t, results[team2.ID])
+}

@@ -14,50 +14,6 @@ import (
 	"questspace/pkg/storage"
 )
 
-//func (c *Client) CreateAnswerTry(ctx context.Context, req *storage.CreateAnswerTryRequest) error {
-//	query := sq.Insert("questspace.answer_try").
-//		Columns("task_id", "user_id", "answer").
-//		Values(req.TaskID, req.UserID, req.Text).
-//		PlaceholderFormat(sq.Dollar)
-//
-//	if _, err := query.RunWith(c.runner).ExecContext(ctx); err != nil {
-//		return xerrors.Errorf("executing query: %w", err)
-//	}
-//	return nil
-//}
-//
-//func (c *Client) GetAnswerTries(ctx context.Context, req *storage.GetAnswerTriesRequest) ([]storage.AnswerTry, error) {
-//	//TODO implement me
-//	panic("implement me")
-//}
-//
-//func (c *Client) TakeHint(ctx context.Context, req *storage.TakeHintRequest) (string, error) {
-//	//if req.TeamID != "" {
-//	//	query := sq.Insert("questspace.answer_try").
-//	//		Columns("team_id", "task_id", "answer").
-//	//		Values(req.TeamID, req.TaskID, req.)
-//	//}
-//	//	sqlQuery := sq.Expr(`INSERT INTO questspace.hint_take (team_id, task_id, index) VALUES ((
-//	//	SELECT t.id FROM questspace.registration r LEFT JOIN questspace.team t on t.id = r.team_id
-//	//	WHERE r.user_id = $1 AND t.quest_id = $2
-//	//) AS got_team_id, $3, $4)`, req.UserID, req.QuestID, req.TaskID, req.Index)
-//	//
-//	//	if _, err := sq.ExecContextWith(ctx, c.runner, sqlQuery); err != nil {
-//	//		if pgErr := new(pgconn.PgError); errors.As(err, &pgErr) && pgErr.Code == uniqueViolationCode {
-//	//			return storage.ErrExists
-//	//		}
-//	//		return xerrors.Errorf("exec query: %w", err)
-//	//	}
-//	//	return nil
-//	panic("implement me")
-//}
-//
-//func (c *Client) GetHintTakes(ctx context.Context, req *storage.GetHintTakesRequest) ([]storage.Hint, string, error) {
-//
-//	//TODO implement me
-//	panic("implement me")
-//}
-
 func (c *Client) GetHintTakes(ctx context.Context, req *storage.GetHintTakesRequest) (storage.HintTakes, error) {
 	query := sq.Select("ht.task_id", "ht.index", "t.hints").
 		From("questspace.hint_take ht").LeftJoin("questspace.task t ON ht.task_id = t.id").
@@ -124,7 +80,7 @@ WITH inserted_hint AS (
 }
 
 func (c *Client) GetAcceptedTasks(ctx context.Context, req *storage.GetAcceptedTasksRequest) (storage.AcceptedTasks, error) {
-	query := sq.Select("t.id").
+	query := sq.Select("t.id", "at.answer").
 		From("questspace.answer_try at").
 		LeftJoin("questspace.task t ON at.task_id = t.id").
 		LeftJoin("questspace.task_group tg ON t.group_id = tg.id").
@@ -139,11 +95,11 @@ func (c *Client) GetAcceptedTasks(ctx context.Context, req *storage.GetAcceptedT
 
 	acceptedTasks := make(storage.AcceptedTasks)
 	for rows.Next() {
-		id := ""
-		if err = rows.Scan(&id); err != nil {
+		var id, text string
+		if err = rows.Scan(&id, &text); err != nil {
 			return nil, xerrors.Errorf("scan row: %w", err)
 		}
-		acceptedTasks[id] = struct{}{}
+		acceptedTasks[id] = text
 	}
 	if err := rows.Err(); err != nil {
 		return nil, xerrors.Errorf("iter rows: %w", err)
@@ -197,4 +153,50 @@ func (c *Client) GetScoreResults(ctx context.Context, req *storage.GetResultsReq
 	}
 
 	return scoreRes, nil
+}
+
+func (c *Client) GetPenalties(ctx context.Context, req *storage.GetPenaltiesRequest) (storage.TeamPenalties, error) {
+	query := sq.Select("p.team_id", "p.value").
+		From("questspace.team_penalty p").
+		PlaceholderFormat(sq.Dollar)
+	if len(req.TeamIDs) > 0 {
+		query = query.Where(sq.Eq{"p.team_id": req.TeamIDs})
+	}
+	if req.QuestID != "" {
+		query = query.LeftJoin("questspace.team t ON t.id = p.team_id").Where(sq.Eq{"t.quest_id": req.QuestID})
+	}
+
+	rows, err := query.RunWith(c.runner).QueryContext(ctx)
+	if err != nil {
+		return nil, xerrors.Errorf("query rows: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+
+	res := make(storage.TeamPenalties)
+	for rows.Next() {
+		var p storage.Penalty
+		if err = rows.Scan(&p.TeamID, &p.Value); err != nil {
+			return nil, xerrors.Errorf("scan row: %w", err)
+		}
+		vals := res[p.TeamID]
+		vals = append(vals, p)
+		res[p.TeamID] = vals
+	}
+	if err := rows.Err(); err != nil {
+		return nil, xerrors.Errorf("iter rows: %w", err)
+	}
+
+	return res, nil
+}
+
+func (c *Client) CreatePenalty(ctx context.Context, req *storage.CreatePenaltyRequest) error {
+	query := sq.Insert("questspace.team_penalty").
+		Columns("team_id", "value").
+		Values(req.TeamID, req.Penalty).
+		PlaceholderFormat(sq.Dollar)
+
+	if _, err := query.RunWith(c.runner).ExecContext(ctx); err != nil {
+		return xerrors.Errorf("exec query: %w", err)
+	}
+	return nil
 }

@@ -166,7 +166,7 @@ type HintTake struct {
 
 type HintTakes map[string][]HintTake
 
-type AcceptedTasks map[string]struct{}
+type AcceptedTasks map[string]string
 
 type SingleTaskResult struct {
 	TeamID    string
@@ -181,3 +181,11 @@ type SingleTaskResult struct {
 
 // ScoreResults [team_id] -> [task_id] -> Result
 type ScoreResults map[string]map[string]SingleTaskResult
+
+type Penalty struct {
+	TeamID string
+	Value  int
+}
+
+// TeamPenalties [team_id] -> []Penalty
+type TeamPenalties map[string][]Penalty
