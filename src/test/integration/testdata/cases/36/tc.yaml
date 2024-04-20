@@ -395,6 +395,20 @@ requests:
     expected-status: 200
     expected-json: >
       {
+        "leaderboard": {
+          "rows": [
+            {
+              "score": 50,
+              "team_name": "dream_team",
+              "team_id": "$TEAM_ID"
+            },
+            {
+              "score": 500,
+              "team_name": "dust_team",
+              "team_id": "$TEAM_ID2"
+            }
+          ]
+        },
         "quest": {
           "access": "public",
           "creator": {
