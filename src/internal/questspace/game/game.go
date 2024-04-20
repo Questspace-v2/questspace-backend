@@ -274,7 +274,9 @@ func (s *Service) TryAnswer(ctx context.Context, user *storage.User, req *TryAns
 	}
 	accepted := false
 	for _, correctAnswer := range answerData.CorrectAnswers {
-		if strings.EqualFold(req.Text, correctAnswer) {
+		trimmedCorrect := strings.TrimSpace(correctAnswer)
+		trimmedAnswer := strings.TrimSpace(req.Text)
+		if strings.EqualFold(trimmedCorrect, trimmedAnswer) {
 			accepted = true
 			break
 		}
