@@ -403,7 +403,7 @@ const docTemplate = `{
                 "tags": [
                     "PlayMode"
                 ],
-                "summary": "Get leaderboard table during quest",
+                "summary": "Get admin leaderboard table during quest",
                 "parameters": [
                     {
                         "type": "string",
@@ -1488,6 +1488,9 @@ const docTemplate = `{
         "quest.TeamQuestResponse": {
             "type": "object",
             "properties": {
+                "leaderboard": {
+                    "$ref": "#/definitions/game.LeaderboardResponse"
+                },
                 "quest": {
                     "$ref": "#/definitions/storage.Quest"
                 },

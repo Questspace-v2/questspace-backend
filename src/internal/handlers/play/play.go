@@ -218,7 +218,7 @@ func (h *Handler) HandleTryAnswer(c *gin.Context) error {
 
 // HandleGetTableResults handles GET quest/:id/table request
 //
-// @Summary		Get leaderboard table during quest
+// @Summary		Get admin leaderboard table during quest
 // @Tags		PlayMode
 // @Param		quest_id	path		string		true	"Quest ID"
 // @Success		200			{object}	game.TeamResults

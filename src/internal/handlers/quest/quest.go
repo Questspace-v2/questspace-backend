@@ -11,6 +11,7 @@ import (
 
 	"questspace/internal/handlers/transport"
 	pgdb "questspace/internal/pgdb/client"
+	"questspace/internal/questspace/game"
 	"questspace/internal/questspace/quests"
 	"questspace/internal/validate"
 	"questspace/pkg/application/httperrors"
@@ -80,8 +81,9 @@ func (h *Handler) HandleCreate(c *gin.Context) error {
 }
 
 type TeamQuestResponse struct {
-	Quest *storage.Quest `json:"quest"`
-	Team  *storage.Team  `json:"team,omitempty"`
+	Quest       *storage.Quest            `json:"quest"`
+	Team        *storage.Team             `json:"team,omitempty"`
+	Leaderboard *game.LeaderboardResponse `json:"leaderboard,omitempty"`
 }
 
 // HandleGet handles GET /quest/:id request
@@ -94,8 +96,8 @@ type TeamQuestResponse struct {
 // @Router		/quest/{quest_id} [get]
 // @Security 	ApiKeyAuth
 func (h *Handler) HandleGet(c *gin.Context) error {
-	questId := c.Param("id")
-	req := storage.GetQuestRequest{ID: questId}
+	questID := c.Param("id")
+	req := storage.GetQuestRequest{ID: questID}
 	s, err := h.clientFactory.NewStorage(c, dbnode.Alive)
 	if err != nil {
 		return xerrors.Errorf("get storage client: %w", err)
@@ -114,7 +116,7 @@ func (h *Handler) HandleGet(c *gin.Context) error {
 		teamReq := storage.GetTeamRequest{
 			UserRegistration: &storage.UserRegistration{
 				UserID:  uauth.ID,
-				QuestID: questId,
+				QuestID: questID,
 			},
 			IncludeMembers: true,
 		}
@@ -126,6 +128,16 @@ func (h *Handler) HandleGet(c *gin.Context) error {
 			team.InviteLink = h.inviteLinkPrefix + team.InviteLink
 		}
 		resp.Team = team
+	}
+
+	if quest.Status == storage.StatusFinished {
+		srv := game.NewService(s, s, s, s)
+		leaderboard, err := srv.GetLeaderboard(c, questID)
+		if err == nil {
+			resp.Leaderboard = leaderboard
+		} else {
+			logging.Error(c, "get leaderboard", zap.Error(err))
+		}
 	}
 
 	c.JSON(http.StatusOK, resp)
