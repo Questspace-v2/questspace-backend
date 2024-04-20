@@ -210,12 +210,12 @@ func (s *Service) GetResults(ctx context.Context, questID string) (*TeamResults,
 	sort.Slice(res.Results, func(i, j int) bool {
 		resScoreL, resScoreR := res.Results[i].TotalScore-res.Results[i].Penalty, res.Results[j].TotalScore-res.Results[j].Penalty
 		if resScoreL != resScoreR {
-			return resScoreL < resScoreR
+			return resScoreL >= resScoreR
 		}
 		if res.Results[i].lastCorrectAnswerTime != nil && res.Results[j].lastCorrectAnswerTime != nil {
-			return res.Results[i].lastCorrectAnswerTime.After(*res.Results[j].lastCorrectAnswerTime)
+			return res.Results[i].lastCorrectAnswerTime.Before(*res.Results[j].lastCorrectAnswerTime)
 		}
-		return res.Results[i].TeamName < res.Results[j].TeamName
+		return res.Results[i].TeamName >= res.Results[j].TeamName
 	})
 	return &res, nil
 }
@@ -270,12 +270,12 @@ func (s *Service) GetLeaderboard(ctx context.Context, questID string) (*Leaderbo
 	}
 	sort.Slice(res.Rows, func(i, j int) bool {
 		if res.Rows[i].Score != res.Rows[j].Score {
-			return res.Rows[i].Score < res.Rows[j].Score
+			return res.Rows[i].Score >= res.Rows[j].Score
 		}
 		if res.Rows[i].lastCorrectAnswerTime != nil && res.Rows[j].lastCorrectAnswerTime != nil {
-			return res.Rows[i].lastCorrectAnswerTime.After(*res.Rows[j].lastCorrectAnswerTime)
+			return res.Rows[i].lastCorrectAnswerTime.Before(*res.Rows[j].lastCorrectAnswerTime)
 		}
-		return res.Rows[i].TeamName < res.Rows[j].TeamName
+		return res.Rows[i].TeamName >= res.Rows[j].TeamName
 	})
 	return &res, nil
 }
