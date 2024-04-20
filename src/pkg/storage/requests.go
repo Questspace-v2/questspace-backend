@@ -248,11 +248,12 @@ type CreateAnswerTryRequest struct {
 
 type GetResultsRequest struct {
 	QuestID string
+	TeamIDs []string
 }
 
 type GetPenaltiesRequest struct {
-	TeamIDs []string
 	QuestID string
+	TeamIDs []string
 }
 
 type CreatePenaltyRequest struct {

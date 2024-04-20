@@ -126,8 +126,14 @@ func (c *Client) GetScoreResults(ctx context.Context, req *storage.GetResultsReq
 		LeftJoin("questspace.answer_try at ON at.team_id = tm.id").
 		LeftJoin("questspace.task t ON at.task_id = t.id").
 		LeftJoin("questspace.task_group tg ON t.group_id = tg.id").
-		Where(sq.Eq{"tg.quest_id": req.QuestID, "at.accepted": true}).
+		Where(sq.Eq{"at.accepted": true}).
 		PlaceholderFormat(sq.Dollar)
+	if req.QuestID != "" {
+		query = query.Where(sq.Eq{"tg.quest_id": req.QuestID})
+	}
+	if len(req.TeamIDs) > 0 {
+		query = query.Where(sq.Eq{"tg.team_id": req.TeamIDs})
+	}
 
 	rows, err := query.RunWith(c.runner).QueryContext(ctx)
 	if err != nil {

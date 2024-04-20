@@ -294,6 +294,13 @@ func (s *Service) TakeHint(ctx context.Context, user *storage.User, req *TakeHin
 		}
 		return nil, xerrors.Errorf("get team: %w", err)
 	}
+	accepted, err := s.ah.GetAcceptedTasks(ctx, &storage.GetAcceptedTasksRequest{TeamID: team.ID, QuestID: req.QuestID})
+	if err != nil {
+		return nil, xerrors.Errorf("get results: %w", err)
+	}
+	if _, ok := accepted[req.TaskID]; ok {
+		return nil, httperrors.Errorf(http.StatusNotAcceptable, "question %q already accepted", req.TaskID)
+	}
 	answerData, err := s.ts.GetAnswerData(ctx, &storage.GetTaskRequest{ID: req.TaskID})
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
@@ -333,6 +340,13 @@ func (s *Service) TryAnswer(ctx context.Context, user *storage.User, req *TryAns
 			return nil, httperrors.Errorf(http.StatusNotFound, "team for user %q not found", user.ID)
 		}
 		return nil, xerrors.Errorf("get team: %w", err)
+	}
+	acceptedTasks, err := s.ah.GetAcceptedTasks(ctx, &storage.GetAcceptedTasksRequest{TeamID: team.ID, QuestID: req.QuestID})
+	if err != nil {
+		return nil, xerrors.Errorf("get results: %w", err)
+	}
+	if acceptedText, ok := acceptedTasks[req.TaskID]; ok {
+		return &TryAnswerResponse{Accepted: true, Text: acceptedText}, nil
 	}
 
 	answerData, err := s.ts.GetAnswerData(ctx, &storage.GetTaskRequest{ID: req.TaskID})
