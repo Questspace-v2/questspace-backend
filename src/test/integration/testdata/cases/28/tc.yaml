@@ -327,6 +327,7 @@ requests:
           {
             "id": "$TEAM_ID",
             "name": "dream_team",
+            "penalty": 0,
             "task_groups": [
               {
                 "id": "$GROUP1_ID",
@@ -350,6 +351,7 @@ requests:
           {
             "id": "$TEAM_ID2",
             "name": "dust_team",
+            "penalty": 0,
             "task_groups": [
               {
                 "id": "$GROUP1_ID",
@@ -433,6 +435,7 @@ requests:
           {
             "id": "$TEAM_ID2",
             "name": "dust_team",
+            "penalty": 0,
             "task_groups": [
               {
                 "id": "$GROUP1_ID",
@@ -456,6 +459,7 @@ requests:
           {
             "id": "$TEAM_ID",
             "name": "dream_team",
+            "penalty": 0,
             "task_groups": [
               {
                 "id": "$GROUP1_ID",
@@ -507,6 +511,7 @@ requests:
           {
             "id": "$TEAM_ID",
             "name": "dream_team",
+            "penalty": 0,
             "task_groups": [
               {
                 "id": "$GROUP1_ID",
@@ -530,6 +535,7 @@ requests:
           {
             "id": "$TEAM_ID2",
             "name": "dust_team",
+            "penalty": 0,
             "task_groups": [
               {
                 "id": "$GROUP1_ID",

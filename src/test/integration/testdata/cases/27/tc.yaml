@@ -1,4 +1,4 @@
-name: quest
+name: task-groups
 requests:
   - method: POST
     uri: /auth/register
@@ -143,10 +143,31 @@ requests:
 
   - method: GET
     uri: /quest/$QUEST_ID/task-groups
+    expected-status: 401
+
+  - method: GET
+    uri: /quest/$QUEST_ID/task-groups
+    authorization: $SVAYP11_TOKEN
 
     expected-status: 200
     expected-json: >
       {
+        "quest": {
+          "access": "public",
+          "creator": {
+            "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+            "id": "$USER_ID",
+            "username": "svayp11"
+          },
+          "description": "description",
+          "finish_time": "$ANY$",
+          "id": "$SET$:QUEST_ID",
+          "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
+          "name": "name",
+          "registration_deadline": "$ANY$",
+          "start_time": "$ANY$",
+          "status": "ON_REGISTRATION"
+        },
         "task_groups": [
           {
             "id": "$GROUP1_ID",
