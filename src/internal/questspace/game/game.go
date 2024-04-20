@@ -2,7 +2,9 @@ package game
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"sort"
 	"strings"
@@ -125,28 +127,41 @@ func (s *Service) FillAnswerData(ctx context.Context, req *AnswerDataRequest) (*
 }
 
 type TaskResult struct {
-	TaskID   string `json:"id"`
-	TaskName string `json:"name"`
-	Score    int    `json:"score"`
-}
-
-type TaskGroupResult struct {
-	GroupID   string       `json:"id"`
-	GroupName string       `json:"name"`
-	Tasks     []TaskResult `json:"tasks"`
+	Score      int
+	groupIndex int
+	taskIndex  int
 }
 
 type TeamResult struct {
-	TeamID                string            `json:"id"`
-	TeamName              string            `json:"name"`
-	TotalScore            int               `json:"total_score"`
-	Penalty               int               `json:"penalty"`
-	TaskGroups            []TaskGroupResult `json:"task_groups"`
+	TeamID                string
+	TeamName              string
+	TotalScore            int
+	Penalty               int
+	TaskResults           []TaskResult
 	lastCorrectAnswerTime *time.Time
 }
 
+func (t TeamResult) MarshalJSON() ([]byte, error) {
+	resJSONMap := make(map[string]interface{}, 4+len(t.TaskResults))
+	resJSONMap["team_id"] = t.TeamID
+	resJSONMap["team_name"] = t.TeamName
+	resJSONMap["total_score"] = t.TotalScore
+	resJSONMap["penalty"] = t.Penalty
+	for _, result := range t.TaskResults {
+		taskKey := fmt.Sprintf("task_%d_%d_score", result.groupIndex, result.taskIndex)
+		resJSONMap[taskKey] = result.Score
+	}
+
+	res, err := json.Marshal(resJSONMap)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
 type TeamResults struct {
-	Results []TeamResult `json:"results"`
+	Results    []TeamResult        `json:"results"`
+	TaskGroups []storage.TaskGroup `json:"task_groups"`
 }
 
 func (s *Service) GetResults(ctx context.Context, questID string) (*TeamResults, error) {
@@ -178,15 +193,11 @@ func (s *Service) GetResults(ctx context.Context, questID string) (*TeamResults,
 			TeamID:   team.ID,
 			TeamName: team.Name,
 		}
-		for _, tg := range taskGroups {
-			tgRes := TaskGroupResult{
-				GroupID:   tg.ID,
-				GroupName: tg.Name,
-			}
-			for _, task := range tg.Tasks {
+		for i, tg := range taskGroups {
+			for j, task := range tg.Tasks {
 				taskRes := TaskResult{
-					TaskID:   task.ID,
-					TaskName: task.Name,
+					groupIndex: i,
+					taskIndex:  j,
 				}
 				if scoreRes, ok := teamScore[task.ID]; ok {
 					taskRes.Score = scoreRes.Score
@@ -197,9 +208,8 @@ func (s *Service) GetResults(ctx context.Context, questID string) (*TeamResults,
 						teamRes.lastCorrectAnswerTime = scoreRes.ScoreTime
 					}
 				}
-				tgRes.Tasks = append(tgRes.Tasks, taskRes)
+				teamRes.TaskResults = append(teamRes.TaskResults, taskRes)
 			}
-			teamRes.TaskGroups = append(teamRes.TaskGroups, tgRes)
 		}
 		for _, p := range teamPenalties {
 			teamRes.Penalty += p.Value
@@ -217,6 +227,7 @@ func (s *Service) GetResults(ctx context.Context, questID string) (*TeamResults,
 		}
 		return res.Results[i].TeamName >= res.Results[j].TeamName
 	})
+	res.TaskGroups = taskGroups
 	return &res, nil
 }
 
