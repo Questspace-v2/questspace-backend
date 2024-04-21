@@ -13,6 +13,13 @@ definitions:
       username:
         type: string
     type: object
+  game.AddPenaltyRequest:
+    properties:
+      penalty:
+        type: integer
+      team_id:
+        type: string
+    type: object
   game.AnswerDataResponse:
     properties:
       quest:
@@ -93,39 +100,24 @@ definitions:
       team_name:
         type: string
     type: object
-  game.TaskGroupResult:
-    properties:
-      id:
-        type: string
-      name:
-        type: string
-      tasks:
-        items:
-          $ref: '#/definitions/game.TaskResult'
-        type: array
-    type: object
   game.TaskResult:
     properties:
-      id:
-        type: string
-      name:
-        type: string
       score:
         type: integer
     type: object
   game.TeamResult:
     properties:
-      id:
-        type: string
-      name:
-        type: string
       penalty:
         type: integer
-      task_groups:
+      taskResults:
         items:
-          $ref: '#/definitions/game.TaskGroupResult'
+          $ref: '#/definitions/game.TaskResult'
         type: array
-      total_score:
+      teamID:
+        type: string
+      teamName:
+        type: string
+      totalScore:
         type: integer
     type: object
   game.TeamResults:
@@ -133,6 +125,10 @@ definitions:
       results:
         items:
           $ref: '#/definitions/game.TeamResult'
+        type: array
+      task_groups:
+        items:
+          $ref: '#/definitions/storage.TaskGroup'
         type: array
     type: object
   game.TryAnswerResponse:
@@ -800,6 +796,36 @@ paths:
         "404":
           description: Not Found
       summary: Get leaderboard table with final results
+      tags:
+      - PlayMode
+  /quest/{id}/penalty:
+    post:
+      parameters:
+      - description: Quest ID
+        in: path
+        name: quest_id
+        required: true
+        type: string
+      - description: Data to set penalty
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/game.AddPenaltyRequest'
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+        "406":
+          description: Not Acceptable
+      security:
+      - ApiKeyAuth: []
+      summary: Add penalty to team
       tags:
       - PlayMode
   /quest/{id}/play:

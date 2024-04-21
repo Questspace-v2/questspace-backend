@@ -143,6 +143,7 @@ func Init(app application.App) error {
 	questGroup.POST("/:id/answer", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(playHandler.HandleTryAnswer))
 	questGroup.GET("/:id/table", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(playHandler.HandleGetTableResults))
 	questGroup.GET("/:id/leaderboard", application.AsGinHandler(playHandler.HandleLeaderboard))
+	questGroup.POST("/:id/penalty", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(playHandler.HandleAddPenalty))
 
 	app.Router().GET("/swagger/*any", ginswagger.WrapHandler(swaggerfiles.Handler))
 	return nil

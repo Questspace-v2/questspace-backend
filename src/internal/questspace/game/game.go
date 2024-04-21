@@ -409,3 +409,26 @@ func (s *Service) TryAnswer(ctx context.Context, user *storage.User, req *TryAns
 
 	return &TryAnswerResponse{Accepted: true, Text: req.Text, Score: score}, nil
 }
+
+type AddPenaltyRequest struct {
+	QuestID string `json:"-"`
+	TeamID  string `json:"team_id"`
+	Penalty int    `json:"penalty"`
+}
+
+func (s *Service) AddPenalty(ctx context.Context, req *AddPenaltyRequest) error {
+	team, err := s.tms.GetTeam(ctx, &storage.GetTeamRequest{ID: req.TeamID})
+	if err != nil {
+		if errors.Is(err, storage.ErrNotFound) {
+			return httperrors.Errorf(http.StatusNotFound, "team %q not found", req.TeamID)
+		}
+		return xerrors.Errorf("get team: %w", err)
+	}
+	if team.Quest.ID != req.QuestID {
+		return httperrors.Errorf(http.StatusForbidden, "team %q belongs to quest %q", req.TeamID, req.QuestID)
+	}
+	if err := s.ah.CreatePenalty(ctx, &storage.CreatePenaltyRequest{TeamID: req.TeamID, Penalty: req.Penalty}); err != nil {
+		return xerrors.Errorf("create penalty: %w", err)
+	}
+	return nil
+}

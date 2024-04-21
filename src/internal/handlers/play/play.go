@@ -299,3 +299,51 @@ func (h *Handler) HandleLeaderboard(c *gin.Context) error {
 	c.JSON(http.StatusOK, leaderBoard)
 	return nil
 }
+
+// HandleAddPenalty handles POST quest/:id/penalty request
+//
+// @Summary		Add penalty to team
+// @Tags		PlayMode
+// @Param		quest_id	path		string					true	"Quest ID"
+// @Param		request		body		game.AddPenaltyRequest	true	"Data to set penalty"
+// @Success		200
+// @Failure		400
+// @Failure		401
+// @Failure 	404
+// @Failure 	406
+// @Router		/quest/{id}/penalty [post]
+// @Security 	ApiKeyAuth
+func (h *Handler) HandleAddPenalty(c *gin.Context) error {
+	questID := c.Param("id")
+	req, err := transport.UnmarshalRequestData[game.AddPenaltyRequest](c.Request)
+	if err != nil {
+		return xerrors.Errorf("%w", err)
+	}
+	req.QuestID = questID
+	uauth, err := jwt.GetUserFromContext(c)
+	if err != nil {
+		return xerrors.Errorf("%w", err)
+	}
+
+	s, err := h.clientFactory.NewStorage(c, dbnode.Alive)
+	if err != nil {
+		return xerrors.Errorf("get storage: %w", err)
+	}
+	quest, err := s.GetQuest(c, &storage.GetQuestRequest{ID: questID})
+	if err != nil {
+		if errors.Is(err, storage.ErrNotFound) {
+			return httperrors.Errorf(http.StatusNotFound, "quest %q not found", questID)
+		}
+		return xerrors.Errorf("get quest: %w", err)
+	}
+	if quest.Creator.ID != uauth.ID {
+		return httperrors.New(http.StatusForbidden, "only creator can add penalty to teams")
+	}
+
+	srv := game.NewService(s, s, s, s)
+	if err := srv.AddPenalty(c, req); err != nil {
+		return xerrors.Errorf("add penalty: %w", err)
+	}
+	c.Status(http.StatusOK)
+	return nil
+}

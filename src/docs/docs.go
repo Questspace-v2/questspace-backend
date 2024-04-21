@@ -351,6 +351,54 @@ const docTemplate = `{
                 }
             }
         },
+        "/quest/{id}/penalty": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "PlayMode"
+                ],
+                "summary": "Add penalty to team",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Quest ID",
+                        "name": "quest_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Data to set penalty",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/game.AddPenaltyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "406": {
+                        "description": "Not Acceptable"
+                    }
+                }
+            }
+        },
         "/quest/{id}/play": {
             "get": {
                 "security": [
@@ -1251,6 +1299,17 @@ const docTemplate = `{
                 }
             }
         },
+        "game.AddPenaltyRequest": {
+            "type": "object",
+            "properties": {
+                "penalty": {
+                    "type": "integer"
+                },
+                "team_id": {
+                    "type": "string"
+                }
+            }
+        },
         "game.AnswerDataResponse": {
             "type": "object",
             "properties": {
@@ -1376,32 +1435,9 @@ const docTemplate = `{
                 }
             }
         },
-        "game.TaskGroupResult": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "tasks": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/game.TaskResult"
-                    }
-                }
-            }
-        },
         "game.TaskResult": {
             "type": "object",
             "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
                 "score": {
                     "type": "integer"
                 }
@@ -1410,22 +1446,22 @@ const docTemplate = `{
         "game.TeamResult": {
             "type": "object",
             "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
                 "penalty": {
                     "type": "integer"
                 },
-                "task_groups": {
+                "taskResults": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/game.TaskGroupResult"
+                        "$ref": "#/definitions/game.TaskResult"
                     }
                 },
-                "total_score": {
+                "teamID": {
+                    "type": "string"
+                },
+                "teamName": {
+                    "type": "string"
+                },
+                "totalScore": {
                     "type": "integer"
                 }
             }
@@ -1437,6 +1473,12 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/game.TeamResult"
+                    }
+                },
+                "task_groups": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/storage.TaskGroup"
                     }
                 }
             }
