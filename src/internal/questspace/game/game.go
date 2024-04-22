@@ -136,16 +136,18 @@ type TeamResult struct {
 	TeamID                string
 	TeamName              string
 	TotalScore            int
+	TaskScore             int
 	Penalty               int
 	TaskResults           []TaskResult
 	lastCorrectAnswerTime *time.Time
 }
 
 func (t TeamResult) MarshalJSON() ([]byte, error) {
-	resJSONMap := make(map[string]interface{}, 4+len(t.TaskResults))
+	resJSONMap := make(map[string]interface{}, 5+len(t.TaskResults))
 	resJSONMap["team_id"] = t.TeamID
 	resJSONMap["team_name"] = t.TeamName
 	resJSONMap["total_score"] = t.TotalScore
+	resJSONMap["task_score"] = t.TaskScore
 	resJSONMap["penalty"] = t.Penalty
 	for _, result := range t.TaskResults {
 		taskKey := fmt.Sprintf("task_%d_%d_score", result.groupIndex, result.taskIndex)
@@ -201,6 +203,7 @@ func (s *Service) GetResults(ctx context.Context, questID string) (*TeamResults,
 				}
 				if scoreRes, ok := teamScore[task.ID]; ok {
 					taskRes.Score = scoreRes.Score
+					teamRes.TaskScore += scoreRes.Score
 					teamRes.TotalScore += scoreRes.Score
 					if teamRes.lastCorrectAnswerTime == nil {
 						teamRes.lastCorrectAnswerTime = scoreRes.ScoreTime
@@ -213,12 +216,13 @@ func (s *Service) GetResults(ctx context.Context, questID string) (*TeamResults,
 		}
 		for _, p := range teamPenalties {
 			teamRes.Penalty += p.Value
+			teamRes.TotalScore -= p.Value
 		}
 		res.Results = append(res.Results, teamRes)
 	}
 
 	sort.Slice(res.Results, func(i, j int) bool {
-		resScoreL, resScoreR := res.Results[i].TotalScore-res.Results[i].Penalty, res.Results[j].TotalScore-res.Results[j].Penalty
+		resScoreL, resScoreR := res.Results[i].TotalScore, res.Results[j].TotalScore
 		if resScoreL != resScoreR {
 			return resScoreL >= resScoreR
 		}
