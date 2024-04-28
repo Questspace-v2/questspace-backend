@@ -5,13 +5,13 @@ import (
 	"errors"
 	"net/http"
 
-	"go.uber.org/zap"
+	"questspace/pkg/httperrors"
+	"questspace/pkg/logging"
 
-	"questspace/pkg/application/logging"
+	"go.uber.org/zap"
 
 	"golang.org/x/xerrors"
 
-	"questspace/pkg/application/httperrors"
 	"questspace/pkg/storage"
 )
 

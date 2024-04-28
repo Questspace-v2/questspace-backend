@@ -10,11 +10,12 @@ import (
 	"strings"
 	"time"
 
+	"questspace/pkg/httperrors"
+	"questspace/pkg/logging"
+
 	"go.uber.org/zap"
 	"golang.org/x/xerrors"
 
-	"questspace/pkg/application/httperrors"
-	"questspace/pkg/application/logging"
 	"questspace/pkg/storage"
 )
 

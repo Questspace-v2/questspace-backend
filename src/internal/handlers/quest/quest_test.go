@@ -9,12 +9,13 @@ import (
 	"testing"
 	"time"
 
+	"questspace/internal/pgdb"
+
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/spkg/ptr"
 	"github.com/stretchr/testify/require"
 
-	pgdb "questspace/internal/pgdb/client"
 	"questspace/pkg/application"
 	"questspace/pkg/auth/jwt"
 	jwtmock "questspace/pkg/auth/jwt/mocks"

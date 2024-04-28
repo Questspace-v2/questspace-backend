@@ -5,9 +5,13 @@ import (
 	"errors"
 	"net/http"
 
-	"questspace/internal/questspace/quests"
+	"questspace/internal/pgdb"
 
-	"questspace/pkg/application/httperrors"
+	"questspace/pkg/httperrors"
+
+	"questspace/pkg/transport"
+
+	"questspace/internal/questspace/quests"
 
 	"questspace/pkg/dbnode"
 
@@ -15,8 +19,6 @@ import (
 	"golang.org/x/xerrors"
 
 	"questspace/internal/handlers/quest"
-	"questspace/internal/handlers/transport"
-	pgdb "questspace/internal/pgdb/client"
 	"questspace/internal/questspace/teams"
 	"questspace/pkg/auth/jwt"
 	"questspace/pkg/storage"

@@ -5,11 +5,13 @@ import (
 	"net/http"
 	"strings"
 
+	"questspace/pkg/transport"
+
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
-	"questspace/pkg/application/httperrors"
-	"questspace/pkg/application/logging"
+	"questspace/pkg/httperrors"
+	"questspace/pkg/logging"
 	"questspace/pkg/storage"
 )
 
@@ -43,6 +45,44 @@ func middleware(parser Parser, strict bool) gin.HandlerFunc {
 		c.Request = c.Request.WithContext(userCtx)
 		c.Next()
 	}
+}
+
+func stdMiddleware(parser Parser, strict bool) transport.Middleware {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			token := getTokenFromRequest(r)
+			if token == "" && strict {
+				transport.ServeErrorResponse(r.Context(), w, httperrors.New(http.StatusUnauthorized, "no credentials found"))
+				return
+			} else if token == "" {
+				next.ServeHTTP(w, r)
+				return
+			}
+
+			user, err := parser.ParseToken(token)
+			if err != nil {
+				transport.ServeErrorResponse(r.Context(), w, httperrors.WrapWithCode(http.StatusUnauthorized, err))
+				return
+			}
+
+			logCtx := logging.AddFieldsToContextLogger(r.Context(), zap.Dict("user",
+				zap.String("id", user.ID),
+				zap.String("username", user.Username),
+			))
+
+			userCtx := context.WithValue(logCtx, jwtKey{}, user)
+			*r = *r.WithContext(userCtx)
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+func StdMiddlewareStrict(parser Parser) transport.Middleware {
+	return stdMiddleware(parser, true)
+}
+
+func StdMiddleware(parser Parser) transport.Middleware {
+	return stdMiddleware(parser, false)
 }
 
 func AuthMiddlewareStrict(parser Parser) gin.HandlerFunc {

@@ -6,12 +6,13 @@ import (
 	"net/http"
 	"slices"
 
+	"questspace/pkg/httperrors"
+
 	"questspace/internal/questspace/tasks"
 
 	"golang.org/x/xerrors"
 
 	"questspace/internal/questspace/permutations"
-	"questspace/pkg/application/httperrors"
 	"questspace/pkg/storage"
 )
 

@@ -5,16 +5,19 @@ import (
 	"errors"
 	"net/http"
 
-	"questspace/internal/handlers/auth"
-	"questspace/internal/handlers/transport"
+	"questspace/internal/pgdb"
+
+	"questspace/pkg/httperrors"
+
+	"questspace/pkg/transport"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/xerrors"
 
+	"questspace/internal/handlers/auth"
+
 	"questspace/internal/hasher"
-	pgdb "questspace/internal/pgdb/client"
 	"questspace/internal/validate"
-	"questspace/pkg/application/httperrors"
 	"questspace/pkg/auth/jwt"
 	"questspace/pkg/dbnode"
 	"questspace/pkg/storage"

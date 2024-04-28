@@ -26,7 +26,7 @@ import (
 	"questspace/internal/handlers/teams"
 	"questspace/internal/handlers/user"
 	"questspace/internal/hasher"
-	pgdb "questspace/internal/pgdb/client"
+	"questspace/internal/pgdb"
 	"questspace/internal/pgdb/pgconfig"
 	"questspace/pkg/application"
 	"questspace/pkg/auth/jwt"

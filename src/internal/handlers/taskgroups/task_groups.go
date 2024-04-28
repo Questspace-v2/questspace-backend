@@ -8,15 +8,15 @@ import (
 	"github.com/gin-gonic/gin"
 	"golang.org/x/xerrors"
 
-	"questspace/internal/handlers/transport"
-	pgdb "questspace/internal/pgdb/client"
+	"questspace/internal/pgdb"
 	"questspace/internal/questspace/quests"
 	"questspace/internal/questspace/taskgroups"
 	"questspace/internal/questspace/taskgroups/requests"
-	"questspace/pkg/application/httperrors"
 	"questspace/pkg/auth/jwt"
 	"questspace/pkg/dbnode"
+	"questspace/pkg/httperrors"
 	"questspace/pkg/storage"
+	"questspace/pkg/transport"
 )
 
 type Handler struct {

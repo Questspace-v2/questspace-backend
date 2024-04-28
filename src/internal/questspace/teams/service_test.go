@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"questspace/pkg/application/httperrors"
+	"questspace/pkg/httperrors"
 
 	"github.com/gofrs/uuid"
 	"github.com/golang/mock/gomock"

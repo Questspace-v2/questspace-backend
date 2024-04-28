@@ -4,17 +4,19 @@ import (
 	"errors"
 	"net/http"
 
+	"questspace/internal/pgdb"
+
+	"questspace/pkg/httperrors"
+
 	"github.com/gin-gonic/gin"
 	"golang.org/x/xerrors"
 
-	"questspace/internal/handlers/transport"
-	pgdb "questspace/internal/pgdb/client"
 	"questspace/internal/questspace/game"
 	"questspace/internal/questspace/quests"
-	"questspace/pkg/application/httperrors"
 	"questspace/pkg/auth/jwt"
 	"questspace/pkg/dbnode"
 	"questspace/pkg/storage"
+	"questspace/pkg/transport"
 )
 
 type Handler struct {

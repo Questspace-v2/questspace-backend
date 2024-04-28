@@ -7,12 +7,12 @@ import (
 	"fmt"
 	"os"
 
+	"questspace/pkg/httperrors"
+	"questspace/pkg/logging"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gofor-little/env"
 	"go.uber.org/zap"
-
-	"questspace/pkg/application/httperrors"
-	"questspace/pkg/application/logging"
 )
 
 type applicationArgs struct {
@@ -88,12 +88,6 @@ func Run(initFunc func(app App) error, configHolder interface{}) {
 		logger.Error("Server error", zap.Error(err))
 		os.Exit(1)
 	}
-}
-
-type AppHandlerFunc func(c *gin.Context) error
-
-type AppHandler interface {
-	Handle(c *gin.Context) error
 }
 
 func AsGinHandler(handler func(c *gin.Context) error) gin.HandlerFunc {

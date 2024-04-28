@@ -4,18 +4,20 @@ import (
 	"context"
 	"net/http"
 
-	"go.uber.org/zap"
+	"questspace/internal/pgdb"
 
-	"questspace/pkg/application/logging"
+	"questspace/pkg/httperrors"
+	"questspace/pkg/logging"
+
+	"questspace/pkg/transport"
+
+	"go.uber.org/zap"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/xerrors"
 	"google.golang.org/api/idtoken"
 
 	"questspace/internal/handlers/auth"
-	"questspace/internal/handlers/transport"
-	pgdb "questspace/internal/pgdb/client"
-	"questspace/pkg/application/httperrors"
 	"questspace/pkg/auth/jwt"
 	"questspace/pkg/storage"
 )

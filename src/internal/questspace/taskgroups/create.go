@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	"questspace/pkg/application/httperrors"
+	"questspace/pkg/httperrors"
 
 	"golang.org/x/xerrors"
 

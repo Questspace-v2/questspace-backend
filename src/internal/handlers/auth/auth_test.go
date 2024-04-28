@@ -7,6 +7,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"questspace/internal/pgdb"
+
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
@@ -14,7 +16,6 @@ import (
 	"golang.org/x/xerrors"
 
 	"questspace/internal/hasher"
-	pgdb "questspace/internal/pgdb/client"
 	"questspace/pkg/application"
 	jwtmock "questspace/pkg/auth/jwt/mocks"
 	"questspace/pkg/storage"

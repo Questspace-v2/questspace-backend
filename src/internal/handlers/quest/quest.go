@@ -5,17 +5,20 @@ import (
 	"net/http"
 	"strconv"
 
+	"questspace/internal/pgdb"
+
+	"questspace/pkg/httperrors"
+	"questspace/pkg/logging"
+
+	"questspace/pkg/transport"
+
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"golang.org/x/xerrors"
 
-	"questspace/internal/handlers/transport"
-	pgdb "questspace/internal/pgdb/client"
 	"questspace/internal/questspace/game"
 	"questspace/internal/questspace/quests"
 	"questspace/internal/validate"
-	"questspace/pkg/application/httperrors"
-	"questspace/pkg/application/logging"
 	"questspace/pkg/auth/jwt"
 	"questspace/pkg/dbnode"
 	"questspace/pkg/storage"

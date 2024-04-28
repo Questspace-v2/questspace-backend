@@ -53,7 +53,7 @@ func (c *Config) GetNodes() ([]hasql.Node, []error) {
 
 	nodes := make([]hasql.Node, 0, len(c.Hosts))
 	for _, host := range c.Hosts {
-		db, err := sql.Open("pgx", c.getDSN(host, user, pw))
+		db, err := sql.Open("pgx", c.GetDSNForHost(host, user, pw))
 		if err != nil {
 			errs = append(errs, err)
 			continue
@@ -67,7 +67,7 @@ func (c *Config) GetNodes() ([]hasql.Node, []error) {
 	return nodes, nil
 }
 
-func (c *Config) getDSN(host, user, password string) string {
+func (c *Config) GetDSNForHost(host, user, password string) string {
 	return fmt.Sprintf("host=%s port=%d dbname=%s user=%s password=%s sslmode=%s sslrootcert=%s target_session_attrs=read-write",
 		host, c.Port, c.Database, user, password, c.SSLMode, c.SSLRootCert)
 }
