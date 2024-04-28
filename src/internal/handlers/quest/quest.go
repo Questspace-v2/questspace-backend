@@ -88,7 +88,7 @@ type TeamQuestResponse struct {
 	Leaderboard *game.LeaderboardResponse `json:"leaderboard,omitempty"`
 }
 
-// HandleGet handles GET /quest/{id} request
+// HandleGet handles GET /quest/:id request
 //
 // @Summary		Get quest by id
 // @Tags		Quests
@@ -198,7 +198,7 @@ func (h *Handler) HandleGetMany(ctx context.Context, w http.ResponseWriter, r *h
 	return nil
 }
 
-// HandleUpdate handles POST /quest/{id} request
+// HandleUpdate handles POST /quest/:id request
 //
 // @Summary		Update main quest information
 // @Tags 		Quests
@@ -253,7 +253,7 @@ func (h *Handler) HandleUpdate(ctx context.Context, w http.ResponseWriter, r *ht
 	return nil
 }
 
-// HandleDelete handles DELETE /quest/{id} request
+// HandleDelete handles DELETE /quest/:id request
 //
 // @Summary		Delete quest
 // @Tags 		Quests
@@ -296,7 +296,7 @@ func (h *Handler) HandleDelete(ctx context.Context, w http.ResponseWriter, r *ht
 	return nil
 }
 
-// HandleFinish handles POST /quest/{id}/finish request
+// HandleFinish handles POST /quest/:id/finish request
 //
 // @Summary		Finish quest
 // @Tags 		Quests

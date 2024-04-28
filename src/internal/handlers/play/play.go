@@ -33,7 +33,7 @@ type GetResponse struct {
 	Team       *storage.Team       `json:"team"`
 }
 
-// HandleGet handles GET quest/{id}/play request
+// HandleGet handles GET quest/:id/play request
 //
 // @Summary		Get task groups with tasks for play-mode
 // @Tags		PlayMode
@@ -104,7 +104,7 @@ type TakeHintRequest struct {
 	Index  int    `json:"index"`
 }
 
-// HandleTakeHint handles POST quest/{id}/hint request
+// HandleTakeHint handles POST quest/:id/hint request
 //
 // @Summary		Take hint for task in play-mode
 // @Tags		PlayMode
@@ -170,7 +170,7 @@ type TryAnswerRequest struct {
 	Text   string
 }
 
-// HandleTryAnswer handles POST quest/{id}/answer request
+// HandleTryAnswer handles POST quest/:id/answer request
 //
 // @Summary		Answer task in play-mode
 // @Tags		PlayMode
@@ -231,7 +231,7 @@ func (h *Handler) HandleTryAnswer(ctx context.Context, w http.ResponseWriter, r 
 	return nil
 }
 
-// HandleGetTableResults handles GET quest/{id}/table request
+// HandleGetTableResults handles GET quest/:id/table request
 //
 // @Summary		Get admin leaderboard table during quest
 // @Tags		PlayMode
@@ -280,7 +280,7 @@ func (h *Handler) HandleGetTableResults(ctx context.Context, w http.ResponseWrit
 	return nil
 }
 
-// HandleLeaderboard handles GET quest/{id}/leaderboard request
+// HandleLeaderboard handles GET quest/:id/leaderboard request
 //
 // @Summary		Get leaderboard table with final results
 // @Tags		PlayMode
@@ -325,7 +325,7 @@ func (h *Handler) HandleLeaderboard(ctx context.Context, w http.ResponseWriter, 
 	return nil
 }
 
-// HandleAddPenalty handles POST quest/{id}/penalty request
+// HandleAddPenalty handles POST quest/:id/penalty request
 //
 // @Summary		Add penalty to team
 // @Tags		PlayMode

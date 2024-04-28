@@ -1,9 +1,10 @@
 package transport
 
 import (
-	"fmt"
 	"net/http"
 	"slices"
+
+	"github.com/julienschmidt/httprouter"
 )
 
 type Middleware func(next http.Handler) http.Handler
@@ -20,17 +21,17 @@ type RouteHandler interface {
 
 type routeHandler struct {
 	mw  []Middleware
-	mux *http.ServeMux
+	mux *httprouter.Router
 }
 
 type Router struct {
 	mw  []Middleware
-	mux *http.ServeMux
+	mux *httprouter.Router
 }
 
 func NewRouter() *Router {
 	return &Router{
-		mux: http.NewServeMux(),
+		mux: httprouter.New(),
 	}
 }
 
@@ -60,7 +61,7 @@ func (r *routeHandler) serve(method, path string, h http.Handler) {
 	for i := len(r.mw) - 1; i >= 0; i-- {
 		handler = r.mw[i](handler)
 	}
-	r.mux.Handle(fmt.Sprintf("%s %s", method, path), handler)
+	r.mux.Handler(method, path, handler)
 }
 
 func (r *routeHandler) GET(path string, h http.Handler) {

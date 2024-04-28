@@ -845,6 +845,210 @@ const docTemplate = `{
                 }
             }
         },
+        "/teams/all/{team_id}": {
+            "get": {
+                "tags": [
+                    "Teams"
+                ],
+                "summary": "Get team by id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Team id",
+                        "name": "team_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/storage.Team"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "Teams"
+                ],
+                "summary": "Delete team by id",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Team id",
+                        "name": "team_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                }
+            }
+        },
+        "/teams/all/{team_id}/captain": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "Teams"
+                ],
+                "summary": "Change team captain",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Team id",
+                        "name": "team_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Change captain request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/teams.ChangeLeaderRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/storage.Team"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                }
+            }
+        },
+        "/teams/all/{team_id}/leave": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "Teams"
+                ],
+                "summary": "Leave the team",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Team id",
+                        "name": "team_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "New captain (if leader leaves)",
+                        "name": "new_captain",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/storage.Team"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                }
+            }
+        },
+        "/teams/all/{team_id}/{member_id}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "Teams"
+                ],
+                "summary": "Remove member from team",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Team id",
+                        "name": "team_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Member id",
+                        "name": "member_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/storage.Team"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                }
+            }
+        },
         "/teams/join/{invite_path}": {
             "get": {
                 "security": [
@@ -915,35 +1119,6 @@ const docTemplate = `{
             }
         },
         "/teams/{team_id}": {
-            "get": {
-                "tags": [
-                    "Teams"
-                ],
-                "summary": "Get team by id",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Team id",
-                        "name": "team_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/storage.Team"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request"
-                    },
-                    "404": {
-                        "description": "Not Found"
-                    }
-                }
-            },
             "post": {
                 "security": [
                     {
@@ -970,179 +1145,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/teams.UpdateRequest"
                         }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/storage.Team"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request"
-                    },
-                    "403": {
-                        "description": "Forbidden"
-                    },
-                    "404": {
-                        "description": "Not Found"
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "tags": [
-                    "Teams"
-                ],
-                "summary": "Delete team by id",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Team id",
-                        "name": "team_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    },
-                    "400": {
-                        "description": "Bad Request"
-                    },
-                    "403": {
-                        "description": "Forbidden"
-                    },
-                    "404": {
-                        "description": "Not Found"
-                    }
-                }
-            }
-        },
-        "/teams/{team_id}/captain": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "tags": [
-                    "Teams"
-                ],
-                "summary": "Change team captain",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Team id",
-                        "name": "team_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Change captain request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/teams.ChangeLeaderRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/storage.Team"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request"
-                    },
-                    "403": {
-                        "description": "Forbidden"
-                    },
-                    "404": {
-                        "description": "Not Found"
-                    }
-                }
-            }
-        },
-        "/teams/{team_id}/leave": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "tags": [
-                    "Teams"
-                ],
-                "summary": "Leave the team",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Team id",
-                        "name": "team_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "New captain (if leader leaves)",
-                        "name": "new_captain",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/storage.Team"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request"
-                    },
-                    "403": {
-                        "description": "Forbidden"
-                    },
-                    "404": {
-                        "description": "Not Found"
-                    }
-                }
-            }
-        },
-        "/teams/{team_id}/{member_id}": {
-            "delete": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "tags": [
-                    "Teams"
-                ],
-                "summary": "Remove member from team",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Team id",
-                        "name": "team_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Member id",
-                        "name": "member_id",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -1454,6 +1456,9 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/game.TaskResult"
                     }
+                },
+                "taskScore": {
+                    "type": "integer"
                 },
                 "teamID": {
                     "type": "string"

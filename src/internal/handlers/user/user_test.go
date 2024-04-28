@@ -65,7 +65,7 @@ func TestGetHandler_CommonCases(t *testing.T) {
 	router.Use(middleware.CtxLog(zaptest.NewLogger(t)))
 	factory := pgdb.NewFakeClientFactory(userStorage)
 	handler := NewGetHandler(factory)
-	router.H().GET("/user/{id}", transport.WrapCtxErr(handler.Handle))
+	router.H().GET("/user/:id", transport.WrapCtxErr(handler.Handle))
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -91,7 +91,7 @@ func TestUpdateHandler_HandleUser(t *testing.T) {
 	router := transport.NewRouter()
 	router.Use(middleware.CtxLog(zaptest.NewLogger(t)))
 	handler := NewUpdateHandler(factory, http.Client{}, pwHasher, jwtParser)
-	router.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).POST("/user/{id}", transport.WrapCtxErr(handler.HandleUser))
+	router.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).POST("/user/:id", transport.WrapCtxErr(handler.HandleUser))
 
 	oldUser := storage.User{
 		ID:        existentID.String(),
@@ -133,7 +133,7 @@ func TestUpdateHandler_HandlePassword(t *testing.T) {
 	router := transport.NewRouter()
 	router.Use(middleware.CtxLog(zaptest.NewLogger(t)))
 	handler := NewUpdateHandler(factory, http.Client{}, pwHasher, jwtParser)
-	router.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).POST("/user/{id}/password", transport.WrapCtxErr(handler.HandlePassword))
+	router.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).POST("/user/:id/password", transport.WrapCtxErr(handler.HandlePassword))
 
 	oldUser := storage.User{
 		ID:        existentID.String(),

@@ -28,7 +28,7 @@ func NewHandler(c pgdb.QuestspaceClientFactory) *Handler {
 
 type TaskGroups []*storage.TaskGroup
 
-// HandleBulkUpdate handles PATCH quest/{id}/task-groups/bulk request
+// HandleBulkUpdate handles PATCH quest/:id/task-groups/bulk request
 //
 // @Summary	[WIP] Patch task groups by creating new ones, delete, update and reorder all ones. Returns all exising task groups.
 // @Tags	TaskGroups
@@ -75,7 +75,7 @@ func (h *Handler) HandleBulkUpdate(ctx context.Context, w http.ResponseWriter, r
 	return nil
 }
 
-// HandleCreate handles POST quest/{id}/task-groups request
+// HandleCreate handles POST quest/:id/task-groups request
 //
 // @Summary		Create task groups and tasks. All previously created task groups and tasks would be deleted and overridden.
 // @Tags		TaskGroups
@@ -140,7 +140,7 @@ type GetResponse struct {
 	TaskGroups []storage.TaskGroup `json:"task_groups"`
 }
 
-// HandleGet handles GET quest/{id}/task-groups request
+// HandleGet handles GET quest/:id/task-groups request
 //
 // @Summary		Get task groups with tasks for quest creator
 // @Tags		TaskGroups

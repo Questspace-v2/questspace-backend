@@ -29,7 +29,7 @@ func NewGetHandler(cf pgdb.QuestspaceClientFactory) *GetHandler {
 	}
 }
 
-// Handle handles GET /user/{id} request
+// Handle handles GET /user/:id request
 //
 // @Summary	Get user by id
 // @Tags	Users
@@ -82,7 +82,7 @@ type UpdatePublicDataRequest struct {
 	AvatarURL string `json:"avatar_url"`
 }
 
-// HandleUser handles POST /user/{id} request
+// HandleUser handles POST /user/:id request
 //
 // @Summary		Update user public data such as username or avatar and returns new auth data
 // @Tags		Users
@@ -153,7 +153,7 @@ type UpdatePasswordRequest struct {
 	NewPassword string `json:"new_password"`
 }
 
-// HandlePassword handles POST /user/{id}/password request
+// HandlePassword handles POST /user/:id/password request
 //
 // @Summary		Update user password
 // @Tags		Users
@@ -210,7 +210,7 @@ func (h *UpdateHandler) HandlePassword(ctx context.Context, w http.ResponseWrite
 	return nil
 }
 
-// HandleDelete handles DELETE /user/{id} request
+// HandleDelete handles DELETE /user/:id request
 //
 // @Summary		Delete user account
 // @Tags		Users

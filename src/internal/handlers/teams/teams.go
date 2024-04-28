@@ -35,7 +35,7 @@ type CreateRequest struct {
 	Name string `json:"name"`
 }
 
-// HandleCreate handles POST /quest/{id}/teams request
+// HandleCreate handles POST /quest/:id/teams request
 //
 // @Summary		Create new team
 // @Tags		Teams
@@ -87,7 +87,7 @@ func (h *Handler) HandleCreate(ctx context.Context, w http.ResponseWriter, r *ht
 	return nil
 }
 
-// HandleJoin handles GET /teams/join/{path} request
+// HandleJoin handles GET /teams/join/:path request
 //
 // @Summary		Join team
 // @Tags		Teams
@@ -125,7 +125,7 @@ func (h *Handler) HandleJoin(ctx context.Context, w http.ResponseWriter, r *http
 	return nil
 }
 
-// HandleGet handles GET /teams/{id} request
+// HandleGet handles GET /teams/:id request
 //
 // @Summary	Get team by id
 // @Tags	Teams
@@ -133,7 +133,7 @@ func (h *Handler) HandleJoin(ctx context.Context, w http.ResponseWriter, r *http
 // @Success	200		{object}	storage.Team
 // @Failure	400
 // @Failure	404
-// @Router	/teams/{team_id} [get]
+// @Router	/teams/all/{team_id} [get]
 func (h *Handler) HandleGet(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	teamID, err := transport.UUIDParam(r, "id")
 	if err != nil {
@@ -156,7 +156,7 @@ func (h *Handler) HandleGet(ctx context.Context, w http.ResponseWriter, r *http.
 	return nil
 }
 
-// HandleGetMany handles GET /quest/{id}/teams request
+// HandleGetMany handles GET /quest/:id/teams request
 //
 // @Summary	Get all teams by quest id
 // @Tags	Teams
@@ -190,7 +190,7 @@ type UpdateRequest struct {
 	Name string `json:"name"`
 }
 
-// HandleUpdate handles POST /teams/{id} request
+// HandleUpdate handles POST /teams/:id request
 //
 // @Summary		Change team information
 // @Tags		Teams
@@ -232,7 +232,7 @@ func (h *Handler) HandleUpdate(ctx context.Context, w http.ResponseWriter, r *ht
 	return nil
 }
 
-// HandleDelete handles DELETE /teams/{id} request
+// HandleDelete handles DELETE /teams/:id request
 //
 // @Summary		Delete team by id
 // @Tags		Teams
@@ -241,7 +241,7 @@ func (h *Handler) HandleUpdate(ctx context.Context, w http.ResponseWriter, r *ht
 // @Failure    	400
 // @Failure    	403
 // @Failure    	404
-// @Router		/teams/{team_id} [delete]
+// @Router		/teams/all/{team_id} [delete]
 // @Security 	ApiKeyAuth
 func (h *Handler) HandleDelete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	teamID, err := transport.UUIDParam(r, "id")
@@ -270,7 +270,7 @@ type ChangeLeaderRequest struct {
 	NewCaptainID string `json:"new_captain_id"`
 }
 
-// HandleChangeLeader handles POST /teams/{id}/captain request
+// HandleChangeLeader handles POST /teams/:id/captain request
 //
 // @Summary		Change team captain
 // @Tags		Teams
@@ -280,7 +280,7 @@ type ChangeLeaderRequest struct {
 // @Failure    	400
 // @Failure    	403
 // @Failure    	404
-// @Router		/teams/{team_id}/captain [post]
+// @Router		/teams/all/{team_id}/captain [post]
 // @Security 	ApiKeyAuth
 func (h *Handler) HandleChangeLeader(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	teamID, err := transport.UUIDParam(r, "id")
@@ -312,7 +312,7 @@ func (h *Handler) HandleChangeLeader(ctx context.Context, w http.ResponseWriter,
 	return nil
 }
 
-// HandleLeave handles POST /teams/{id}/leave request
+// HandleLeave handles POST /teams/:id/leave request
 //
 // @Summary		Leave the team
 // @Tags		Teams
@@ -322,7 +322,7 @@ func (h *Handler) HandleChangeLeader(ctx context.Context, w http.ResponseWriter,
 // @Failure    	400
 // @Failure    	403
 // @Failure    	404
-// @Router		/teams/{team_id}/leave [post]
+// @Router		/teams/all/{team_id}/leave [post]
 // @Security 	ApiKeyAuth
 func (h *Handler) HandleLeave(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	teamID, err := transport.UUIDParam(r, "id")
@@ -357,7 +357,7 @@ func (h *Handler) HandleLeave(ctx context.Context, w http.ResponseWriter, r *htt
 	return nil
 }
 
-// HandleRemoveUser handles DELETE /teams/{id}/{user_id} request
+// HandleRemoveUser handles DELETE /teams/:id/:user_id request
 //
 // @Summary		Remove member from team
 // @Tags		Teams
@@ -367,7 +367,7 @@ func (h *Handler) HandleLeave(ctx context.Context, w http.ResponseWriter, r *htt
 // @Failure    	400
 // @Failure    	403
 // @Failure    	404
-// @Router		/teams/{team_id}/{member_id} [delete]
+// @Router		/teams/all/{team_id}/{member_id} [delete]
 // @Security 	ApiKeyAuth
 func (h *Handler) HandleRemoveUser(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	teamID, err := transport.UUIDParam(r, "id")
@@ -399,7 +399,7 @@ func (h *Handler) HandleRemoveUser(ctx context.Context, w http.ResponseWriter, r
 	return nil
 }
 
-// HandleGetQuestByTeamInvite handles GET /join/{path}/quest request
+// HandleGetQuestByTeamInvite handles GET /join/:path/quest request
 //
 // @Summary		Get quest by its team invite path
 // @Tags		Teams
