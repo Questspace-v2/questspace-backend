@@ -1,27 +1,22 @@
 package teams
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"net/http"
 
-	"questspace/internal/pgdb"
-
-	"questspace/pkg/httperrors"
-
-	"questspace/pkg/transport"
-
-	"questspace/internal/questspace/quests"
-
-	"questspace/pkg/dbnode"
-
-	"github.com/gin-gonic/gin"
 	"golang.org/x/xerrors"
 
 	"questspace/internal/handlers/quest"
+	"questspace/internal/pgdb"
+	"questspace/internal/questspace/quests"
 	"questspace/internal/questspace/teams"
 	"questspace/pkg/auth/jwt"
+	"questspace/pkg/dbnode"
+	"questspace/pkg/httperrors"
 	"questspace/pkg/storage"
+	"questspace/pkg/transport"
 )
 
 type Handler struct {
@@ -40,7 +35,7 @@ type CreateRequest struct {
 	Name string `json:"name"`
 }
 
-// HandleCreate handles POST /quest/:id/teams request
+// HandleCreate handles POST /quest/{id}/teams request
 //
 // @Summary		Create new team
 // @Tags		Teams
@@ -52,13 +47,16 @@ type CreateRequest struct {
 // @Failure    	406
 // @Router		/quest/{quest_id}/teams [post]
 // @Security 	ApiKeyAuth
-func (h *Handler) HandleCreate(c *gin.Context) error {
-	req, err := transport.UnmarshalRequestData[CreateRequest](c.Request)
+func (h *Handler) HandleCreate(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	req, err := transport.UnmarshalRequestData[CreateRequest](r)
 	if err != nil {
 		return xerrors.Errorf("%w", err)
 	}
-	questId := c.Param("id")
-	uauth, err := jwt.GetUserFromContext(c)
+	questId, err := transport.UUIDParam(r, "id")
+	if err != nil {
+		return xerrors.Errorf("%w", err)
+	}
+	uauth, err := jwt.GetUserFromContext(ctx)
 	if err != nil {
 		return xerrors.Errorf("%w", err)
 	}
@@ -68,14 +66,14 @@ func (h *Handler) HandleCreate(c *gin.Context) error {
 		QuestID: questId,
 		Name:    req.Name,
 	}
-	s, tx, err := h.factory.NewStorageTx(c, &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
+	s, tx, err := h.factory.NewStorageTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
 	if err != nil {
 		return xerrors.Errorf("start tx: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
 
 	teamService := teams.NewService(s, h.inviteLinkPrefix)
-	team, err := teamService.CreateTeam(c, &storageReq)
+	team, err := teamService.CreateTeam(ctx, &storageReq)
 	if err != nil {
 		return xerrors.Errorf("create team: %w", err)
 	}
@@ -83,11 +81,13 @@ func (h *Handler) HandleCreate(c *gin.Context) error {
 		return xerrors.Errorf("commit tx: %w", err)
 	}
 
-	c.JSON(http.StatusOK, team)
+	if err = transport.ServeJSONResponse(w, http.StatusOK, team); err != nil {
+		return err
+	}
 	return nil
 }
 
-// HandleJoin handles GET /teams/join/:path request
+// HandleJoin handles GET /teams/join/{path} request
 //
 // @Summary		Join team
 // @Tags		Teams
@@ -97,21 +97,21 @@ func (h *Handler) HandleCreate(c *gin.Context) error {
 // @Failure    	406
 // @Router		/teams/join/{invite_path} [get]
 // @Security 	ApiKeyAuth
-func (h *Handler) HandleJoin(c *gin.Context) error {
-	invitePath := c.Param("path")
-	uauth, err := jwt.GetUserFromContext(c)
+func (h *Handler) HandleJoin(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	invitePath, _ := transport.StringParam(r, "path")
+	uauth, err := jwt.GetUserFromContext(ctx)
 	if err != nil {
 		return xerrors.Errorf("%w", err)
 	}
 
-	s, tx, err := h.factory.NewStorageTx(c, nil)
+	s, tx, err := h.factory.NewStorageTx(ctx, nil)
 	if err != nil {
 		return xerrors.Errorf("start tx: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
 
 	teamService := teams.NewService(s, h.inviteLinkPrefix)
-	team, err := teamService.JoinTeam(c, &storage.JoinTeamRequest{InvitePath: invitePath, User: uauth})
+	team, err := teamService.JoinTeam(ctx, &storage.JoinTeamRequest{InvitePath: invitePath, User: uauth})
 	if err != nil {
 		return xerrors.Errorf("join team: %w", err)
 	}
@@ -119,11 +119,13 @@ func (h *Handler) HandleJoin(c *gin.Context) error {
 		return xerrors.Errorf("commit tx: %w", err)
 	}
 
-	c.JSON(http.StatusOK, team)
+	if err = transport.ServeJSONResponse(w, http.StatusOK, team); err != nil {
+		return err
+	}
 	return nil
 }
 
-// HandleGet handles GET /teams/:id request
+// HandleGet handles GET /teams/{id} request
 //
 // @Summary	Get team by id
 // @Tags	Teams
@@ -132,24 +134,29 @@ func (h *Handler) HandleJoin(c *gin.Context) error {
 // @Failure	400
 // @Failure	404
 // @Router	/teams/{team_id} [get]
-func (h *Handler) HandleGet(c *gin.Context) error {
-	teamID := c.Param("id")
+func (h *Handler) HandleGet(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	teamID, err := transport.UUIDParam(r, "id")
+	if err != nil {
+		return xerrors.Errorf("%w", err)
+	}
 
-	s, err := h.factory.NewStorage(c, dbnode.Alive)
+	s, err := h.factory.NewStorage(ctx, dbnode.Alive)
 	if err != nil {
 		return xerrors.Errorf("get storage: %w", err)
 	}
 	teamService := teams.NewService(s, h.inviteLinkPrefix)
-	team, err := teamService.GetTeam(c, teamID)
+	team, err := teamService.GetTeam(ctx, teamID)
 	if err != nil {
 		return xerrors.Errorf("get team %q: %w", teamID, err)
 	}
 
-	c.JSON(http.StatusOK, team)
+	if err = transport.ServeJSONResponse(w, http.StatusOK, team); err != nil {
+		return err
+	}
 	return nil
 }
 
-// HandleGetMany handles GET /quest/:id/teams request
+// HandleGetMany handles GET /quest/{id}/teams request
 //
 // @Summary	Get all teams by quest id
 // @Tags	Teams
@@ -157,20 +164,25 @@ func (h *Handler) HandleGet(c *gin.Context) error {
 // @Success	200			{object}	[]storage.Team
 // @Failure	400
 // @Router	/quest/{quest_id}/teams [get]
-func (h *Handler) HandleGetMany(c *gin.Context) error {
-	questID := c.Param("id")
+func (h *Handler) HandleGetMany(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	questID, err := transport.UUIDParam(r, "id")
+	if err != nil {
+		return xerrors.Errorf("%w", err)
+	}
 
-	s, err := h.factory.NewStorage(c, dbnode.Alive)
+	s, err := h.factory.NewStorage(ctx, dbnode.Alive)
 	if err != nil {
 		return xerrors.Errorf("get storage: %w", err)
 	}
 	teamService := teams.NewService(s, h.inviteLinkPrefix)
-	questTeams, err := teamService.GetQuestTeams(c, questID)
+	questTeams, err := teamService.GetQuestTeams(ctx, questID)
 	if err != nil {
 		return xerrors.Errorf("get teams of quest %q: %w", questID, err)
 	}
 
-	c.JSON(http.StatusOK, questTeams)
+	if err = transport.ServeJSONResponse(w, http.StatusOK, questTeams); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -178,7 +190,7 @@ type UpdateRequest struct {
 	Name string `json:"name"`
 }
 
-// HandleUpdate handles POST /teams/:id request
+// HandleUpdate handles POST /teams/{id} request
 //
 // @Summary		Change team information
 // @Tags		Teams
@@ -190,32 +202,37 @@ type UpdateRequest struct {
 // @Failure		404
 // @Router		/teams/{team_id} [post]
 // @Security 	ApiKeyAuth
-func (h *Handler) HandleUpdate(c *gin.Context) error {
-	teamID := c.Param("id")
-	req, err := transport.UnmarshalRequestData[UpdateRequest](c.Request)
+func (h *Handler) HandleUpdate(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	teamID, err := transport.UUIDParam(r, "id")
 	if err != nil {
 		return xerrors.Errorf("%w", err)
 	}
-	uauth, err := jwt.GetUserFromContext(c)
+	req, err := transport.UnmarshalRequestData[UpdateRequest](r)
+	if err != nil {
+		return xerrors.Errorf("%w", err)
+	}
+	uauth, err := jwt.GetUserFromContext(ctx)
 	if err != nil {
 		return xerrors.Errorf("%w", err)
 	}
 
-	s, err := h.factory.NewStorage(c, dbnode.Master)
+	s, err := h.factory.NewStorage(ctx, dbnode.Master)
 	if err != nil {
 		return xerrors.Errorf("get storage: %w", err)
 	}
 	teamService := teams.NewService(s, h.inviteLinkPrefix)
-	team, err := teamService.UpdateTeamName(c, uauth, &storage.ChangeTeamNameRequest{ID: teamID, Name: req.Name})
+	team, err := teamService.UpdateTeamName(ctx, uauth, &storage.ChangeTeamNameRequest{ID: teamID, Name: req.Name})
 	if err != nil {
 		return xerrors.Errorf("update name: %w", err)
 	}
 
-	c.JSON(http.StatusOK, team)
+	if err = transport.ServeJSONResponse(w, http.StatusOK, team); err != nil {
+		return err
+	}
 	return nil
 }
 
-// HandleDelete handles DELETE /teams/:id request
+// HandleDelete handles DELETE /teams/{id} request
 //
 // @Summary		Delete team by id
 // @Tags		Teams
@@ -226,23 +243,26 @@ func (h *Handler) HandleUpdate(c *gin.Context) error {
 // @Failure    	404
 // @Router		/teams/{team_id} [delete]
 // @Security 	ApiKeyAuth
-func (h *Handler) HandleDelete(c *gin.Context) error {
-	teamID := c.Param("id")
-	uauth, err := jwt.GetUserFromContext(c)
+func (h *Handler) HandleDelete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	teamID, err := transport.UUIDParam(r, "id")
+	if err != nil {
+		return xerrors.Errorf("%w", err)
+	}
+	uauth, err := jwt.GetUserFromContext(ctx)
 	if err != nil {
 		return xerrors.Errorf("%w", err)
 	}
 
-	s, err := h.factory.NewStorage(c, dbnode.Master)
+	s, err := h.factory.NewStorage(ctx, dbnode.Master)
 	if err != nil {
 		return xerrors.Errorf("get storage: %w", err)
 	}
 	teamService := teams.NewService(s, h.inviteLinkPrefix)
-	if err := teamService.DeleteTeam(c, uauth, &storage.DeleteTeamRequest{ID: teamID}); err != nil {
+	if err := teamService.DeleteTeam(ctx, uauth, &storage.DeleteTeamRequest{ID: teamID}); err != nil {
 		return xerrors.Errorf("delete team %q: %w", teamID, err)
 	}
 
-	c.Status(http.StatusOK)
+	w.WriteHeader(http.StatusOK)
 	return nil
 }
 
@@ -250,7 +270,7 @@ type ChangeLeaderRequest struct {
 	NewCaptainID string `json:"new_captain_id"`
 }
 
-// HandleChangeLeader handles POST /teams/:id/captain request
+// HandleChangeLeader handles POST /teams/{id}/captain request
 //
 // @Summary		Change team captain
 // @Tags		Teams
@@ -262,32 +282,37 @@ type ChangeLeaderRequest struct {
 // @Failure    	404
 // @Router		/teams/{team_id}/captain [post]
 // @Security 	ApiKeyAuth
-func (h *Handler) HandleChangeLeader(c *gin.Context) error {
-	teamID := c.Param("id")
-	req, err := transport.UnmarshalRequestData[ChangeLeaderRequest](c.Request)
+func (h *Handler) HandleChangeLeader(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	teamID, err := transport.UUIDParam(r, "id")
 	if err != nil {
 		return xerrors.Errorf("%w", err)
 	}
-	uauth, err := jwt.GetUserFromContext(c)
+	req, err := transport.UnmarshalRequestData[ChangeLeaderRequest](r)
+	if err != nil {
+		return xerrors.Errorf("%w", err)
+	}
+	uauth, err := jwt.GetUserFromContext(ctx)
 	if err != nil {
 		return xerrors.Errorf("%w", err)
 	}
 
-	s, err := h.factory.NewStorage(c, dbnode.Master)
+	s, err := h.factory.NewStorage(ctx, dbnode.Master)
 	if err != nil {
 		return xerrors.Errorf("get storage: %w", err)
 	}
 	teamService := teams.NewService(s, h.inviteLinkPrefix)
-	team, err := teamService.ChangeLeader(c, uauth, &storage.ChangeLeaderRequest{ID: teamID, CaptainID: req.NewCaptainID})
+	team, err := teamService.ChangeLeader(ctx, uauth, &storage.ChangeLeaderRequest{ID: teamID, CaptainID: req.NewCaptainID})
 	if err != nil {
 		return xerrors.Errorf("change captain of team %q to %q: %w", teamID, req.NewCaptainID, err)
 	}
 
-	c.JSON(http.StatusOK, team)
+	if err = transport.ServeJSONResponse(w, http.StatusOK, team); err != nil {
+		return err
+	}
 	return nil
 }
 
-// HandleLeave handles POST /teams/:id/leave request
+// HandleLeave handles POST /teams/{id}/leave request
 //
 // @Summary		Leave the team
 // @Tags		Teams
@@ -299,22 +324,25 @@ func (h *Handler) HandleChangeLeader(c *gin.Context) error {
 // @Failure    	404
 // @Router		/teams/{team_id}/leave [post]
 // @Security 	ApiKeyAuth
-func (h *Handler) HandleLeave(c *gin.Context) error {
-	teamID := c.Param("id")
-	newCaptainID := c.Query("new_captain")
-	uauth, err := jwt.GetUserFromContext(c)
+func (h *Handler) HandleLeave(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	teamID, err := transport.UUIDParam(r, "id")
+	if err != nil {
+		return xerrors.Errorf("%w", err)
+	}
+	newCaptainID := transport.Query(r, "new_captain")
+	uauth, err := jwt.GetUserFromContext(ctx)
 	if err != nil {
 		return xerrors.Errorf("%w", err)
 	}
 
-	s, tx, err := h.factory.NewStorageTx(c, &sql.TxOptions{Isolation: sql.LevelSerializable})
+	s, tx, err := h.factory.NewStorageTx(ctx, &sql.TxOptions{Isolation: sql.LevelSerializable})
 	if err != nil {
 		return xerrors.Errorf("start tx: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
 
 	teamService := teams.NewService(s, h.inviteLinkPrefix)
-	team, err := teamService.LeaveTeam(c, uauth, teamID, newCaptainID)
+	team, err := teamService.LeaveTeam(ctx, uauth, teamID, newCaptainID)
 	if err != nil {
 		return xerrors.Errorf("leave team: %w", err)
 	}
@@ -323,11 +351,13 @@ func (h *Handler) HandleLeave(c *gin.Context) error {
 		return xerrors.Errorf("commit tx: %w", err)
 	}
 
-	c.JSON(http.StatusOK, team)
+	if err = transport.ServeJSONResponse(w, http.StatusOK, team); err != nil {
+		return err
+	}
 	return nil
 }
 
-// HandleRemoveUser handles DELETE /teams/:id/:user_id request
+// HandleRemoveUser handles DELETE /teams/{id}/{user_id} request
 //
 // @Summary		Remove member from team
 // @Tags		Teams
@@ -339,32 +369,37 @@ func (h *Handler) HandleLeave(c *gin.Context) error {
 // @Failure    	404
 // @Router		/teams/{team_id}/{member_id} [delete]
 // @Security 	ApiKeyAuth
-func (h *Handler) HandleRemoveUser(c *gin.Context) error {
-	teamID := c.Param("id")
-	userID := c.Param("user_id")
-	if userID == "" {
-		return httperrors.New(http.StatusBadRequest, "no users to delete")
+func (h *Handler) HandleRemoveUser(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	teamID, err := transport.UUIDParam(r, "id")
+	if err != nil {
+		return xerrors.Errorf("%w", err)
 	}
-	uauth, err := jwt.GetUserFromContext(c)
+	userID, err := transport.UUIDParam(r, "user_id")
+	if err != nil {
+		return xerrors.Errorf("%w", err)
+	}
+	uauth, err := jwt.GetUserFromContext(ctx)
 	if err != nil {
 		return xerrors.Errorf("%w", err)
 	}
 
-	s, err := h.factory.NewStorage(c, dbnode.Master)
+	s, err := h.factory.NewStorage(ctx, dbnode.Master)
 	if err != nil {
 		return xerrors.Errorf("get storage: %w", err)
 	}
 	teamService := teams.NewService(s, h.inviteLinkPrefix)
-	team, err := teamService.RemoveUser(c, uauth, &storage.RemoveUserRequest{UserID: userID, ID: teamID})
+	team, err := teamService.RemoveUser(ctx, uauth, &storage.RemoveUserRequest{UserID: userID, ID: teamID})
 	if err != nil {
 		return xerrors.Errorf("remove user %q from team %q: %w", userID, teamID, err)
 	}
 
-	c.JSON(http.StatusOK, team)
+	if err = transport.ServeJSONResponse(w, http.StatusOK, team); err != nil {
+		return err
+	}
 	return nil
 }
 
-// HandleGetQuestByTeamInvite handles GET /join/:path/quest request
+// HandleGetQuestByTeamInvite handles GET /join/{path}/quest request
 //
 // @Summary		Get quest by its team invite path
 // @Tags		Teams
@@ -373,13 +408,13 @@ func (h *Handler) HandleRemoveUser(c *gin.Context) error {
 // @Failure		404
 // @Router		/teams/join/{invite_path}/quest [get]
 // @Security 	ApiKeyAuth
-func (h *Handler) HandleGetQuestByTeamInvite(c *gin.Context) error {
-	invitePath := c.Param("path")
-	s, err := h.factory.NewStorage(c, dbnode.Alive)
+func (h *Handler) HandleGetQuestByTeamInvite(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	invitePath, _ := transport.StringParam(r, "path")
+	s, err := h.factory.NewStorage(ctx, dbnode.Alive)
 	if err != nil {
 		return xerrors.Errorf("get storage client: %w", err)
 	}
-	team, err := s.GetTeam(c, &storage.GetTeamRequest{InvitePath: invitePath})
+	team, err := s.GetTeam(ctx, &storage.GetTeamRequest{InvitePath: invitePath})
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return xerrors.Errorf("not found team with invite path %q: %w", invitePath, err)
@@ -388,7 +423,7 @@ func (h *Handler) HandleGetQuestByTeamInvite(c *gin.Context) error {
 	}
 
 	req := storage.GetQuestRequest{ID: team.Quest.ID}
-	gotQuest, err := s.GetQuest(c, &req)
+	gotQuest, err := s.GetQuest(ctx, &req)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return httperrors.Errorf(http.StatusNotFound, "not found quest with id %q", req.ID)
@@ -398,7 +433,7 @@ func (h *Handler) HandleGetQuestByTeamInvite(c *gin.Context) error {
 
 	quests.SetStatus(gotQuest)
 	resp := quest.TeamQuestResponse{Quest: gotQuest}
-	if uauth, err := jwt.GetUserFromContext(c); err == nil {
+	if uauth, err := jwt.GetUserFromContext(ctx); err == nil {
 		teamReq := storage.GetTeamRequest{
 			UserRegistration: &storage.UserRegistration{
 				UserID:  uauth.ID,
@@ -406,7 +441,7 @@ func (h *Handler) HandleGetQuestByTeamInvite(c *gin.Context) error {
 			},
 			IncludeMembers: true,
 		}
-		team, err := s.GetTeam(c, &teamReq)
+		team, err := s.GetTeam(ctx, &teamReq)
 		if err != nil && !errors.Is(err, storage.ErrNotFound) {
 			return xerrors.Errorf("get user team: %w", err)
 		}
@@ -416,6 +451,8 @@ func (h *Handler) HandleGetQuestByTeamInvite(c *gin.Context) error {
 		resp.Team = team
 	}
 
-	c.JSON(http.StatusOK, resp)
+	if err = transport.ServeJSONResponse(w, http.StatusOK, &resp); err != nil {
+		return err
+	}
 	return nil
 }

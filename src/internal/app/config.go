@@ -6,9 +6,9 @@ import (
 	"golang.org/x/xerrors"
 	"gopkg.in/yaml.v3"
 
+	"questspace/internal/handlers/auth/google"
+	"questspace/internal/handlers/teams"
 	"questspace/internal/pgdb/pgconfig"
-	"questspace/internal/stdhandlers/auth/google"
-	"questspace/internal/stdhandlers/teams"
 	"questspace/pkg/auth/jwt"
 	"questspace/pkg/cors"
 )

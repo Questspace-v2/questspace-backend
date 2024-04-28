@@ -1,20 +1,18 @@
 package play
 
 import (
+	"context"
 	"errors"
 	"net/http"
 
-	"questspace/internal/pgdb"
-
-	"questspace/pkg/httperrors"
-
-	"github.com/gin-gonic/gin"
 	"golang.org/x/xerrors"
 
+	"questspace/internal/pgdb"
 	"questspace/internal/questspace/game"
 	"questspace/internal/questspace/quests"
 	"questspace/pkg/auth/jwt"
 	"questspace/pkg/dbnode"
+	"questspace/pkg/httperrors"
 	"questspace/pkg/storage"
 	"questspace/pkg/transport"
 )
@@ -35,7 +33,7 @@ type GetResponse struct {
 	Team       *storage.Team       `json:"team"`
 }
 
-// HandleGet handles GET quest/:id/play request
+// HandleGet handles GET quest/{id}/play request
 //
 // @Summary		Get task groups with tasks for play-mode
 // @Tags		PlayMode
@@ -47,19 +45,22 @@ type GetResponse struct {
 // @Failure 	406
 // @Router		/quest/{id}/play [get]
 // @Security 	ApiKeyAuth
-func (h *Handler) HandleGet(c *gin.Context) error {
-	questID := c.Param("id")
-	uauth, err := jwt.GetUserFromContext(c)
+func (h *Handler) HandleGet(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	questID, err := transport.UUIDParam(r, "id")
+	if err != nil {
+		return xerrors.Errorf("%w", err)
+	}
+	uauth, err := jwt.GetUserFromContext(ctx)
 	if err != nil {
 		return xerrors.Errorf("%w", err)
 	}
 
-	s, err := h.clientFactory.NewStorage(c, dbnode.Alive)
+	s, err := h.clientFactory.NewStorage(ctx, dbnode.Alive)
 	if err != nil {
 		return xerrors.Errorf("get storage: %w", err)
 	}
 
-	quest, err := s.GetQuest(c, &storage.GetQuestRequest{ID: questID})
+	quest, err := s.GetQuest(ctx, &storage.GetQuestRequest{ID: questID})
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return httperrors.Errorf(http.StatusNotFound, "not found quest %q", questID)
@@ -70,14 +71,14 @@ func (h *Handler) HandleGet(c *gin.Context) error {
 	if quest.Status != storage.StatusRunning {
 		return httperrors.New(http.StatusNotAcceptable, "cannot get tasks before quest start")
 	}
-	taskGroups, err := s.GetTaskGroups(c, &storage.GetTaskGroupsRequest{QuestID: questID, IncludeTasks: true})
+	taskGroups, err := s.GetTaskGroups(ctx, &storage.GetTaskGroupsRequest{QuestID: questID, IncludeTasks: true})
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return httperrors.Errorf(http.StatusNotFound, "not found quest %q", questID)
 		}
 		return xerrors.Errorf("get taskgroups: %w", err)
 	}
-	userTeam, err := s.GetTeam(c, &storage.GetTeamRequest{UserRegistration: &storage.UserRegistration{UserID: uauth.ID, QuestID: questID}})
+	userTeam, err := s.GetTeam(ctx, &storage.GetTeamRequest{UserRegistration: &storage.UserRegistration{UserID: uauth.ID, QuestID: questID}})
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return httperrors.Errorf(http.StatusNotAcceptable, "user %q has no team", uauth.ID)
@@ -87,12 +88,14 @@ func (h *Handler) HandleGet(c *gin.Context) error {
 
 	service := game.NewService(s, s, s, s)
 	req := game.AnswerDataRequest{Quest: quest, Team: userTeam, TaskGroups: taskGroups}
-	resp, err := service.FillAnswerData(c, &req)
+	resp, err := service.FillAnswerData(ctx, &req)
 	if err != nil {
 		return xerrors.Errorf("fill answer data: %w", err)
 	}
 
-	c.JSON(http.StatusOK, resp)
+	if err = transport.ServeJSONResponse(w, http.StatusOK, resp); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -101,7 +104,7 @@ type TakeHintRequest struct {
 	Index  int    `json:"index"`
 }
 
-// HandleTakeHint handles POST quest/:id/hint request
+// HandleTakeHint handles POST quest/{id}/hint request
 //
 // @Summary		Take hint for task in play-mode
 // @Tags		PlayMode
@@ -114,24 +117,27 @@ type TakeHintRequest struct {
 // @Failure 	406
 // @Router		/quest/{id}/hint [post]
 // @Security 	ApiKeyAuth
-func (h *Handler) HandleTakeHint(c *gin.Context) error {
-	questID := c.Param("id")
-	req, err := transport.UnmarshalRequestData[TakeHintRequest](c.Request)
+func (h *Handler) HandleTakeHint(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	questID, err := transport.UUIDParam(r, "id")
 	if err != nil {
 		return xerrors.Errorf("%w", err)
 	}
-	uauth, err := jwt.GetUserFromContext(c)
+	req, err := transport.UnmarshalRequestData[TakeHintRequest](r)
+	if err != nil {
+		return xerrors.Errorf("%w", err)
+	}
+	uauth, err := jwt.GetUserFromContext(ctx)
 	if err != nil {
 		return xerrors.Errorf("%w", err)
 	}
 
-	s, tx, err := h.clientFactory.NewStorageTx(c, nil)
+	s, tx, err := h.clientFactory.NewStorageTx(ctx, nil)
 	if err != nil {
 		return xerrors.Errorf("start tx: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
 
-	quest, err := s.GetQuest(c, &storage.GetQuestRequest{ID: questID})
+	quest, err := s.GetQuest(ctx, &storage.GetQuestRequest{ID: questID})
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return httperrors.Errorf(http.StatusNotFound, "quest %q not found", questID)
@@ -145,7 +151,7 @@ func (h *Handler) HandleTakeHint(c *gin.Context) error {
 
 	srv := game.NewService(s, s, s, s)
 	srvReq := game.TakeHintRequest{QuestID: questID, TaskID: req.TaskID, Index: req.Index}
-	hint, err := srv.TakeHint(c, uauth, &srvReq)
+	hint, err := srv.TakeHint(ctx, uauth, &srvReq)
 	if err != nil {
 		return xerrors.Errorf("hint error: %w", err)
 	}
@@ -153,7 +159,9 @@ func (h *Handler) HandleTakeHint(c *gin.Context) error {
 		return xerrors.Errorf("commit tx: %w", err)
 	}
 
-	c.JSON(http.StatusOK, hint)
+	if err = transport.ServeJSONResponse(w, http.StatusOK, hint); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -162,7 +170,7 @@ type TryAnswerRequest struct {
 	Text   string
 }
 
-// HandleTryAnswer handles POST quest/:id/answer request
+// HandleTryAnswer handles POST quest/{id}/answer request
 //
 // @Summary		Answer task in play-mode
 // @Tags		PlayMode
@@ -175,24 +183,27 @@ type TryAnswerRequest struct {
 // @Failure 	406
 // @Router		/quest/{id}/answer [post]
 // @Security 	ApiKeyAuth
-func (h *Handler) HandleTryAnswer(c *gin.Context) error {
-	questID := c.Param("id")
-	req, err := transport.UnmarshalRequestData[TryAnswerRequest](c.Request)
+func (h *Handler) HandleTryAnswer(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	questID, err := transport.UUIDParam(r, "id")
 	if err != nil {
 		return xerrors.Errorf("%w", err)
 	}
-	uauth, err := jwt.GetUserFromContext(c)
+	req, err := transport.UnmarshalRequestData[TryAnswerRequest](r)
+	if err != nil {
+		return xerrors.Errorf("%w", err)
+	}
+	uauth, err := jwt.GetUserFromContext(ctx)
 	if err != nil {
 		return xerrors.Errorf("%w", err)
 	}
 
-	s, tx, err := h.clientFactory.NewStorageTx(c, nil)
+	s, tx, err := h.clientFactory.NewStorageTx(ctx, nil)
 	if err != nil {
 		return xerrors.Errorf("start tx: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
 
-	quest, err := s.GetQuest(c, &storage.GetQuestRequest{ID: questID})
+	quest, err := s.GetQuest(ctx, &storage.GetQuestRequest{ID: questID})
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return httperrors.Errorf(http.StatusNotFound, "quest %q not found", questID)
@@ -206,7 +217,7 @@ func (h *Handler) HandleTryAnswer(c *gin.Context) error {
 
 	srv := game.NewService(s, s, s, s)
 	srvReq := game.TryAnswerRequest{TaskID: req.TaskID, Text: req.Text, QuestID: questID}
-	try, err := srv.TryAnswer(c, uauth, &srvReq)
+	try, err := srv.TryAnswer(ctx, uauth, &srvReq)
 	if err != nil {
 		return xerrors.Errorf("try answer: %w", err)
 	}
@@ -214,11 +225,13 @@ func (h *Handler) HandleTryAnswer(c *gin.Context) error {
 		return xerrors.Errorf("commit tx: %w", err)
 	}
 
-	c.JSON(http.StatusOK, try)
+	if err = transport.ServeJSONResponse(w, http.StatusOK, try); err != nil {
+		return err
+	}
 	return nil
 }
 
-// HandleGetTableResults handles GET quest/:id/table request
+// HandleGetTableResults handles GET quest/{id}/table request
 //
 // @Summary		Get admin leaderboard table during quest
 // @Tags		PlayMode
@@ -230,18 +243,21 @@ func (h *Handler) HandleTryAnswer(c *gin.Context) error {
 // @Failure 	404
 // @Router		/quest/{id}/table [get]
 // @Security 	ApiKeyAuth
-func (h *Handler) HandleGetTableResults(c *gin.Context) error {
-	questID := c.Param("id")
-	uauth, err := jwt.GetUserFromContext(c)
+func (h *Handler) HandleGetTableResults(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	questID, err := transport.UUIDParam(r, "id")
+	if err != nil {
+		return xerrors.Errorf("%w", err)
+	}
+	uauth, err := jwt.GetUserFromContext(ctx)
 	if err != nil {
 		return xerrors.Errorf("%w", err)
 	}
 
-	s, err := h.clientFactory.NewStorage(c, dbnode.Alive)
+	s, err := h.clientFactory.NewStorage(ctx, dbnode.Alive)
 	if err != nil {
 		return xerrors.Errorf("get storage: %w", err)
 	}
-	quest, err := s.GetQuest(c, &storage.GetQuestRequest{ID: questID})
+	quest, err := s.GetQuest(ctx, &storage.GetQuestRequest{ID: questID})
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return httperrors.Errorf(http.StatusNotFound, "quest %q not found", questID)
@@ -253,16 +269,18 @@ func (h *Handler) HandleGetTableResults(c *gin.Context) error {
 	}
 
 	srv := game.NewService(s, s, s, s)
-	leaderBoard, err := srv.GetResults(c, questID)
+	leaderBoard, err := srv.GetResults(ctx, questID)
 	if err != nil {
 		return xerrors.Errorf("get results: %w", err)
 	}
 
-	c.JSON(http.StatusOK, leaderBoard)
+	if err = transport.ServeJSONResponse(w, http.StatusOK, leaderBoard); err != nil {
+		return err
+	}
 	return nil
 }
 
-// HandleLeaderboard handles GET quest/:id/leaderboard request
+// HandleLeaderboard handles GET quest/{id}/leaderboard request
 //
 // @Summary		Get leaderboard table with final results
 // @Tags		PlayMode
@@ -273,14 +291,17 @@ func (h *Handler) HandleGetTableResults(c *gin.Context) error {
 // @Failure 	403
 // @Failure 	404
 // @Router		/quest/{id}/leaderboard [get]
-func (h *Handler) HandleLeaderboard(c *gin.Context) error {
-	questID := c.Param("id")
+func (h *Handler) HandleLeaderboard(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	questID, err := transport.UUIDParam(r, "id")
+	if err != nil {
+		return xerrors.Errorf("%w", err)
+	}
 
-	s, err := h.clientFactory.NewStorage(c, dbnode.Alive)
+	s, err := h.clientFactory.NewStorage(ctx, dbnode.Alive)
 	if err != nil {
 		return xerrors.Errorf("get storage: %w", err)
 	}
-	quest, err := s.GetQuest(c, &storage.GetQuestRequest{ID: questID})
+	quest, err := s.GetQuest(ctx, &storage.GetQuestRequest{ID: questID})
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return httperrors.Errorf(http.StatusNotFound, "quest %q not found", questID)
@@ -293,16 +314,18 @@ func (h *Handler) HandleLeaderboard(c *gin.Context) error {
 	}
 
 	srv := game.NewService(s, s, s, s)
-	leaderBoard, err := srv.GetLeaderboard(c, questID)
+	leaderBoard, err := srv.GetLeaderboard(ctx, questID)
 	if err != nil {
 		return xerrors.Errorf("get leaderboard: %w", err)
 	}
 
-	c.JSON(http.StatusOK, leaderBoard)
+	if err = transport.ServeJSONResponse(w, http.StatusOK, leaderBoard); err != nil {
+		return err
+	}
 	return nil
 }
 
-// HandleAddPenalty handles POST quest/:id/penalty request
+// HandleAddPenalty handles POST quest/{id}/penalty request
 //
 // @Summary		Add penalty to team
 // @Tags		PlayMode
@@ -315,23 +338,26 @@ func (h *Handler) HandleLeaderboard(c *gin.Context) error {
 // @Failure 	406
 // @Router		/quest/{id}/penalty [post]
 // @Security 	ApiKeyAuth
-func (h *Handler) HandleAddPenalty(c *gin.Context) error {
-	questID := c.Param("id")
-	req, err := transport.UnmarshalRequestData[game.AddPenaltyRequest](c.Request)
+func (h *Handler) HandleAddPenalty(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	questID, err := transport.UUIDParam(r, "id")
+	if err != nil {
+		return xerrors.Errorf("%w", err)
+	}
+	req, err := transport.UnmarshalRequestData[game.AddPenaltyRequest](r)
 	if err != nil {
 		return xerrors.Errorf("%w", err)
 	}
 	req.QuestID = questID
-	uauth, err := jwt.GetUserFromContext(c)
+	uauth, err := jwt.GetUserFromContext(ctx)
 	if err != nil {
 		return xerrors.Errorf("%w", err)
 	}
 
-	s, err := h.clientFactory.NewStorage(c, dbnode.Alive)
+	s, err := h.clientFactory.NewStorage(ctx, dbnode.Alive)
 	if err != nil {
 		return xerrors.Errorf("get storage: %w", err)
 	}
-	quest, err := s.GetQuest(c, &storage.GetQuestRequest{ID: questID})
+	quest, err := s.GetQuest(ctx, &storage.GetQuestRequest{ID: questID})
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return httperrors.Errorf(http.StatusNotFound, "quest %q not found", questID)
@@ -343,9 +369,9 @@ func (h *Handler) HandleAddPenalty(c *gin.Context) error {
 	}
 
 	srv := game.NewService(s, s, s, s)
-	if err := srv.AddPenalty(c, req); err != nil {
+	if err := srv.AddPenalty(ctx, req); err != nil {
 		return xerrors.Errorf("add penalty: %w", err)
 	}
-	c.Status(http.StatusOK)
+	w.WriteHeader(http.StatusOK)
 	return nil
 }

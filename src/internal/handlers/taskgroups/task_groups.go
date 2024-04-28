@@ -1,11 +1,10 @@
 package taskgroups
 
 import (
-	"database/sql"
+	"context"
 	"errors"
 	"net/http"
 
-	"github.com/gin-gonic/gin"
 	"golang.org/x/xerrors"
 
 	"questspace/internal/pgdb"
@@ -29,7 +28,7 @@ func NewHandler(c pgdb.QuestspaceClientFactory) *Handler {
 
 type TaskGroups []*storage.TaskGroup
 
-// HandleBulkUpdate handles PATCH quest/:id/task-groups/bulk request
+// HandleBulkUpdate handles PATCH quest/{id}/task-groups/bulk request
 //
 // @Summary	[WIP] Patch task groups by creating new ones, delete, update and reorder all ones. Returns all exising task groups.
 // @Tags	TaskGroups
@@ -39,27 +38,30 @@ type TaskGroups []*storage.TaskGroup
 // @Failure	401
 // @Failure	403
 // @Router	/quest/{id}/task-groups/bulk [patch]
-func (h *Handler) HandleBulkUpdate(c *gin.Context) error {
-	c.Status(http.StatusNotImplemented)
+func (h *Handler) HandleBulkUpdate(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	w.WriteHeader(http.StatusNotImplemented)
 	return nil
 
 	//nolint:govet
 	//TODO(svayp11): add auth
-	questID := c.Param("id")
-	req, err := transport.UnmarshalRequestData[storage.TaskGroupsBulkUpdateRequest](c.Request)
+	questID, err := transport.UUIDParam(r, "id")
+	if err != nil {
+		return xerrors.Errorf("%w", err)
+	}
+	req, err := transport.UnmarshalRequestData[storage.TaskGroupsBulkUpdateRequest](r)
 	if err != nil {
 		return xerrors.Errorf("%w", err)
 	}
 	req.QuestID = questID
 
-	s, tx, err := h.clientFactory.NewStorageTx(c, &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
+	s, tx, err := h.clientFactory.NewStorageTx(ctx, nil)
 	if err != nil {
 		return xerrors.Errorf("get storage client: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
 
 	updater := taskgroups.NewUpdater(s, nil)
-	tasksGroups, err := updater.BulkUpdateTaskGroups(c, req)
+	tasksGroups, err := updater.BulkUpdateTaskGroups(ctx, req)
 	if err != nil {
 		return xerrors.Errorf("bulk update: %w", err)
 	}
@@ -67,11 +69,13 @@ func (h *Handler) HandleBulkUpdate(c *gin.Context) error {
 		return xerrors.Errorf("commit tx: %w", err)
 	}
 
-	c.JSON(http.StatusOK, tasksGroups)
+	if err = transport.ServeJSONResponse(w, http.StatusOK, tasksGroups); err != nil {
+		return err
+	}
 	return nil
 }
 
-// HandleCreate handles POST quest/:id/task-groups request
+// HandleCreate handles POST quest/{id}/task-groups request
 //
 // @Summary		Create task groups and tasks. All previously created task groups and tasks would be deleted and overridden.
 // @Tags		TaskGroups
@@ -84,26 +88,29 @@ func (h *Handler) HandleBulkUpdate(c *gin.Context) error {
 // @Failure 	404
 // @Router		/quest/{id}/task-groups [post]
 // @Security 	ApiKeyAuth
-func (h *Handler) HandleCreate(c *gin.Context) error {
-	questID := c.Param("id")
-	req, err := transport.UnmarshalRequestData[requests.CreateFullRequest](c.Request)
+func (h *Handler) HandleCreate(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	questID, err := transport.UUIDParam(r, "id")
+	if err != nil {
+		return xerrors.Errorf("%w", err)
+	}
+	req, err := transport.UnmarshalRequestData[requests.CreateFullRequest](r)
 	if err != nil {
 		return xerrors.Errorf("%w", err)
 	}
 	req.QuestID = questID
 
-	uauth, err := jwt.GetUserFromContext(c)
+	uauth, err := jwt.GetUserFromContext(ctx)
 	if err != nil {
 		return xerrors.Errorf("%w", err)
 	}
 
-	s, tx, err := h.clientFactory.NewStorageTx(c, &sql.TxOptions{Isolation: sql.LevelReadCommitted})
+	s, tx, err := h.clientFactory.NewStorageTx(ctx, nil)
 	if err != nil {
 		return xerrors.Errorf("start tx: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
 
-	q, err := s.GetQuest(c, &storage.GetQuestRequest{ID: questID})
+	q, err := s.GetQuest(ctx, &storage.GetQuestRequest{ID: questID})
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return httperrors.Errorf(http.StatusNotFound, "not found quest %q", questID)
@@ -114,15 +121,17 @@ func (h *Handler) HandleCreate(c *gin.Context) error {
 		return httperrors.Errorf(http.StatusForbidden, "cannot change others' quests")
 	}
 	serv := taskgroups.NewService(s, s)
-	resp, err := serv.Create(c, req)
+	resp, err := serv.Create(ctx, req)
 	if err != nil {
 		return xerrors.Errorf("create taskgroups: %w", err)
 	}
 
-	if err := tx.Commit(); err != nil {
+	if err = tx.Commit(); err != nil {
 		return xerrors.Errorf("commit tx: %w", err)
 	}
-	c.JSON(http.StatusOK, resp)
+	if err = transport.ServeJSONResponse(w, http.StatusOK, resp); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -131,7 +140,7 @@ type GetResponse struct {
 	TaskGroups []storage.TaskGroup `json:"task_groups"`
 }
 
-// HandleGet handles GET quest/:id/task-groups request
+// HandleGet handles GET quest/{id}/task-groups request
 //
 // @Summary		Get task groups with tasks for quest creator
 // @Tags		TaskGroups
@@ -144,19 +153,22 @@ type GetResponse struct {
 // @Failure 	406
 // @Router		/quest/{id}/task-groups [get]
 // @Security 	ApiKeyAuth
-func (h *Handler) HandleGet(c *gin.Context) error {
-	questID := c.Param("id")
-	uauth, err := jwt.GetUserFromContext(c)
+func (h *Handler) HandleGet(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	questID, err := transport.UUIDParam(r, "id")
+	if err != nil {
+		return xerrors.Errorf("%w", err)
+	}
+	uauth, err := jwt.GetUserFromContext(ctx)
 	if err != nil {
 		return xerrors.Errorf("%w", err)
 	}
 
-	s, err := h.clientFactory.NewStorage(c, dbnode.Alive)
+	s, err := h.clientFactory.NewStorage(ctx, dbnode.Alive)
 	if err != nil {
 		return xerrors.Errorf("get storage: %w", err)
 	}
 
-	quest, err := s.GetQuest(c, &storage.GetQuestRequest{ID: questID})
+	quest, err := s.GetQuest(ctx, &storage.GetQuestRequest{ID: questID})
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return httperrors.Errorf(http.StatusNotFound, "not found quest %q", questID)
@@ -167,7 +179,7 @@ func (h *Handler) HandleGet(c *gin.Context) error {
 		return httperrors.Errorf(http.StatusForbidden, "only creator can get tasks outside of playmode", questID)
 	}
 	quests.SetStatus(quest)
-	taskGroups, err := s.GetTaskGroups(c, &storage.GetTaskGroupsRequest{QuestID: questID, IncludeTasks: true})
+	taskGroups, err := s.GetTaskGroups(ctx, &storage.GetTaskGroupsRequest{QuestID: questID, IncludeTasks: true})
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return httperrors.Errorf(http.StatusNotFound, "not found quest %q", questID)
@@ -176,6 +188,8 @@ func (h *Handler) HandleGet(c *gin.Context) error {
 	}
 	resp := GetResponse{Quest: quest, TaskGroups: taskGroups}
 
-	c.JSON(http.StatusOK, resp)
+	if err = transport.ServeJSONResponse(w, http.StatusOK, &resp); err != nil {
+		return err
+	}
 	return nil
 }

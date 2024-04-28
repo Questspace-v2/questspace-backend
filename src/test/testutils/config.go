@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"text/template"
 
-	"questspace/pkg/application"
+	"questspace/pkg/environment"
 )
 
 const (
@@ -115,7 +115,7 @@ func setenv() error {
 		os.Setenv(postgresPasswordEnvVar, TestPGPassword),
 		os.Setenv(jwtSecretEnvVar, TestJWTSecret),
 		os.Setenv(googleSecretEnvVar, TestGoogleSecret),
-		os.Setenv(application.AppEnvironmentEnvKey, "dev"),
+		os.Setenv(environment.AppEnvironmentEnvKey, "dev"),
 	)
 	return errors.Join(errs...)
 }
@@ -125,5 +125,5 @@ func unsetenv() {
 	_ = os.Unsetenv(postgresPasswordEnvVar)
 	_ = os.Unsetenv(jwtSecretEnvVar)
 	_ = os.Unsetenv(googleSecretEnvVar)
-	_ = os.Unsetenv(application.AppEnvironmentEnvKey)
+	_ = os.Unsetenv(environment.AppEnvironmentEnvKey)
 }

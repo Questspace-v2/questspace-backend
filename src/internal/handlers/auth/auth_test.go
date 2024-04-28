@@ -7,19 +7,18 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"questspace/internal/pgdb"
-
-	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
-	"go.uber.org/zap"
+	"go.uber.org/zap/zaptest"
 	"golang.org/x/xerrors"
 
 	"questspace/internal/hasher"
-	"questspace/pkg/application"
+	"questspace/internal/pgdb"
 	jwtmock "questspace/pkg/auth/jwt/mocks"
+	"questspace/pkg/middleware"
 	"questspace/pkg/storage"
 	storagemock "questspace/pkg/storage/mocks"
+	"questspace/pkg/transport"
 )
 
 type storageRegData struct {
@@ -110,20 +109,17 @@ func TestAuth_HandleBasicSignUp(t *testing.T) {
 			statusCode: http.StatusInternalServerError,
 		},
 	}
-	gin.SetMode(gin.TestMode)
 	ctrl := gomock.NewController(t)
 	userStorage := storagemock.NewMockQuestSpaceStorage(ctrl)
 	pwHasher := hasher.NewNopHasher()
 	factory := pgdb.NewFakeClientFactory(userStorage)
 	jwtParser := jwtmock.NewMockParser(ctrl)
 
-	router := gin.Default()
+	router := transport.NewRouter()
+
 	handler := NewHandler(factory, http.Client{}, pwHasher, jwtParser)
-	router.Use(func(c *gin.Context) {
-		c.Set("app-logger", zap.NewNop())
-		c.Next()
-	})
-	router.POST("/auth/register", application.AsGinHandler(handler.HandleBasicSignUp))
+	router.Use(middleware.CtxLog(zaptest.NewLogger(t)))
+	router.H().POST("/auth/register", transport.WrapCtxErr(handler.HandleBasicSignUp))
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -214,20 +210,16 @@ func TestAuth_HandleBasicSignIn(t *testing.T) {
 			statusCode: http.StatusForbidden,
 		},
 	}
-	gin.SetMode(gin.TestMode)
 	ctrl := gomock.NewController(t)
 	userStorage := storagemock.NewMockQuestSpaceStorage(ctrl)
 	pwHasher := hasher.NewNopHasher()
 	factory := pgdb.NewFakeClientFactory(userStorage)
 	jwtParser := jwtmock.NewMockParser(ctrl)
 
-	router := gin.Default()
+	router := transport.NewRouter()
+	router.Use(middleware.CtxLog(zaptest.NewLogger(t)))
 	handler := NewHandler(factory, http.Client{}, pwHasher, jwtParser)
-	router.Use(func(c *gin.Context) {
-		c.Set("app-logger", zap.NewNop())
-		c.Next()
-	})
-	router.POST("/auth/sign-in", application.AsGinHandler(handler.HandleBasicSignIn))
+	router.H().POST("/auth/sign-in", transport.WrapCtxErr(handler.HandleBasicSignIn))
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {

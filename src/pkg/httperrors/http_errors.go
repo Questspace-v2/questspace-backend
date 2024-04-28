@@ -1,14 +1,6 @@
 package httperrors
 
 import (
-	"errors"
-	"fmt"
-	"net/http"
-
-	"questspace/pkg/logging"
-
-	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 	"golang.org/x/xerrors"
 )
 
@@ -37,19 +29,4 @@ func (e *HTTPError) Error() string {
 
 func (e *HTTPError) Unwrap() error {
 	return e.err
-}
-
-func WriteErrorResponse(c *gin.Context, err error) {
-	httpErr := &HTTPError{}
-	if errors.As(err, &httpErr) {
-		c.JSON(httpErr.Code, gin.H{"error": httpErr.Error()})
-		logging.Warn(c, "user error",
-			zap.String("status_str", http.StatusText(httpErr.Code)),
-			zap.Int("status", httpErr.Code),
-			zap.String("error_trace", fmt.Sprintf("%+v", httpErr.err)),
-		)
-		return
-	}
-	logging.Error(c, "error handling request", zap.String("error_trace", fmt.Sprintf("%+v", err)))
-	c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 }

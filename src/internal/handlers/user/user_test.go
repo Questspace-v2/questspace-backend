@@ -7,19 +7,19 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"questspace/internal/pgdb"
-
-	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap/zaptest"
 	"golang.org/x/xerrors"
 
 	"questspace/internal/hasher"
-	"questspace/pkg/application"
+	"questspace/internal/pgdb"
 	"questspace/pkg/auth/jwt"
 	jwtmock "questspace/pkg/auth/jwt/mocks"
+	"questspace/pkg/middleware"
 	"questspace/pkg/storage"
 	storagemock "questspace/pkg/storage/mocks"
+	"questspace/pkg/transport"
 )
 
 func TestGetHandler_CommonCases(t *testing.T) {
@@ -52,14 +52,13 @@ func TestGetHandler_CommonCases(t *testing.T) {
 		},
 	}
 
-	gin.SetMode(gin.TestMode)
 	ctrl := gomock.NewController(t)
 	userStorage := storagemock.NewMockQuestSpaceStorage(ctrl)
-	router := gin.Default()
-	router.ContextWithFallback = true
+	router := transport.NewRouter()
+	router.Use(middleware.CtxLog(zaptest.NewLogger(t)))
 	factory := pgdb.NewFakeClientFactory(userStorage)
 	handler := NewGetHandler(factory)
-	router.GET("/user/:id", application.AsGinHandler(handler.Handle))
+	router.H().GET("/user/{id}", transport.WrapCtxErr(handler.Handle))
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -76,17 +75,16 @@ func TestGetHandler_CommonCases(t *testing.T) {
 }
 
 func TestUpdateHandler_HandleUser(t *testing.T) {
-	gin.SetMode(gin.TestMode)
 	ctrl := gomock.NewController(t)
 	userStorage := storagemock.NewMockQuestSpaceStorage(ctrl)
 	jwtParser := jwtmock.NewMockParser(ctrl)
 	factory := pgdb.NewFakeClientFactory(userStorage)
 	pwHasher := hasher.NewNopHasher()
 
-	router := gin.Default()
-	router.ContextWithFallback = true
+	router := transport.NewRouter()
+	router.Use(middleware.CtxLog(zaptest.NewLogger(t)))
 	handler := NewUpdateHandler(factory, http.Client{}, pwHasher, jwtParser)
-	router.POST("/user/:id", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(handler.HandleUser))
+	router.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).POST("/user/{id}", transport.WrapCtxErr(handler.HandleUser))
 
 	oldUser := storage.User{
 		ID:        "1",
@@ -105,8 +103,8 @@ func TestUpdateHandler_HandleUser(t *testing.T) {
 	raw, err := json.Marshal(req)
 	require.NoError(t, err)
 	httpReq, err := http.NewRequest(http.MethodPost, "/user/1", bytes.NewReader(raw))
-	httpReq.Header.Add("Authorization", "Bearer alg.pld.key")
 	require.NoError(t, err)
+	httpReq.Header.Add("Authorization", "Bearer alg.pld.key")
 	rr := httptest.NewRecorder()
 
 	jwtParser.EXPECT().ParseToken("alg.pld.key").Return(&oldUser, nil)
@@ -119,17 +117,16 @@ func TestUpdateHandler_HandleUser(t *testing.T) {
 }
 
 func TestUpdateHandler_HandlePassword(t *testing.T) {
-	gin.SetMode(gin.TestMode)
 	ctrl := gomock.NewController(t)
 	userStorage := storagemock.NewMockQuestSpaceStorage(ctrl)
 	jwtParser := jwtmock.NewMockParser(ctrl)
 	factory := pgdb.NewFakeClientFactory(userStorage)
 	pwHasher := hasher.NewNopHasher()
 
-	router := gin.Default()
-	router.ContextWithFallback = true
+	router := transport.NewRouter()
+	router.Use(middleware.CtxLog(zaptest.NewLogger(t)))
 	handler := NewUpdateHandler(factory, http.Client{}, pwHasher, jwtParser)
-	router.POST("/user/:id/password", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(handler.HandlePassword))
+	router.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).POST("/user/{id}/password", transport.WrapCtxErr(handler.HandlePassword))
 
 	oldUser := storage.User{
 		ID:        "1",
@@ -146,8 +143,8 @@ func TestUpdateHandler_HandlePassword(t *testing.T) {
 	raw, err := json.Marshal(req)
 	require.NoError(t, err)
 	httpReq, err := http.NewRequest(http.MethodPost, "/user/1/password", bytes.NewReader(raw))
-	httpReq.Header.Add("Authorization", "Bearer alg.pld.key")
 	require.NoError(t, err)
+	httpReq.Header.Add("Authorization", "Bearer alg.pld.key")
 	rr := httptest.NewRecorder()
 
 	jwtParser.EXPECT().ParseToken("alg.pld.key").Return(&oldUser, nil)

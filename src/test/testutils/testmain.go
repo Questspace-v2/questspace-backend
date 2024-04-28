@@ -18,7 +18,7 @@ type Database interface {
 
 const (
 	ServerURL            = "http://localhost:8080"
-	QuestspaceServerPath = "questspace/cmd/std_questspace"
+	QuestspaceServerPath = "questspace/cmd/questspace"
 )
 
 var (

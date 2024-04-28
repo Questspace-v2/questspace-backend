@@ -4,20 +4,18 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"slices"
+	"os"
+	"os/signal"
 	"time"
 
-	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
-	_ "github.com/jackc/pgx/v5/stdlib"
-	swaggerfiles "github.com/swaggo/files"
-	ginswagger "github.com/swaggo/gin-swagger"
+	httpswagger "github.com/swaggo/http-swagger"
+	"go.uber.org/zap"
+	"golang.org/x/sys/unix"
 	"golang.org/x/xerrors"
-	"golang.yandex/hasql"
-	"golang.yandex/hasql/checkers"
 	"google.golang.org/api/idtoken"
 
 	"questspace/docs"
+	"questspace/internal/app"
 	"questspace/internal/handlers/auth"
 	"questspace/internal/handlers/auth/google"
 	"questspace/internal/handlers/play"
@@ -27,128 +25,126 @@ import (
 	"questspace/internal/handlers/user"
 	"questspace/internal/hasher"
 	"questspace/internal/pgdb"
-	"questspace/internal/pgdb/pgconfig"
-	"questspace/pkg/application"
 	"questspace/pkg/auth/jwt"
+	"questspace/pkg/cors"
 	"questspace/pkg/dbnode"
+	"questspace/pkg/transport"
 )
 
-var config struct {
-	DB       pgconfig.Config `yaml:"db"`
-	HashCost int             `yaml:"hash-cost"`
-	CORS     struct {
-		AllowOrigins []string `yaml:"allow-origins"`
-		AllowHeaders []string `yaml:"allow-headers"`
-		AllowMethods []string `yaml:"allow-methods"`
-	} `yaml:"cors"`
-	JWT    jwt.Config    `yaml:"jwt"`
-	Teams  teams.Config  `yaml:"teams"`
-	Google google.Config `yaml:"google-oauth"`
-}
-
-// Init godoc
-// @securityDefinitions.apikey ApiKeyAuth
-// @in header
-// @name Authorization
-func Init(app application.App) error {
-	corsConfig := cors.DefaultConfig()
-	corsConfig.AllowOrigins = slices.Clone(config.CORS.AllowOrigins)
-	corsConfig.AllowHeaders = slices.Clone(config.CORS.AllowHeaders)
-	corsConfig.AllowMethods = slices.Clone(config.CORS.AllowMethods)
-	app.Router().Use(cors.New(corsConfig))
-	app.Router().OPTIONS("/*any", func(c *gin.Context) { c.Status(http.StatusNoContent) })
-
-	nodes, errs := config.DB.GetNodes()
-	if len(errs) > 0 {
-		return xerrors.Errorf("failed to connect to db nodes: %w", errors.Join(errs...))
-	}
-	cl, err := hasql.NewCluster(nodes, checkers.PostgreSQL, hasql.WithNodePicker(hasql.PickNodeClosest()))
+// InitApp godoc
+// @securityDefinitions.apikey 	ApiKeyAuth
+// @in 							header
+// @name 						Authorization
+func InitApp(ctx context.Context, application *app.App) error {
+	cfg, err := application.GetConfig()
 	if err != nil {
-		return xerrors.Errorf("failed to create cluster: %w", err)
+		return err
 	}
-	timeoutCtx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
-	if _, err := cl.WaitForAlive(timeoutCtx); err != nil {
-		return xerrors.Errorf("cannot connect to database cluster: %w", err)
+
+	application.Router().Use(cors.Middleware(&cfg.CORS))
+	application.Router().H().OPTIONS("/", http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+	}))
+
+	nodes, errs := pgdb.GetNodes(&cfg.DB)
+	if len(errs) > 0 {
+		return errors.Join(errs...)
 	}
+	cl, err := pgdb.CreateCluster(ctx, nodes)
+	if err != nil {
+		return err
+	}
+	application.Cleanup(cl.Close)
 	nodePicker := dbnode.NewBasicPicker(cl)
 	clientFactory := pgdb.NewQuestspaceClientFactory(nodePicker)
-	client := http.Client{
+	httpClient := http.Client{
 		Timeout: time.Minute,
 	}
-	pwHasher := hasher.NewBCryptHasher(config.HashCost)
 
-	jwtSecret, err := config.JWT.Secret.Read()
+	pwHasher := hasher.NewBCryptHasher(cfg.HashCost)
+	jwtSecret, err := cfg.JWT.Secret.Read()
 	if err != nil {
-		return xerrors.Errorf("load jwt secret: %w", err)
+		return err
 	}
-
 	jwtParser := jwt.NewTokenParser([]byte(jwtSecret))
 
 	docs.SwaggerInfo.BasePath = "/"
 
-	tokenValidator, err := idtoken.NewValidator(context.Background())
+	tokenValidator, err := idtoken.NewValidator(ctx)
 	if err != nil {
 		return xerrors.Errorf("create token validator: %w", err)
 	}
-	googleOAuthHandler := google.NewOAuthHandler(clientFactory, tokenValidator, jwtParser, config.Google)
 
-	authGroup := app.Router().Group("/auth")
-	authHandler := auth.NewHandler(clientFactory, client, pwHasher, jwtParser)
-	authGroup.POST("/register", application.AsGinHandler(authHandler.HandleBasicSignUp))
-	authGroup.POST("/sign-in", application.AsGinHandler(authHandler.HandleBasicSignIn))
-	authGroup.POST("/google", application.AsGinHandler(googleOAuthHandler.Handle))
+	r := application.Router()
+	r.H().GET("/swagger/", httpswagger.Handler())
 
-	userGroup := app.Router().Group("/user")
+	authHandler := auth.NewHandler(clientFactory, httpClient, pwHasher, jwtParser)
+	googleOAuthHandler := google.NewOAuthHandler(clientFactory, tokenValidator, jwtParser, cfg.Google)
+	r.H().POST("/auth/register", transport.WrapCtxErr(authHandler.HandleBasicSignUp))
+	r.H().POST("/auth/sign-in", transport.WrapCtxErr(authHandler.HandleBasicSignIn))
+	r.H().POST("/auth/google", transport.WrapCtxErr(googleOAuthHandler.Handle))
 
 	getUserHandler := user.NewGetHandler(clientFactory)
-	userGroup.GET("/:id", application.AsGinHandler(getUserHandler.Handle))
+	r.H().GET("/user/{id}", transport.WrapCtxErr(getUserHandler.Handle))
+	updateUserHandler := user.NewUpdateHandler(clientFactory, httpClient, pwHasher, jwtParser)
+	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).POST("/user/{id}", transport.WrapCtxErr(updateUserHandler.HandleUser))
+	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).POST("/user/{id}/password", transport.WrapCtxErr(updateUserHandler.HandlePassword))
+	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).DELETE("/user/{id}", transport.WrapCtxErr(updateUserHandler.HandleDelete))
 
-	updateUserHandler := user.NewUpdateHandler(clientFactory, client, pwHasher, jwtParser)
-	userGroup.POST("/:id", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(updateUserHandler.HandleUser))
-	userGroup.POST("/:id/password", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(updateUserHandler.HandlePassword))
-	userGroup.DELETE("/:id", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(updateUserHandler.HandleDelete))
+	questHandler := quest.NewHandler(clientFactory, httpClient, cfg.Teams.InviteLinkPrefix)
+	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).POST("/quest", transport.WrapCtxErr(questHandler.HandleCreate))
+	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).GET("/quest", transport.WrapCtxErr(questHandler.HandleGetMany))
+	r.H().Use(jwt.AuthMiddleware(jwtParser)).GET("/quest/{id}", transport.WrapCtxErr(questHandler.HandleGet))
+	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).POST("/quest/{id}", transport.WrapCtxErr(questHandler.HandleUpdate))
+	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).DELETE("/quest/{id}", transport.WrapCtxErr(questHandler.HandleDelete))
+	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).POST("/quest/{id}/finish", transport.WrapCtxErr(questHandler.HandleFinish))
 
-	teamsHandler := teams.NewHandler(clientFactory, config.Teams.InviteLinkPrefix)
-
-	questGroup := app.Router().Group("/quest")
-	questHandler := quest.NewHandler(clientFactory, client, config.Teams.InviteLinkPrefix)
-	questGroup.POST("", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(questHandler.HandleCreate))
-	questGroup.GET("", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(questHandler.HandleGetMany))
-	questGroup.GET("/:id", jwt.AuthMiddleware(jwtParser), application.AsGinHandler(questHandler.HandleGet))
-	questGroup.POST("/:id", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(questHandler.HandleUpdate))
-	questGroup.DELETE("/:id", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(questHandler.HandleDelete))
-	questGroup.POST("/:id/finish", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(questHandler.HandleFinish))
-
-	teamsGroup := app.Router().Group("/teams")
-	questGroup.POST("/:id/teams", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(teamsHandler.HandleCreate))
-	questGroup.GET("/:id/teams", application.AsGinHandler(teamsHandler.HandleGetMany))
-	teamsGroup.GET("/join/:path", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(teamsHandler.HandleJoin))
-	teamsGroup.GET("/join/:path/quest", jwt.AuthMiddleware(jwtParser), application.AsGinHandler(teamsHandler.HandleGetQuestByTeamInvite))
-	teamsGroup.GET("/:id", application.AsGinHandler(teamsHandler.HandleGet))
-	teamsGroup.POST("/:id", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(teamsHandler.HandleUpdate))
-	teamsGroup.DELETE("/:id", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(teamsHandler.HandleDelete))
-	teamsGroup.POST("/:id/captain", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(teamsHandler.HandleChangeLeader))
-	teamsGroup.POST("/:id/leave", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(teamsHandler.HandleLeave))
-	teamsGroup.DELETE("/:id/:user_id", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(teamsHandler.HandleRemoveUser))
+	teamsHandler := teams.NewHandler(clientFactory, cfg.Teams.InviteLinkPrefix)
+	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).POST("/quest/{id}/teams", transport.WrapCtxErr(teamsHandler.HandleCreate))
+	r.H().GET("/quest/{id}/teams", transport.WrapCtxErr(teamsHandler.HandleGetMany))
+	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).GET("/teams/join/{path}", transport.WrapCtxErr(teamsHandler.HandleJoin))
+	r.H().Use(jwt.AuthMiddleware(jwtParser)).GET("/teams/join/{path}/quest", transport.WrapCtxErr(teamsHandler.HandleGetQuestByTeamInvite))
+	r.H().GET("/teams/{id}", transport.WrapCtxErr(teamsHandler.HandleGet))
+	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).POST("/teams/{id}", transport.WrapCtxErr(teamsHandler.HandleUpdate))
+	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).DELETE("/teams/{id}", transport.WrapCtxErr(teamsHandler.HandleDelete))
+	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).POST("/teams/{id}/captain", transport.WrapCtxErr(teamsHandler.HandleChangeLeader))
+	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).POST("/teams/{id}/leave", transport.WrapCtxErr(teamsHandler.HandleLeave))
+	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).DELETE("/teams/{id}/{user_id}", transport.WrapCtxErr(teamsHandler.HandleRemoveUser))
 
 	taskGroupHandler := taskgroups.NewHandler(clientFactory)
-	questGroup.PATCH("/:id/task-groups/bulk", application.AsGinHandler(taskGroupHandler.HandleBulkUpdate))
-	questGroup.POST("/:id/task-groups", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(taskGroupHandler.HandleCreate))
-	questGroup.GET("/:id/task-groups", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(taskGroupHandler.HandleGet))
+	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).PATCH("/quest/{id}/task-groups/bulk", transport.WrapCtxErr(taskGroupHandler.HandleBulkUpdate))
+	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).POST("/quest/{id}/task-groups", transport.WrapCtxErr(taskGroupHandler.HandleCreate))
+	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).GET("/quest/{id}/task-groups", transport.WrapCtxErr(taskGroupHandler.HandleGet))
 
 	playHandler := play.NewHandler(clientFactory)
-	questGroup.GET("/:id/play", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(playHandler.HandleGet))
-	questGroup.POST("/:id/hint", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(playHandler.HandleTakeHint))
-	questGroup.POST("/:id/answer", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(playHandler.HandleTryAnswer))
-	questGroup.GET("/:id/table", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(playHandler.HandleGetTableResults))
-	questGroup.GET("/:id/leaderboard", application.AsGinHandler(playHandler.HandleLeaderboard))
-	questGroup.POST("/:id/penalty", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(playHandler.HandleAddPenalty))
-
-	app.Router().GET("/swagger/*any", ginswagger.WrapHandler(swaggerfiles.Handler))
+	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).GET("/quest/{id}/play", transport.WrapCtxErr(playHandler.HandleGet))
+	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).POST("/quest/{id}/hint", transport.WrapCtxErr(playHandler.HandleTakeHint))
+	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).POST("/quest/{id}/answer", transport.WrapCtxErr(playHandler.HandleTryAnswer))
+	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).GET("/quest/{id}/table", transport.WrapCtxErr(playHandler.HandleGetTableResults))
+	r.H().GET("/quest/{id}/leaderboard", transport.WrapCtxErr(playHandler.HandleLeaderboard))
+	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).POST("/quest/{id}/penalty", transport.WrapCtxErr(playHandler.HandleAddPenalty))
 	return nil
 }
 
+func RunApp() (code int) {
+	ctx, cancel := signal.NotifyContext(context.Background(), unix.SIGINT, unix.SIGTERM)
+	defer cancel()
+
+	application := app.NewApp()
+	defer func() { _ = application.Close() }()
+
+	if err := InitApp(ctx, application); err != nil {
+		application.Logger().Error("application init error", zap.Error(err))
+		return 1
+	}
+
+	if err := application.Run(ctx); err != nil {
+		application.Logger().Error("server down", zap.Error(err))
+		return 1
+	}
+	return 0
+}
+
 func main() {
-	application.Run(Init, &config)
+	os.Exit(RunApp())
 }

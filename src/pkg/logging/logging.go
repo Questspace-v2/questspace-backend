@@ -3,65 +3,13 @@ package logging
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"os"
-	"strconv"
-	"strings"
-	"time"
 
-	"github.com/gin-gonic/gin"
-	"github.com/gofrs/uuid"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
 type loggerKey struct{}
-
-var restrictedHeaders = map[string]struct{}{
-	"authorization": {},
-	"cookie":        {},
-	"cookie2":       {},
-}
-
-func Middleware(logger zap.Logger) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		reqId := uuid.Must(uuid.NewV4()).String() + "-" + strconv.FormatInt(time.Now().UTC().Unix(), 10)
-		fields := []zap.Field{
-			zap.String("request_id", reqId),
-		}
-
-		req := c.Request
-		var headers []zap.Field
-		for name, values := range req.Header {
-			headerNameLower := strings.ToLower(name)
-			if _, ok := restrictedHeaders[headerNameLower]; ok {
-				headers = append(headers, zap.String(headerNameLower, "***"))
-				continue
-			}
-			headers = append(headers, zap.String(headerNameLower, strings.Join(values, ", ")))
-		}
-
-		fields = append(fields,
-			zap.String("uri", req.URL.RequestURI()),
-			zap.String("method", req.Method),
-			zap.Dict("headers", headers...),
-		)
-
-		ctxLogger := logger.With(fields...)
-		WithLogger(c, ctxLogger)
-		c.Next()
-	}
-}
-
-func RecoveryMiddleware(c *gin.Context) {
-	defer func() {
-		if err := recover(); err != nil {
-			Error(c, "panic during handling request", zap.Any("cause", err))
-			c.Status(http.StatusInternalServerError)
-		}
-	}()
-	c.Next()
-}
 
 func AddFieldsToContextLogger(ctx context.Context, fields ...zap.Field) context.Context {
 	logger := GetLogger(ctx)
@@ -74,11 +22,6 @@ func AddFieldsToContextLogger(ctx context.Context, fields ...zap.Field) context.
 }
 
 func WithLogger(ctx context.Context, logger *zap.Logger) context.Context {
-	if c, ok := ctx.(*gin.Context); ok {
-		logCtx := setCtxLogger(c.Request.Context(), logger)
-		c.Request = c.Request.WithContext(logCtx)
-		return c
-	}
 	return setCtxLogger(ctx, logger)
 }
 

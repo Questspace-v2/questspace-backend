@@ -1,26 +1,23 @@
 package auth
 
 import (
+	"context"
 	"errors"
 	"net/http"
 
-	"questspace/internal/pgdb"
-
-	"questspace/pkg/httperrors"
-	"questspace/pkg/logging"
-
-	"questspace/pkg/transport"
-
-	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
 	"go.uber.org/zap"
 	"golang.org/x/xerrors"
 
 	"questspace/internal/hasher"
+	"questspace/internal/pgdb"
 	"questspace/internal/validate"
 	"questspace/pkg/auth/jwt"
 	"questspace/pkg/dbnode"
+	"questspace/pkg/httperrors"
+	"questspace/pkg/logging"
 	"questspace/pkg/storage"
+	"questspace/pkg/transport"
 )
 
 const defaultAvatarURLTmpl = "https://api.dicebear.com/7.x/thumbs/svg?seed="
@@ -55,12 +52,12 @@ type Response struct {
 // @Failure	400
 // @Failure	415
 // @Router	/auth/register [post]
-func (h *Handler) HandleBasicSignUp(c *gin.Context) error {
-	req, err := transport.UnmarshalRequestData[storage.CreateUserRequest](c.Request)
+func (h *Handler) HandleBasicSignUp(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	req, err := transport.UnmarshalRequestData[storage.CreateUserRequest](r)
 	if err != nil {
 		return xerrors.Errorf("%w", err)
 	}
-	if err := validate.ImageURL(c, h.fetcher, req.AvatarURL); err != nil {
+	if err := validate.ImageURL(ctx, h.fetcher, req.AvatarURL); err != nil {
 		return xerrors.Errorf("%w", err)
 	}
 	if req.AvatarURL == "" {
@@ -74,12 +71,12 @@ func (h *Handler) HandleBasicSignUp(c *gin.Context) error {
 		return xerrors.Errorf("calculate password hash: %w", err)
 	}
 
-	s, tx, err := h.clientFactory.NewStorageTx(c, nil)
+	s, tx, err := h.clientFactory.NewStorageTx(ctx, nil)
 	if err != nil {
 		return xerrors.Errorf("get storage client: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
-	user, err := s.CreateUser(c, req)
+	user, err := s.CreateUser(ctx, req)
 	if err != nil {
 		if errors.Is(err, storage.ErrExists) {
 			return httperrors.Errorf(http.StatusBadRequest, "user %q already exits", req.Username)
@@ -93,12 +90,14 @@ func (h *Handler) HandleBasicSignUp(c *gin.Context) error {
 	if err != nil {
 		return xerrors.Errorf("issue token: %w", err)
 	}
-	if err := tx.Commit(); err != nil {
+	if err = tx.Commit(); err != nil {
 		return xerrors.Errorf("commit tx: %w", err)
 	}
-	c.JSON(http.StatusOK, resp)
+	if err = transport.ServeJSONResponse(w, http.StatusOK, &resp); err != nil {
+		return err
+	}
 
-	logging.Info(c, "basic registration done",
+	logging.Info(ctx, "basic registration done",
 		zap.String("username", user.Username),
 		zap.String("user_id", user.ID),
 	)
@@ -120,17 +119,17 @@ type SignInRequest struct {
 // @Failure	403
 // @Failure	404
 // @Router	/auth/sign-in [post]
-func (h *Handler) HandleBasicSignIn(c *gin.Context) error {
-	req, err := transport.UnmarshalRequestData[SignInRequest](c.Request)
+func (h *Handler) HandleBasicSignIn(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	req, err := transport.UnmarshalRequestData[SignInRequest](r)
 	if err != nil {
 		return xerrors.Errorf("%w", err)
 	}
 
-	s, err := h.clientFactory.NewStorage(c, dbnode.Alive)
+	s, err := h.clientFactory.NewStorage(ctx, dbnode.Alive)
 	if err != nil {
 		return xerrors.Errorf("get storage client: %w", err)
 	}
-	pwHash, err := s.GetUserPasswordHash(c, &storage.GetUserRequest{Username: req.Username})
+	pwHash, err := s.GetUserPasswordHash(ctx, &storage.GetUserRequest{Username: req.Username})
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return httperrors.Errorf(http.StatusNotFound, "user %q does not exist", req.Username)
@@ -140,7 +139,7 @@ func (h *Handler) HandleBasicSignIn(c *gin.Context) error {
 	if !h.pwHasher.HasSameHash(req.Password, pwHash) {
 		return httperrors.New(http.StatusForbidden, "invalid password")
 	}
-	user, err := s.GetUser(c, &storage.GetUserRequest{Username: req.Username})
+	user, err := s.GetUser(ctx, &storage.GetUserRequest{Username: req.Username})
 	if err != nil {
 		return xerrors.Errorf("get user: %w", err)
 	}
@@ -152,6 +151,10 @@ func (h *Handler) HandleBasicSignIn(c *gin.Context) error {
 		User:        user,
 		AccessToken: token,
 	}
-	c.JSON(http.StatusOK, resp)
+
+	if err = transport.ServeJSONResponse(w, http.StatusOK, &resp); err != nil {
+		return err
+	}
+
 	return nil
 }

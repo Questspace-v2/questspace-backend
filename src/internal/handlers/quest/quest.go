@@ -1,27 +1,24 @@
 package quest
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"strconv"
 
-	"questspace/internal/pgdb"
-
-	"questspace/pkg/httperrors"
-	"questspace/pkg/logging"
-
-	"questspace/pkg/transport"
-
-	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"golang.org/x/xerrors"
 
+	"questspace/internal/pgdb"
 	"questspace/internal/questspace/game"
 	"questspace/internal/questspace/quests"
 	"questspace/internal/validate"
 	"questspace/pkg/auth/jwt"
 	"questspace/pkg/dbnode"
+	"questspace/pkg/httperrors"
+	"questspace/pkg/logging"
 	"questspace/pkg/storage"
+	"questspace/pkg/transport"
 )
 
 type Handler struct {
@@ -49,32 +46,34 @@ func NewHandler(cf pgdb.QuestspaceClientFactory, f http.Client, p string) *Handl
 // @Failure		415
 // @Router		/quest [post]
 // @Security	ApiKeyAuth
-func (h *Handler) HandleCreate(c *gin.Context) error {
-	req, err := transport.UnmarshalRequestData[storage.CreateQuestRequest](c.Request)
+func (h *Handler) HandleCreate(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	req, err := transport.UnmarshalRequestData[storage.CreateQuestRequest](r)
 	if err != nil {
 		return xerrors.Errorf("%w", err)
 	}
-	uauth, err := jwt.GetUserFromContext(c)
+	uauth, err := jwt.GetUserFromContext(ctx)
 	if err != nil {
 		return xerrors.Errorf("%w", err)
 	}
 	req.Creator = uauth
-	if err := validate.ImageURL(c, h.fetcher, req.MediaLink); err != nil {
+	if err := validate.ImageURL(ctx, h.fetcher, req.MediaLink); err != nil {
 		return xerrors.Errorf("%w", err)
 	}
 
-	s, err := h.clientFactory.NewStorage(c, dbnode.Master)
+	s, err := h.clientFactory.NewStorage(ctx, dbnode.Master)
 	if err != nil {
 		return xerrors.Errorf("get storage client: %w", err)
 	}
-	quest, err := s.CreateQuest(c, req)
+	quest, err := s.CreateQuest(ctx, req)
 	if err != nil {
 		return xerrors.Errorf("create quest: %w", err)
 	}
 	quests.SetStatus(quest)
-	c.JSON(http.StatusOK, quest)
+	if err = transport.ServeJSONResponse(w, http.StatusOK, quest); err != nil {
+		return err
+	}
 
-	logging.Info(c, "created quest",
+	logging.Info(ctx, "created quest",
 		zap.String("quest_id", quest.ID),
 		zap.String("quest_name", quest.Name),
 		zap.String("creator_id", uauth.ID),
@@ -89,7 +88,7 @@ type TeamQuestResponse struct {
 	Leaderboard *game.LeaderboardResponse `json:"leaderboard,omitempty"`
 }
 
-// HandleGet handles GET /quest/:id request
+// HandleGet handles GET /quest/{id} request
 //
 // @Summary		Get quest by id
 // @Tags		Quests
@@ -98,14 +97,17 @@ type TeamQuestResponse struct {
 // @Failure		404
 // @Router		/quest/{quest_id} [get]
 // @Security 	ApiKeyAuth
-func (h *Handler) HandleGet(c *gin.Context) error {
-	questID := c.Param("id")
+func (h *Handler) HandleGet(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	questID, err := transport.UUIDParam(r, "id")
+	if err != nil {
+		return xerrors.Errorf("%w", err)
+	}
 	req := storage.GetQuestRequest{ID: questID}
-	s, err := h.clientFactory.NewStorage(c, dbnode.Alive)
+	s, err := h.clientFactory.NewStorage(ctx, dbnode.Alive)
 	if err != nil {
 		return xerrors.Errorf("get storage client: %w", err)
 	}
-	quest, err := s.GetQuest(c, &req)
+	quest, err := s.GetQuest(ctx, &req)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return httperrors.Errorf(http.StatusNotFound, "not found quest with id %q", req.ID)
@@ -115,7 +117,7 @@ func (h *Handler) HandleGet(c *gin.Context) error {
 
 	quests.SetStatus(quest)
 	resp := TeamQuestResponse{Quest: quest}
-	if uauth, err := jwt.GetUserFromContext(c); err == nil {
+	if uauth, err := jwt.GetUserFromContext(ctx); err == nil {
 		teamReq := storage.GetTeamRequest{
 			UserRegistration: &storage.UserRegistration{
 				UserID:  uauth.ID,
@@ -123,7 +125,7 @@ func (h *Handler) HandleGet(c *gin.Context) error {
 			},
 			IncludeMembers: true,
 		}
-		team, err := s.GetTeam(c, &teamReq)
+		team, err := s.GetTeam(ctx, &teamReq)
 		if err != nil && !errors.Is(err, storage.ErrNotFound) {
 			return xerrors.Errorf("get user team: %w", err)
 		}
@@ -135,15 +137,17 @@ func (h *Handler) HandleGet(c *gin.Context) error {
 
 	if quest.Status == storage.StatusFinished {
 		srv := game.NewService(s, s, s, s)
-		leaderboard, err := srv.GetLeaderboard(c, questID)
+		leaderboard, err := srv.GetLeaderboard(ctx, questID)
 		if err == nil {
 			resp.Leaderboard = leaderboard
 		} else {
-			logging.Error(c, "get leaderboard", zap.Error(err))
+			logging.Error(ctx, "get leaderboard", zap.Error(err))
 		}
 	}
 
-	c.JSON(http.StatusOK, resp)
+	if err = transport.ServeJSONResponse(w, http.StatusOK, resp); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -161,14 +165,14 @@ const defaultPageSize = 50
 // @Failure		401
 // @Router		/quest [get]
 // @Security	ApiKeyAuth
-func (h *Handler) HandleGetMany(c *gin.Context) error {
-	uauth, err := jwt.GetUserFromContext(c)
+func (h *Handler) HandleGetMany(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	uauth, err := jwt.GetUserFromContext(ctx)
 	if err != nil {
 		return xerrors.Errorf("%w", err)
 	}
 
-	fields := c.QueryArray("fields")
-	pageSizeStr := c.Query("page_size")
+	fields := transport.QueryArray(r, "fields")
+	pageSizeStr := transport.Query(r, "page_size")
 	pageSize := defaultPageSize
 	if pageSizeStr != "" {
 		var err error
@@ -177,22 +181,24 @@ func (h *Handler) HandleGetMany(c *gin.Context) error {
 			return httperrors.Errorf(http.StatusBadRequest, "parse page size: %w", err)
 		}
 	}
-	pageID := c.Query("page_id")
+	pageID := transport.Query(r, "page_id")
 
-	s, err := h.clientFactory.NewStorage(c, dbnode.Alive)
+	s, err := h.clientFactory.NewStorage(ctx, dbnode.Alive)
 	if err != nil {
 		return xerrors.Errorf("get storage: %w", err)
 	}
-	gotQuests, err := quests.ReadQuests(c, s, uauth, fields, pageID, pageSize)
+	gotQuests, err := quests.ReadQuests(ctx, s, uauth, fields, pageID, pageSize)
 	if err != nil {
 		return xerrors.Errorf("read quests: %w", err)
 	}
 
-	c.JSON(http.StatusOK, gotQuests)
+	if err = transport.ServeJSONResponse(w, http.StatusOK, gotQuests); err != nil {
+		return err
+	}
 	return nil
 }
 
-// HandleUpdate handles POST /quest/:id request
+// HandleUpdate handles POST /quest/{id} request
 //
 // @Summary		Update main quest information
 // @Tags 		Quests
@@ -205,26 +211,29 @@ func (h *Handler) HandleGetMany(c *gin.Context) error {
 // @Failure		415
 // @Router		/quest/{quest_id} [post]
 // @Security	ApiKeyAuth
-func (h *Handler) HandleUpdate(c *gin.Context) error {
-	req, err := transport.UnmarshalRequestData[storage.UpdateQuestRequest](c.Request)
+func (h *Handler) HandleUpdate(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	req, err := transport.UnmarshalRequestData[storage.UpdateQuestRequest](r)
 	if err != nil {
 		return xerrors.Errorf("%w", err)
 	}
-	req.ID = c.Param("id")
-	if err := validate.ImageURL(c, h.fetcher, req.MediaLink); err != nil {
+	req.ID, err = transport.UUIDParam(r, "id")
+	if err != nil {
 		return xerrors.Errorf("%w", err)
 	}
-	uauth, err := jwt.GetUserFromContext(c)
+	if err := validate.ImageURL(ctx, h.fetcher, req.MediaLink); err != nil {
+		return xerrors.Errorf("%w", err)
+	}
+	uauth, err := jwt.GetUserFromContext(ctx)
 	if err != nil {
 		return xerrors.Errorf("%w", err)
 	}
 
-	s, tx, err := h.clientFactory.NewStorageTx(c, nil)
+	s, tx, err := h.clientFactory.NewStorageTx(ctx, nil)
 	if err != nil {
 		return xerrors.Errorf("get storage: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
-	quest, err := s.UpdateQuest(c, req)
+	quest, err := s.UpdateQuest(ctx, req)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return httperrors.Errorf(http.StatusNotFound, "not found quest with id %q", req.ID)
@@ -238,11 +247,13 @@ func (h *Handler) HandleUpdate(c *gin.Context) error {
 		return xerrors.Errorf("commit transaction: %w", err)
 	}
 	quests.SetStatus(quest)
-	c.JSON(http.StatusOK, quest)
+	if err = transport.ServeJSONResponse(w, http.StatusOK, quest); err != nil {
+		return err
+	}
 	return nil
 }
 
-// HandleDelete handles DELETE /quest/:id request
+// HandleDelete handles DELETE /quest/{id} request
 //
 // @Summary		Delete quest
 // @Tags 		Quests
@@ -253,18 +264,21 @@ func (h *Handler) HandleUpdate(c *gin.Context) error {
 // @Failure    	404
 // @Router		/quest/{quest_id} [delete]
 // @Security 	ApiKeyAuth
-func (h *Handler) HandleDelete(c *gin.Context) error {
-	id := c.Param("id")
-	uauth, err := jwt.GetUserFromContext(c)
+func (h *Handler) HandleDelete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	id, err := transport.UUIDParam(r, "id")
 	if err != nil {
 		return xerrors.Errorf("%w", err)
 	}
-	s, err := h.clientFactory.NewStorage(c, dbnode.Master)
+	uauth, err := jwt.GetUserFromContext(ctx)
+	if err != nil {
+		return xerrors.Errorf("%w", err)
+	}
+	s, err := h.clientFactory.NewStorage(ctx, dbnode.Master)
 	if err != nil {
 		return xerrors.Errorf("get storage client: %w", err)
 	}
 
-	q, err := s.GetQuest(c, &storage.GetQuestRequest{ID: id})
+	q, err := s.GetQuest(ctx, &storage.GetQuestRequest{ID: id})
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return httperrors.Errorf(http.StatusNotFound, "quest %q not found", id)
@@ -275,13 +289,14 @@ func (h *Handler) HandleDelete(c *gin.Context) error {
 		return httperrors.New(http.StatusForbidden, "cannot delete others' quests")
 	}
 
-	if err := s.DeleteQuest(c, &storage.DeleteQuestRequest{ID: id}); err != nil {
+	if err = s.DeleteQuest(ctx, &storage.DeleteQuestRequest{ID: id}); err != nil {
 		return xerrors.Errorf("%w", err)
 	}
+	w.WriteHeader(http.StatusOK)
 	return nil
 }
 
-// HandleFinish handles POST /quest/:id/finish request
+// HandleFinish handles POST /quest/{id}/finish request
 //
 // @Summary		Finish quest
 // @Tags 		Quests
@@ -292,18 +307,21 @@ func (h *Handler) HandleDelete(c *gin.Context) error {
 // @Failure    	404
 // @Router		/quest/{quest_id}/finish [post]
 // @Security 	ApiKeyAuth
-func (h *Handler) HandleFinish(c *gin.Context) error {
-	id := c.Param("id")
-	uauth, err := jwt.GetUserFromContext(c)
+func (h *Handler) HandleFinish(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	id, err := transport.UUIDParam(r, "id")
 	if err != nil {
 		return xerrors.Errorf("%w", err)
 	}
-	s, err := h.clientFactory.NewStorage(c, dbnode.Master)
+	uauth, err := jwt.GetUserFromContext(ctx)
+	if err != nil {
+		return xerrors.Errorf("%w", err)
+	}
+	s, err := h.clientFactory.NewStorage(ctx, dbnode.Master)
 	if err != nil {
 		return xerrors.Errorf("get storage client: %w", err)
 	}
 
-	q, err := s.GetQuest(c, &storage.GetQuestRequest{ID: id})
+	q, err := s.GetQuest(ctx, &storage.GetQuestRequest{ID: id})
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return httperrors.Errorf(http.StatusNotFound, "quest %q not found", id)
@@ -314,8 +332,9 @@ func (h *Handler) HandleFinish(c *gin.Context) error {
 		return httperrors.New(http.StatusForbidden, "only creator can finish their quests")
 	}
 
-	if err = s.FinishQuest(c, &storage.FinishQuestRequest{ID: id}); err != nil {
+	if err = s.FinishQuest(ctx, &storage.FinishQuestRequest{ID: id}); err != nil {
 		return xerrors.Errorf("finish quest: %w", err)
 	}
+	w.WriteHeader(http.StatusOK)
 	return nil
 }
