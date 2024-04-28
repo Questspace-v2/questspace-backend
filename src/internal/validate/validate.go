@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"questspace/pkg/httperrors"
-
 	"golang.org/x/xerrors"
+
+	"questspace/pkg/httperrors"
 )
 
 const imgHeadTimeout = time.Second * 5

@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"questspace/pkg/httperrors"
-
 	"golang.org/x/xerrors"
+
+	"questspace/pkg/httperrors"
 )
 
 func UnmarshalRequestData[T any](req *http.Request) (*T, error) {

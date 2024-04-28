@@ -42,7 +42,7 @@ func InitApp(ctx context.Context, application *app.App) error {
 	}
 
 	application.Router().Use(cors.Middleware(&cfg.CORS))
-	application.Router().H().OPTIONS("/", http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+	application.Router().H().OPTIONS("/*any", http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	}))
 

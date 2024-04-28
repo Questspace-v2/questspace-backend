@@ -54,8 +54,6 @@ func NewApp() *App {
 	}
 	defer func() { _ = logger.Sync() }()
 
-	//app := &App{router: transport.NewRouter()}
-
 	_, err = os.Stat(".env")
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		log.Fatalf("Failed to check .env file: %v", err)

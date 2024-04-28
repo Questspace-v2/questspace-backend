@@ -6,12 +6,11 @@ import (
 	"strings"
 	"time"
 
-	"questspace/pkg/logging"
-
-	"questspace/pkg/transport"
-
 	"github.com/gofrs/uuid"
 	"go.uber.org/zap"
+
+	"questspace/pkg/logging"
+	"questspace/pkg/transport"
 )
 
 var restrictedHeaders = map[string]struct{}{

@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"net/http"
 
+	"go.uber.org/zap"
+
 	"questspace/pkg/httperrors"
 	"questspace/pkg/logging"
-
-	"go.uber.org/zap"
 )
 
 type AppHandlerFunc func(ctx context.Context, w http.ResponseWriter, r *http.Request) error
