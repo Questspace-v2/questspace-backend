@@ -1,0 +1,58 @@
+name: update-user
+requests:
+  - method: POST
+    uri: /auth/register
+    json-input: >
+      {
+        "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+        "username": "svayp11",
+        "password": "password"
+      }
+
+    expected-status: 200
+    expected-json: >
+      {
+        "access_token": "$SET$:SVAYP11_TOKEN",
+        "user": {
+          "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+          "username": "svayp11",
+          "id": "$SET$:USER_ID"
+        }
+      }
+
+  - method: POST
+    uri: /user/$USER_ID
+    authorization: $SVAYP11_TOKEN
+    json-input: >
+      {
+        "avatar_url": "https://api.dicebear.com/7.x/thumbs/png",
+        "username": "pyavs22"
+      }
+
+    expected-status: 200
+    expected-json: >
+      {
+        "access_token": "$SET$:PYAVS22_TOKEN",
+        "user": {
+          "avatar_url": "https://api.dicebear.com/7.x/thumbs/png",
+          "id": "$USER_ID",
+          "username": "pyavs22"
+        }
+      }
+
+  - method: GET
+    uri: /user/$USER_ID
+
+    expected-status: 200
+    expected-json: >
+      {
+        "id": "$USER_ID",
+        "avatar_url": "https://api.dicebear.com/7.x/thumbs/png",
+        "username": "pyavs22"
+      }
+
+  - method: DELETE
+    uri: /user/$USER_ID
+    authorization: $PYAVS22_TOKEN
+
+    expected-status: 200

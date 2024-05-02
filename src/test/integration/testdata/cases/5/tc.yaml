@@ -1,0 +1,40 @@
+name: sign-in
+requests:
+  - method: POST
+    uri: /auth/register
+    json-input: >
+      {
+        "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+        "username": "svayp11", 
+        "password": "password"
+      }
+
+    expected-status: 200
+    expected-json: >
+      {
+        "access_token": "$SET$:SVAYP11_TOKEN",
+        "user": {
+          "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+          "username": "svayp11", 
+          "id": "$SET$:USER_ID"
+        }
+      }
+
+  - method: POST
+    uri: /auth/sign-in
+    json-input: >
+      {
+        "password": "password",
+        "username": "svayp11"
+      }
+
+    expected-status: 200
+    expected-json: >
+      {
+        "access_token": "$SVAYP11_TOKEN",
+        "user": {
+          "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+          "username": "svayp11", 
+          "id": "$USER_ID"
+        }
+      }

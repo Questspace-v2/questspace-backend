@@ -1,0 +1,560 @@
+name: game
+requests:
+  - method: POST
+    uri: /auth/register
+    json-input: >
+      {
+        "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+        "username": "svayp11",
+        "password": "password"
+      }
+
+    expected-status: 200
+    expected-json: >
+      {
+        "access_token": "$SET$:SVAYP11_TOKEN",
+        "user": {
+          "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+          "username": "svayp11",
+          "id": "$SET$:USER_ID"
+        }
+      }
+
+  - method: POST
+    uri: /quest
+    authorization: $SVAYP11_TOKEN
+    json-input: >
+      {
+        "access": "public",
+        "description": "description",
+        "finish_time": "2024-04-21T14:00:00+05:00",
+        "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
+        "name": "name",
+        "registration_deadline": "2024-04-18T12:00:00+05:00",
+        "start_time": "2024-04-18T14:00:00+05:00"
+      }
+
+    expected-status: 200
+    expected-json: >
+      {
+        "access": "public",
+        "creator": {
+          "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+          "id": "$USER_ID",
+          "username": "svayp11"
+        },
+        "description": "description",
+        "finish_time": "$ANY$",
+        "id": "$SET$:QUEST_ID",
+        "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
+        "name": "name",
+        "registration_deadline": "$ANY$",
+        "start_time": "$ANY$",
+        "status": "RUNNING"
+      }
+
+  - method: POST
+    uri: /quest/$QUEST_ID/task-groups
+    authorization: $SVAYP11_TOKEN
+    json-input: >
+      {
+        "task_groups": [
+          {
+            "name": "group_1",
+            "pub_time": "2024-04-18T14:00:00+05:00",
+            "tasks": [
+              {
+                "correct_answers": [
+                  "string"
+                ],
+                "hints": [
+                  "str"
+                ],
+                "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
+                "name": "task_1",
+                "pub_time": "2024-04-18T14:00:00+05:00",
+                "question": "question",
+                "reward": 50,
+                "verification": "auto"
+              },
+              {
+                "correct_answers": [
+                  "not_string"
+                ],
+                "hints": [
+                  "not_str"
+                ],
+                "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
+                "name": "task_2",
+                "pub_time": "2024-04-18T14:00:00+05:00",
+                "question": "notquestion",
+                "reward": 500,
+                "verification": "auto"
+              }
+            ]
+          }
+        ]
+      }
+
+    expected-status: 200
+    expected-json: >
+      {
+        "task_groups": [
+          {
+            "id": "$SET$:GROUP1_ID",
+            "name": "group_1",
+            "order_idx": 0,
+            "pub_time": "$ANY$",
+            "tasks": [
+              {
+                "correct_answers": [
+                  "string"
+                ],
+                "hints": [
+                  "str"
+                ],
+                "id": "$SET$:TASK1_ID",
+                "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
+                "name": "task_1",
+                "order_idx": 0,
+                "question": "question",
+                "reward": 50,
+                "verification_type": "auto"
+              },
+              {
+                "correct_answers": [
+                  "not_string"
+                ],
+                "hints": [
+                  "not_str"
+                ],
+                "id": "$SET$:TASK2_ID",
+                "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
+                "name": "task_2",
+                "order_idx": 1,
+                "question": "notquestion",
+                "reward": 500,
+                "verification_type": "auto"
+              }
+            ]
+          }
+        ]
+      }
+
+  - method: POST
+    uri: /auth/register
+    json-input: >
+      {
+        "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+        "username": "pyavs22",
+        "password": "qwerty"
+      }
+
+    expected-status: 200
+    expected-json: >
+      {
+        "access_token": "$SET$:PYAVS22_TOKEN",
+        "user": {
+          "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+          "username": "pyavs22",
+          "id": "$SET$:USER_ID2"
+        }
+      }
+
+  - method: POST
+    uri: /auth/register
+    json-input: >
+      {
+        "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+        "username": "syavp33",
+        "password": "qwer"
+      }
+
+    expected-status: 200
+    expected-json: >
+      {
+        "access_token": "$SET$:SYAVP33_TOKEN",
+        "user": {
+          "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+          "username": "syavp33",
+          "id": "$SET$:USER_ID3"
+        }
+      }
+
+  - method: POST
+    uri: /quest/$QUEST_ID/teams
+    authorization: $PYAVS22_TOKEN
+    json-input: >
+      {
+        "name": "dream_team"
+      }
+
+    expected-status: 200
+    expected-json: >
+      {
+        "captain": {
+          "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+          "id": "$USER_ID2",
+          "username": "pyavs22"
+        },
+        "id": "$SET$:TEAM_ID",
+        "invite_link": "$SET$:INVITE_LINK",
+        "members": [
+          {
+            "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+            "id": "$USER_ID2",
+            "username": "pyavs22"
+          }
+        ],
+        "name": "dream_team",
+        "score": 0
+      }
+
+  - method: POST
+    uri: /quest/$QUEST_ID/teams
+    authorization: $SYAVP33_TOKEN
+    json-input: >
+      {
+        "name": "dust_team"
+      }
+
+    expected-status: 200
+    expected-json: >
+      {
+        "captain": {
+          "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+          "id": "$USER_ID3",
+          "username": "syavp33"
+
+        },
+        "id": "$SET$:TEAM_ID2",
+        "invite_link": "$SET$:INVITE_LINK2",
+        "members": [
+          {
+            "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+            "id": "$USER_ID3",
+            "username": "syavp33"
+          }
+        ],
+        "name": "dust_team",
+        "score": 0
+      }
+
+  - method: GET
+    uri: /quest/$QUEST_ID/play
+    authorization: $PYAVS22_TOKEN
+
+    expected-status: 200
+    expected-json: >
+      {
+        "quest": {
+          "access": "public",
+          "creator": {
+            "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+            "id": "$USER_ID",
+            "username": "svayp11"
+          },
+          "description": "description",
+          "finish_time": "$ANY$",
+          "id": "$QUEST_ID",
+          "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
+          "name": "name",
+          "registration_deadline": "$ANY$",
+          "start_time": "$ANY$",
+          "status": "RUNNING"
+        },
+        "task_groups": [
+          {
+            "id": "$GROUP1_ID",
+            "name": "group_1",
+            "order_idx": 0,
+            "pub_time": "$ANY$",
+            "tasks": [
+              {
+                "accepted": false,
+                "hints": [
+                  {
+                    "taken": false
+                  }
+                ],
+                "id": "$TASK1_ID",
+                "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
+                "name": "task_1",
+                "order_idx": 0,
+                "question": "question",
+                "reward": 50,
+                "verification_type": "auto"
+              },
+              {
+                "accepted": false,
+                "hints": [
+                  {
+                    "taken": false
+                  }
+                ],
+                "id": "$TASK2_ID",
+                "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
+                "name": "task_2",
+                "order_idx": 1,
+                "question": "notquestion",
+                "reward": 500,
+                "verification_type": "auto"
+              }
+            ]
+          }
+        ],
+        "team": {
+          "captain": {
+            "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+            "id": "$USER_ID2",
+            "username": "pyavs22"
+          },
+          "id": "$SET$:TEAM_ID",
+          "invite_link": "$SET$:INVITE_LINK",
+          "name": "dream_team",
+          "score": 0
+        }
+      }
+
+  - method: GET
+    uri: /quest/$QUEST_ID/table
+    authorization: $SVAYP11_TOKEN
+
+    expected-status: 200
+    expected-json: >
+      {
+        "results": [
+          {
+            "id": "$TEAM_ID",
+            "name": "dream_team",
+            "penalty": 0,
+            "task_groups": [
+              {
+                "id": "$GROUP1_ID",
+                "name": "group_1",
+                "tasks": [
+                  {
+                    "id": "$TASK1_ID",
+                    "name": "task_1",
+                    "score": 0
+                  },
+                  {
+                    "id": "$TASK2_ID",
+                    "name": "task_2",
+                    "score": 0
+                  }
+                ]
+              }
+            ],
+            "total_score": 0
+          },
+          {
+            "id": "$TEAM_ID2",
+            "name": "dust_team",
+            "penalty": 0,
+            "task_groups": [
+              {
+                "id": "$GROUP1_ID",
+                "name": "group_1",
+                "tasks": [
+                  {
+                    "id": "$TASK1_ID",
+                    "name": "task_1",
+                    "score": 0
+                  },
+                  {
+                    "id": "$TASK2_ID",
+                    "name": "task_2",
+                    "score": 0
+                  }
+                ]
+              }
+            ],
+            "total_score": 0
+          }
+        ]
+      }
+
+  - method: POST
+    uri: /quest/$QUEST_ID/hint
+    authorization: $SYAVP33_TOKEN
+    json-input: >
+      {
+        "index": 0,
+        "task_id": "$TASK1_ID"
+      }
+
+    expected-status: 200
+    expected-json: >
+      {
+        "index": 0,
+        "text": "str"
+      }
+
+  - method: POST
+    uri: /quest/$QUEST_ID/answer
+    authorization: $PYAVS22_TOKEN
+    json-input: >
+      {
+        "taskID": "$TASK1_ID",
+        "text": "string"
+      }
+
+    expected-status: 200
+    expected-json: >
+      {
+        "accepted": true,
+        "score": 50,
+        "text": "string"
+      }
+
+  - method: POST
+    uri: /quest/$QUEST_ID/answer
+    authorization: $SYAVP33_TOKEN
+    json-input: >
+      {
+        "taskID": "$TASK1_ID",
+        "text": "str"
+      }
+
+    expected-status: 200
+    expected-json: >
+      {
+        "accepted": false,
+        "text": "str"
+      }
+
+  - method: GET
+    uri: /quest/$QUEST_ID/table
+    authorization: $SVAYP11_TOKEN
+
+    expected-status: 200
+    expected-json: >
+      {
+        "results": [
+          {
+            "id": "$TEAM_ID2",
+            "name": "dust_team",
+            "penalty": 0,
+            "task_groups": [
+              {
+                "id": "$GROUP1_ID",
+                "name": "group_1",
+                "tasks": [
+                  {
+                    "id": "$TASK1_ID",
+                    "name": "task_1",
+                    "score": 0
+                  },
+                  {
+                    "id": "$TASK2_ID",
+                    "name": "task_2",
+                    "score": 0
+                  }
+                ]
+              }
+            ],
+            "total_score": 0
+          },
+          {
+            "id": "$TEAM_ID",
+            "name": "dream_team",
+            "penalty": 0,
+            "task_groups": [
+              {
+                "id": "$GROUP1_ID",
+                "name": "group_1",
+                "tasks": [
+                  {
+                    "id": "$TASK1_ID",
+                    "name": "task_1",
+                    "score": 50
+                  },
+                  {
+                    "id": "$TASK2_ID",
+                    "name": "task_2",
+                    "score": 0
+                  }
+                ]
+              }
+            ],
+            "total_score": 50
+          }
+        ]
+      }
+
+  - method: POST
+    uri: /quest/$QUEST_ID/answer
+    authorization: $SYAVP33_TOKEN
+    json-input: >
+      {
+        "taskID": "$TASK2_ID",
+        "text": "not_string"
+      }
+
+    expected-status: 200
+    expected-json: >
+      {
+        "accepted": true,
+        "score": 500,
+        "text": "not_string"
+      }
+
+  - method: GET
+    uri: /quest/$QUEST_ID/table
+    authorization: $SVAYP11_TOKEN
+
+    expected-status: 200
+    expected-json: >
+      {
+        "results": [
+          {
+            "id": "$TEAM_ID",
+            "name": "dream_team",
+            "penalty": 0,
+            "task_groups": [
+              {
+                "id": "$GROUP1_ID",
+                "name": "group_1",
+                "tasks": [
+                  {
+                    "id": "$TASK1_ID",
+                    "name": "task_1",
+                    "score": 50
+                  },
+                  {
+                    "id": "$TASK2_ID",
+                    "name": "task_2",
+                    "score": 0
+                  }
+                ]
+              }
+            ],
+            "total_score": 50
+          },
+          {
+            "id": "$TEAM_ID2",
+            "name": "dust_team",
+            "penalty": 0,
+            "task_groups": [
+              {
+                "id": "$GROUP1_ID",
+                "name": "group_1",
+                "tasks": [
+                  {
+                    "id": "$TASK1_ID",
+                    "name": "task_1",
+                    "score": 0
+                  },
+                  {
+                    "id": "$TASK2_ID",
+                    "name": "task_2",
+                    "score": 500
+                  }
+                ]
+              }
+            ],
+            "total_score": 500
+          }
+        ]
+      }

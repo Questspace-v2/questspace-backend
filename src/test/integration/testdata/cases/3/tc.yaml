@@ -1,0 +1,11 @@
+name: register-wrong-type
+method: POST
+uri: /auth/register
+json-input: >
+  {
+    "avatar_url": "https://freetestdata.com/wp-content/uploads/2021/09/Free_Test_Data_100KB_MP3.mp3",
+    "username": "svayp11",
+    "password": "password"
+  }
+
+expected-status: 415

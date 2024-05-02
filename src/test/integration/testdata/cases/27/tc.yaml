@@ -1,0 +1,211 @@
+name: task-groups
+requests:
+  - method: POST
+    uri: /auth/register
+    json-input: >
+      {
+        "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+        "username": "svayp11",
+        "password": "password"
+      }
+
+    expected-status: 200
+    expected-json: >
+      {
+        "access_token": "$SET$:SVAYP11_TOKEN",
+        "user": {
+          "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+          "username": "svayp11",
+          "id": "$SET$:USER_ID"
+        }
+      }
+
+  - method: POST
+    uri: /quest
+    authorization: $SVAYP11_TOKEN
+    json-input: >
+      {
+        "access": "public",
+        "description": "description",
+        "finish_time": "2024-04-21T14:00:00+05:00",
+        "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
+        "name": "name",
+        "registration_deadline": "2024-04-21T12:00:00+05:00",
+        "start_time": "2024-04-21T14:00:00+05:00"
+      }
+
+    expected-status: 200
+    expected-json: >
+      {
+        "access": "public",
+        "creator": {
+          "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+          "id": "$USER_ID",
+          "username": "svayp11"
+        },
+        "description": "description",
+        "finish_time": "$ANY$",
+        "id": "$SET$:QUEST_ID",
+        "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
+        "name": "name",
+        "registration_deadline": "$ANY$",
+        "start_time": "$ANY$",
+        "status": "ON_REGISTRATION"
+      }
+
+  - method: POST
+    uri: /quest/$QUEST_ID/task-groups
+    authorization: $SVAYP11_TOKEN
+    json-input: >
+      {
+        "task_groups": [
+          {
+            "name": "group_1",
+            "pub_time": "2024-04-21T14:00:00+05:00",
+            "tasks": [
+              {
+                "correct_answers": [
+                  "string"
+                ],
+                "hints": [
+                  "str"
+                ],
+                "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
+                "name": "task_1",
+                "pub_time": "2024-04-21T14:00:00+05:00",
+                "question": "question",
+                "reward": 50,
+                "verification": "auto"
+              },
+              {
+                "correct_answers": [
+                  "not_string"
+                ],
+                "hints": [
+                  "not_str"
+                ],
+                "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
+                "name": "task_2",
+                "pub_time": "2024-04-21T14:00:00+05:00",
+                "question": "notquestion",
+                "reward": 500,
+                "verification": "auto"
+              }
+            ]
+          }
+        ]
+      }
+
+    expected-status: 200
+    expected-json: >
+      {
+        "task_groups": [
+          {
+            "id": "$SET$:GROUP1_ID",
+            "name": "group_1",
+            "order_idx": 0,
+            "pub_time": "$ANY$",
+            "tasks": [
+              {
+                "correct_answers": [
+                  "string"
+                ],
+                "hints": [
+                  "str"
+                ],
+                "id": "$SET$:TASK1_ID",
+                "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
+                "name": "task_1",
+                "order_idx": 0,
+                "question": "question",
+                "reward": 50,
+                "verification_type": "auto"
+              },
+              {
+                "correct_answers": [
+                  "not_string"
+                ],
+                "hints": [
+                  "not_str"
+                ],
+                "id": "$SET$:TASK2_ID",
+                "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
+                "name": "task_2",
+                "order_idx": 1,
+                "question": "notquestion",
+                "reward": 500,
+                "verification_type": "auto"
+              }
+            ]
+          }
+        ]
+      }
+
+  - method: GET
+    uri: /quest/$QUEST_ID/task-groups
+    expected-status: 401
+
+  - method: GET
+    uri: /quest/$QUEST_ID/task-groups
+    authorization: $SVAYP11_TOKEN
+
+    expected-status: 200
+    expected-json: >
+      {
+        "quest": {
+          "access": "public",
+          "creator": {
+            "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+            "id": "$USER_ID",
+            "username": "svayp11"
+          },
+          "description": "description",
+          "finish_time": "$ANY$",
+          "id": "$SET$:QUEST_ID",
+          "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
+          "name": "name",
+          "registration_deadline": "$ANY$",
+          "start_time": "$ANY$",
+          "status": "ON_REGISTRATION"
+        },
+        "task_groups": [
+          {
+            "id": "$GROUP1_ID",
+            "name": "group_1",
+            "order_idx": 0,
+            "pub_time": "$ANY$",
+            "tasks": [
+              {
+                "correct_answers": [
+                  "string"
+                ],
+                "hints": [
+                  "str"
+                ],
+                "id": "$TASK1_ID",
+                "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
+                "name": "task_1",
+                "order_idx": 0,
+                "question": "question",
+                "reward": 50,
+                "verification_type": "auto"
+              },
+              {
+                "correct_answers": [
+                  "not_string"
+                ],
+                "hints": [
+                  "not_str"
+                ],
+                "id": "$TASK2_ID",
+                "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
+                "name": "task_2",
+                "order_idx": 1,
+                "question": "notquestion",
+                "reward": 500,
+                "verification_type": "auto"
+              }
+            ]
+          }
+        ]
+      }

@@ -1,0 +1,83 @@
+name: quest
+requests:
+  - method: POST
+    uri: /auth/register
+    json-input: >
+      {
+        "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+        "username": "svayp11",
+        "password": "password"
+      }
+
+    expected-status: 200
+    expected-json: >
+      {
+        "access_token": "$SET$:SVAYP11_TOKEN",
+        "user": {
+          "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+          "username": "svayp11",
+          "id": "$SET$:USER_ID"
+        }
+      }
+
+  - method: POST
+    uri: /quest
+    authorization: $SVAYP11_TOKEN
+    json-input: >
+      {
+        "access": "public",
+        "description": "description",
+        "finish_time": "2024-04-21T14:00:00+05:00",
+        "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
+        "name": "name",
+        "registration_deadline": "2024-04-21T12:00:00+05:00",
+        "start_time": "2024-04-21T14:00:00+05:00"
+      }
+
+    expected-status: 200
+    expected-json: >
+      {
+        "access": "public",
+        "creator": {
+          "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+          "id": "$USER_ID",
+          "username": "svayp11"
+        },
+        "description": "description",
+        "finish_time": "$ANY$",
+        "id": "$SET$:QUEST_ID",
+        "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
+        "name": "name",
+        "registration_deadline": "$ANY$",
+        "start_time": "$ANY$",
+        "status": "ON_REGISTRATION"
+      }
+
+  - method: GET
+    uri: "/quest/$QUEST_ID"
+
+    expected-status: 200
+    expected-json: >
+      {
+        "quest": {
+          "access": "public",
+          "creator": {
+            "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+            "id": "$USER_ID",
+            "username": "svayp11"
+          },
+          "description": "description",
+          "finish_time": "$ANY$",
+          "id": "$QUEST_ID",
+          "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
+          "name": "name",
+          "registration_deadline": "$ANY$",
+          "start_time": "$ANY$",
+          "status": "ON_REGISTRATION"
+        }
+      }
+
+  - method: DELETE
+    uri: "/quest/$QUEST_ID"
+    authorization: $SVAYP11_TOKEN
+    expected-status: 200

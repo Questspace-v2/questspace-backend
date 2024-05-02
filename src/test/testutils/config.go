@@ -16,7 +16,7 @@ const (
 
 	TestJWTSecret    = "secret"
 	TestGoogleSecret = "google_secret"
-	InviteLinkPrefix = "https://testing.questspace.fun/invites/"
+	InviteLinkPrefix = ""
 
 	postgresPasswordEnvVar = "POSTGRES_PASSWORD"
 	postgresUserEnvVar     = "POSTGRES_USER"

@@ -1,0 +1,11 @@
+name: register-no-password
+method: POST
+uri: /auth/register
+json-input: >
+  {
+    "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+    "username": "svayp11",
+    "password": ""
+  }
+
+expected-status: 400
