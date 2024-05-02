@@ -30,3 +30,6 @@ prod.yaml
 # infra
 infra/k8s/**/*-secret.yaml
 infra/k8s/**/*-configmap.yaml
+
+# macOS
+.DS_Store
