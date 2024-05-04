@@ -7,18 +7,26 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/gin-gonic/gin"
+	"github.com/gofrs/uuid"
+
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap/zaptest"
 	"golang.org/x/xerrors"
 
 	"questspace/internal/hasher"
-	pgdb "questspace/internal/pgdb/client"
-	"questspace/pkg/application"
+	"questspace/internal/pgdb"
 	"questspace/pkg/auth/jwt"
 	jwtmock "questspace/pkg/auth/jwt/mocks"
+	"questspace/pkg/middleware"
 	"questspace/pkg/storage"
 	storagemock "questspace/pkg/storage/mocks"
+	"questspace/pkg/transport"
+)
+
+var (
+	existentID    = uuid.Must(uuid.NewV4())
+	nonExistentID = uuid.Must(uuid.NewV4())
 )
 
 func TestGetHandler_CommonCases(t *testing.T) {
@@ -31,34 +39,33 @@ func TestGetHandler_CommonCases(t *testing.T) {
 	}{
 		{
 			name:       "ok",
-			id:         "id",
-			getReq:     &storage.GetUserRequest{ID: "id"},
+			id:         existentID.String(),
+			getReq:     &storage.GetUserRequest{ID: existentID.String()},
 			statusCode: http.StatusOK,
 		},
 		{
 			name:       "not found",
-			id:         "non_existent_id",
-			getReq:     &storage.GetUserRequest{ID: "non_existent_id"},
+			id:         nonExistentID.String(),
+			getReq:     &storage.GetUserRequest{ID: nonExistentID.String()},
 			getErr:     storage.ErrNotFound,
 			statusCode: http.StatusNotFound,
 		},
 		{
 			name:       "internal error",
-			id:         "id",
-			getReq:     &storage.GetUserRequest{ID: "id"},
+			id:         existentID.String(),
+			getReq:     &storage.GetUserRequest{ID: existentID.String()},
 			getErr:     xerrors.New("oops"),
 			statusCode: http.StatusInternalServerError,
 		},
 	}
 
-	gin.SetMode(gin.TestMode)
 	ctrl := gomock.NewController(t)
 	userStorage := storagemock.NewMockQuestSpaceStorage(ctrl)
-	router := gin.Default()
-	router.ContextWithFallback = true
+	router := transport.NewRouter()
+	router.Use(middleware.CtxLog(zaptest.NewLogger(t)))
 	factory := pgdb.NewFakeClientFactory(userStorage)
 	handler := NewGetHandler(factory)
-	router.GET("/user/:id", application.AsGinHandler(handler.Handle))
+	router.H().GET("/user/:id", transport.WrapCtxErr(handler.Handle))
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -75,25 +82,24 @@ func TestGetHandler_CommonCases(t *testing.T) {
 }
 
 func TestUpdateHandler_HandleUser(t *testing.T) {
-	gin.SetMode(gin.TestMode)
 	ctrl := gomock.NewController(t)
 	userStorage := storagemock.NewMockQuestSpaceStorage(ctrl)
 	jwtParser := jwtmock.NewMockParser(ctrl)
 	factory := pgdb.NewFakeClientFactory(userStorage)
 	pwHasher := hasher.NewNopHasher()
 
-	router := gin.Default()
-	router.ContextWithFallback = true
+	router := transport.NewRouter()
+	router.Use(middleware.CtxLog(zaptest.NewLogger(t)))
 	handler := NewUpdateHandler(factory, http.Client{}, pwHasher, jwtParser)
-	router.POST("/user/:id", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(handler.HandleUser))
+	router.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).POST("/user/:id", transport.WrapCtxErr(handler.HandleUser))
 
 	oldUser := storage.User{
-		ID:        "1",
+		ID:        existentID.String(),
 		Username:  "old_username",
 		AvatarURL: "https://api.dicebear.com/7.x/thumbs/svg?seed=123132",
 	}
 	expectedUser := storage.User{
-		ID:        "1",
+		ID:        existentID.String(),
 		Username:  "another_username",
 		AvatarURL: "https://api.dicebear.com/7.x/thumbs/svg?seed=123132",
 	}
@@ -103,9 +109,9 @@ func TestUpdateHandler_HandleUser(t *testing.T) {
 	}
 	raw, err := json.Marshal(req)
 	require.NoError(t, err)
-	httpReq, err := http.NewRequest(http.MethodPost, "/user/1", bytes.NewReader(raw))
-	httpReq.Header.Add("Authorization", "Bearer alg.pld.key")
+	httpReq, err := http.NewRequest(http.MethodPost, "/user/"+existentID.String(), bytes.NewReader(raw))
 	require.NoError(t, err)
+	httpReq.Header.Add("Authorization", "Bearer alg.pld.key")
 	rr := httptest.NewRecorder()
 
 	jwtParser.EXPECT().ParseToken("alg.pld.key").Return(&oldUser, nil)
@@ -118,20 +124,19 @@ func TestUpdateHandler_HandleUser(t *testing.T) {
 }
 
 func TestUpdateHandler_HandlePassword(t *testing.T) {
-	gin.SetMode(gin.TestMode)
 	ctrl := gomock.NewController(t)
 	userStorage := storagemock.NewMockQuestSpaceStorage(ctrl)
 	jwtParser := jwtmock.NewMockParser(ctrl)
 	factory := pgdb.NewFakeClientFactory(userStorage)
 	pwHasher := hasher.NewNopHasher()
 
-	router := gin.Default()
-	router.ContextWithFallback = true
+	router := transport.NewRouter()
+	router.Use(middleware.CtxLog(zaptest.NewLogger(t)))
 	handler := NewUpdateHandler(factory, http.Client{}, pwHasher, jwtParser)
-	router.POST("/user/:id/password", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(handler.HandlePassword))
+	router.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).POST("/user/:id/password", transport.WrapCtxErr(handler.HandlePassword))
 
 	oldUser := storage.User{
-		ID:        "1",
+		ID:        existentID.String(),
 		Username:  "username",
 		AvatarURL: "https://api.dicebear.com/7.x/thumbs/svg?seed=123132",
 	}
@@ -144,9 +149,9 @@ func TestUpdateHandler_HandlePassword(t *testing.T) {
 	}
 	raw, err := json.Marshal(req)
 	require.NoError(t, err)
-	httpReq, err := http.NewRequest(http.MethodPost, "/user/1/password", bytes.NewReader(raw))
-	httpReq.Header.Add("Authorization", "Bearer alg.pld.key")
+	httpReq, err := http.NewRequest(http.MethodPost, "/user/"+existentID.String()+"/password", bytes.NewReader(raw))
 	require.NoError(t, err)
+	httpReq.Header.Add("Authorization", "Bearer alg.pld.key")
 	rr := httptest.NewRecorder()
 
 	jwtParser.EXPECT().ParseToken("alg.pld.key").Return(&oldUser, nil)

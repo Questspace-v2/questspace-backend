@@ -113,6 +113,8 @@ definitions:
         items:
           $ref: '#/definitions/game.TaskResult'
         type: array
+      taskScore:
+        type: integer
       teamID:
         type: string
       teamName:
@@ -1110,6 +1112,36 @@ paths:
       tags:
       - Teams
   /teams/{team_id}:
+    post:
+      parameters:
+      - description: Team id
+        in: path
+        name: team_id
+        required: true
+        type: string
+      - description: New information
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/teams.UpdateRequest'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/storage.Team'
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - ApiKeyAuth: []
+      summary: Change team information
+      tags:
+      - Teams
+  /teams/all/{team_id}:
     delete:
       parameters:
       - description: Team id
@@ -1150,36 +1182,7 @@ paths:
       summary: Get team by id
       tags:
       - Teams
-    post:
-      parameters:
-      - description: Team id
-        in: path
-        name: team_id
-        required: true
-        type: string
-      - description: New information
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/teams.UpdateRequest'
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/storage.Team'
-        "400":
-          description: Bad Request
-        "403":
-          description: Forbidden
-        "404":
-          description: Not Found
-      security:
-      - ApiKeyAuth: []
-      summary: Change team information
-      tags:
-      - Teams
-  /teams/{team_id}/{member_id}:
+  /teams/all/{team_id}/{member_id}:
     delete:
       parameters:
       - description: Team id
@@ -1208,7 +1211,7 @@ paths:
       summary: Remove member from team
       tags:
       - Teams
-  /teams/{team_id}/captain:
+  /teams/all/{team_id}/captain:
     post:
       parameters:
       - description: Team id
@@ -1238,7 +1241,7 @@ paths:
       summary: Change team captain
       tags:
       - Teams
-  /teams/{team_id}/leave:
+  /teams/all/{team_id}/leave:
     post:
       parameters:
       - description: Team id

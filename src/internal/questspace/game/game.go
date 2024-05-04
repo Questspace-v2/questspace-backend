@@ -13,8 +13,8 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/xerrors"
 
-	"questspace/pkg/application/httperrors"
-	"questspace/pkg/application/logging"
+	"questspace/pkg/httperrors"
+	"questspace/pkg/logging"
 	"questspace/pkg/storage"
 )
 

@@ -5,51 +5,53 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
-	"questspace/pkg/application/httperrors"
-	"questspace/pkg/application/logging"
+	"questspace/pkg/httperrors"
+	"questspace/pkg/logging"
 	"questspace/pkg/storage"
+	"questspace/pkg/transport"
 )
 
 const AuthCookieName = "qs_user_acc"
 
 type jwtKey struct{}
 
-func middleware(parser Parser, strict bool) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		token := getTokenFromRequest(c.Request)
-		if token == "" && strict {
-			httperrors.WriteErrorResponse(c, httperrors.New(http.StatusUnauthorized, "no credentials found"))
-			return
-		} else if token == "" {
-			c.Next()
-			return
-		}
+func middleware(parser Parser, strict bool) transport.Middleware {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			token := getTokenFromRequest(r)
+			if token == "" && strict {
+				transport.ServeErrorResponse(r.Context(), w, httperrors.New(http.StatusUnauthorized, "no credentials found"))
+				return
+			} else if token == "" {
+				next.ServeHTTP(w, r)
+				return
+			}
 
-		user, err := parser.ParseToken(token)
-		if err != nil {
-			httperrors.WriteErrorResponse(c, httperrors.WrapWithCode(http.StatusUnauthorized, err))
-			return
-		}
+			user, err := parser.ParseToken(token)
+			if err != nil {
+				transport.ServeErrorResponse(r.Context(), w, httperrors.WrapWithCode(http.StatusUnauthorized, err))
+				return
+			}
 
-		logging.AddFieldsToContextLogger(c, zap.Dict("user",
-			zap.String("id", user.ID),
-			zap.String("username", user.Username),
-		))
+			logCtx := logging.AddFieldsToContextLogger(r.Context(), zap.Dict("user",
+				zap.String("id", user.ID),
+				zap.String("username", user.Username),
+			))
 
-		userCtx := context.WithValue(c.Request.Context(), jwtKey{}, user)
-		c.Request = c.Request.WithContext(userCtx)
-		c.Next()
+			userCtx := context.WithValue(logCtx, jwtKey{}, user)
+			*r = *r.WithContext(userCtx)
+			next.ServeHTTP(w, r)
+		})
 	}
 }
 
-func AuthMiddlewareStrict(parser Parser) gin.HandlerFunc {
+func AuthMiddlewareStrict(parser Parser) transport.Middleware {
 	return middleware(parser, true)
 }
 
-func AuthMiddleware(parser Parser) gin.HandlerFunc {
+func AuthMiddleware(parser Parser) transport.Middleware {
 	return middleware(parser, false)
 }
 

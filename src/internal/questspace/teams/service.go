@@ -6,12 +6,10 @@ import (
 	"net/http"
 
 	"go.uber.org/zap"
-
-	"questspace/pkg/application/logging"
-
 	"golang.org/x/xerrors"
 
-	"questspace/pkg/application/httperrors"
+	"questspace/pkg/httperrors"
+	"questspace/pkg/logging"
 	"questspace/pkg/storage"
 )
 

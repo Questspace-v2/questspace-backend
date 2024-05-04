@@ -6,7 +6,7 @@ import (
 
 	"golang.org/x/xerrors"
 
-	"questspace/pkg/application/httperrors"
+	"questspace/pkg/httperrors"
 	"questspace/pkg/storage"
 )
 

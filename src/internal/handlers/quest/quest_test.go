@@ -9,30 +9,30 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/spkg/ptr"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap/zaptest"
 
-	pgdb "questspace/internal/pgdb/client"
-	"questspace/pkg/application"
+	"questspace/internal/pgdb"
 	"questspace/pkg/auth/jwt"
 	jwtmock "questspace/pkg/auth/jwt/mocks"
+	"questspace/pkg/middleware"
 	"questspace/pkg/storage"
 	storagemock "questspace/pkg/storage/mocks"
+	"questspace/pkg/transport"
 )
 
 func TestHandleCreate(t *testing.T) {
-	gin.SetMode(gin.TestMode)
 	ctrl := gomock.NewController(t)
 	userStorage := storagemock.NewMockQuestSpaceStorage(ctrl)
 	jwtParser := jwtmock.NewMockParser(ctrl)
 	factory := pgdb.NewFakeClientFactory(userStorage)
 
-	router := gin.Default()
-	router.ContextWithFallback = true
+	router := transport.NewRouter()
+	router.Use(middleware.CtxLog(zaptest.NewLogger(t)))
 	handler := NewHandler(factory, http.Client{}, "hello/")
-	router.POST("/quest", jwt.AuthMiddlewareStrict(jwtParser), application.AsGinHandler(handler.HandleCreate))
+	router.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).POST("/quest", transport.WrapCtxErr(handler.HandleCreate))
 
 	now := ptr.Time(time.Unix(time.Now().Unix(), 0))
 	now = ptr.Time(now.In(time.UTC))
@@ -60,8 +60,8 @@ func TestHandleCreate(t *testing.T) {
 	raw, err := json.Marshal(req)
 	require.NoError(t, err)
 	httpReq, err := http.NewRequest(http.MethodPost, "/quest", bytes.NewReader(raw))
-	httpReq.Header.Add("Authorization", "Bearer token")
 	require.NoError(t, err)
+	httpReq.Header.Add("Authorization", "Bearer token")
 	rr := httptest.NewRecorder()
 
 	req.Creator = &userCreator

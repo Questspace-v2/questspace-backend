@@ -1,23 +1,22 @@
 package user
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"net/http"
 
-	"questspace/internal/handlers/auth"
-	"questspace/internal/handlers/transport"
-
-	"github.com/gin-gonic/gin"
 	"golang.org/x/xerrors"
 
+	"questspace/internal/handlers/auth"
 	"questspace/internal/hasher"
-	pgdb "questspace/internal/pgdb/client"
+	"questspace/internal/pgdb"
 	"questspace/internal/validate"
-	"questspace/pkg/application/httperrors"
 	"questspace/pkg/auth/jwt"
 	"questspace/pkg/dbnode"
+	"questspace/pkg/httperrors"
 	"questspace/pkg/storage"
+	"questspace/pkg/transport"
 )
 
 type GetHandler struct {
@@ -38,14 +37,17 @@ func NewGetHandler(cf pgdb.QuestspaceClientFactory) *GetHandler {
 // @Success	200		{object}	storage.User
 // @Failure	404
 // @Router	/user/{user_id} [get]
-func (h *GetHandler) Handle(c *gin.Context) error {
-	userId := c.Param("id")
-	req := &storage.GetUserRequest{ID: userId}
-	s, err := h.clientFactory.NewStorage(c, dbnode.Alive)
+func (h *GetHandler) Handle(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	userID, err := transport.UUIDParam(r, "id")
+	if err != nil {
+		return xerrors.Errorf("%w", err)
+	}
+	req := &storage.GetUserRequest{ID: userID}
+	s, err := h.clientFactory.NewStorage(ctx, dbnode.Alive)
 	if err != nil {
 		return xerrors.Errorf("get storage: %w", err)
 	}
-	user, err := s.GetUser(c, req)
+	user, err := s.GetUser(ctx, req)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return httperrors.Errorf(http.StatusNotFound, "user with id %q not found", req.ID)
@@ -53,7 +55,9 @@ func (h *GetHandler) Handle(c *gin.Context) error {
 		return xerrors.Errorf("get user: %w", err)
 	}
 
-	c.JSON(http.StatusOK, user)
+	if err = transport.ServeJSONResponse(w, http.StatusOK, user); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -91,29 +95,32 @@ type UpdatePublicDataRequest struct {
 // @Failure		422
 // @Router		/user/{user_id} [post]
 // @Security 	ApiKeyAuth
-func (h *UpdateHandler) HandleUser(c *gin.Context) error {
-	req, err := transport.UnmarshalRequestData[UpdatePublicDataRequest](c.Request)
+func (h *UpdateHandler) HandleUser(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	req, err := transport.UnmarshalRequestData[UpdatePublicDataRequest](r)
 	if err != nil {
 		return xerrors.Errorf("%w", err)
 	}
-	uauth, err := jwt.GetUserFromContext(c)
+	uauth, err := jwt.GetUserFromContext(ctx)
 	if err != nil {
 		return xerrors.Errorf("%w", err)
 	}
-	id := c.Param("id")
+	id, err := transport.UUIDParam(r, "id")
+	if err != nil {
+		return xerrors.Errorf("%w", err)
+	}
 	if uauth.ID != id {
 		return httperrors.Errorf(http.StatusForbidden, "cannot change data of another user")
 	}
-	if err := validate.ImageURL(c, h.fetcher, req.AvatarURL); err != nil {
+	if err := validate.ImageURL(ctx, h.fetcher, req.AvatarURL); err != nil {
 		return httperrors.WrapWithCode(http.StatusUnsupportedMediaType, err)
 	}
 
-	s, tx, err := h.clientFactory.NewStorageTx(c, &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
+	s, tx, err := h.clientFactory.NewStorageTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
 	if err != nil {
 		return xerrors.Errorf("get storage: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
-	user, err := s.UpdateUser(c, &storage.UpdateUserRequest{ID: id, Username: req.Username, AvatarURL: req.AvatarURL})
+	user, err := s.UpdateUser(ctx, &storage.UpdateUserRequest{ID: id, Username: req.Username, AvatarURL: req.AvatarURL})
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return httperrors.Errorf(http.StatusNotFound, "user with id %q not found", id)
@@ -127,7 +134,7 @@ func (h *UpdateHandler) HandleUser(c *gin.Context) error {
 	if err != nil {
 		return xerrors.Errorf("issue token: %w", err)
 	}
-	if err := tx.Commit(); err != nil {
+	if err = tx.Commit(); err != nil {
 		return xerrors.Errorf("commit tx: %w", err)
 	}
 
@@ -135,7 +142,9 @@ func (h *UpdateHandler) HandleUser(c *gin.Context) error {
 		User:        user,
 		AccessToken: token,
 	}
-	c.JSON(http.StatusOK, &resp)
+	if err = transport.ServeJSONResponse(w, http.StatusOK, &resp); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -155,25 +164,28 @@ type UpdatePasswordRequest struct {
 // @Failure		403
 // @Route		/user/{user_id}/password [post]
 // @Security 	ApiKeyAuth
-func (h *UpdateHandler) HandlePassword(c *gin.Context) error {
-	req, err := transport.UnmarshalRequestData[UpdatePasswordRequest](c.Request)
+func (h *UpdateHandler) HandlePassword(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	req, err := transport.UnmarshalRequestData[UpdatePasswordRequest](r)
 	if err != nil {
 		return xerrors.Errorf("%w", err)
 	}
-	uauth, err := jwt.GetUserFromContext(c)
+	uauth, err := jwt.GetUserFromContext(ctx)
 	if err != nil {
 		return httperrors.WrapWithCode(http.StatusUnauthorized, err)
 	}
-	id := c.Param("id")
+	id, err := transport.UUIDParam(r, "id")
+	if err != nil {
+		return xerrors.Errorf("%w", err)
+	}
 	if uauth.ID != id {
 		return httperrors.Errorf(http.StatusForbidden, "cannot change data of another user")
 	}
 
-	s, err := h.clientFactory.NewStorage(c, dbnode.Master)
+	s, err := h.clientFactory.NewStorage(ctx, dbnode.Master)
 	if err != nil {
 		return xerrors.Errorf("get storage: %w", err)
 	}
-	oldPw, err := s.GetUserPasswordHash(c, &storage.GetUserRequest{ID: id})
+	oldPw, err := s.GetUserPasswordHash(ctx, &storage.GetUserRequest{ID: id})
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return httperrors.Errorf(http.StatusNotFound, "user with id %q not found", id)
@@ -187,12 +199,14 @@ func (h *UpdateHandler) HandlePassword(c *gin.Context) error {
 	if err != nil {
 		return xerrors.Errorf("hash password: %w", err)
 	}
-	user, err := s.UpdateUser(c, &storage.UpdateUserRequest{ID: id, Password: pwHash})
+	user, err := s.UpdateUser(ctx, &storage.UpdateUserRequest{ID: id, Password: pwHash})
 	if err != nil {
 		return xerrors.Errorf("update user: %w", err)
 	}
 
-	c.JSON(http.StatusOK, user)
+	if err = transport.ServeJSONResponse(w, http.StatusOK, user); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -207,9 +221,12 @@ func (h *UpdateHandler) HandlePassword(c *gin.Context) error {
 // @Failure		404
 // @Router		/user/{user_id} [delete]
 // @Security 	ApiKeyAuth
-func (h *UpdateHandler) HandleDelete(c *gin.Context) error {
-	id := c.Param("id")
-	uauth, err := jwt.GetUserFromContext(c)
+func (h *UpdateHandler) HandleDelete(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	id, err := transport.UUIDParam(r, "id")
+	if err != nil {
+		return xerrors.Errorf("%w", err)
+	}
+	uauth, err := jwt.GetUserFromContext(ctx)
 	if err != nil {
 		return httperrors.WrapWithCode(http.StatusUnauthorized, err)
 	}
@@ -218,11 +235,11 @@ func (h *UpdateHandler) HandleDelete(c *gin.Context) error {
 	}
 
 	req := storage.DeleteUserRequest{ID: id}
-	s, err := h.clientFactory.NewStorage(c, dbnode.Master)
+	s, err := h.clientFactory.NewStorage(ctx, dbnode.Master)
 	if err != nil {
 		return xerrors.Errorf("get storage: %w", err)
 	}
-	if err := s.DeleteUser(c, &req); err != nil {
+	if err = s.DeleteUser(ctx, &req); err != nil {
 		return xerrors.Errorf("delete %q: %w", uauth.Username, err)
 	}
 	return nil

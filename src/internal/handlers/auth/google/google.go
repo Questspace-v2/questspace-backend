@@ -5,19 +5,16 @@ import (
 	"net/http"
 
 	"go.uber.org/zap"
-
-	"questspace/pkg/application/logging"
-
-	"github.com/gin-gonic/gin"
 	"golang.org/x/xerrors"
 	"google.golang.org/api/idtoken"
 
 	"questspace/internal/handlers/auth"
-	"questspace/internal/handlers/transport"
-	pgdb "questspace/internal/pgdb/client"
-	"questspace/pkg/application/httperrors"
+	"questspace/internal/pgdb"
 	"questspace/pkg/auth/jwt"
+	"questspace/pkg/httperrors"
+	"questspace/pkg/logging"
 	"questspace/pkg/storage"
+	"questspace/pkg/transport"
 )
 
 type OAuthHandler struct {
@@ -48,23 +45,23 @@ type OAuthRequest struct {
 // @Success	200		{object}	auth.Response
 // @Failure	400
 // @Router	/auth/google [post]
-func (o *OAuthHandler) Handle(c *gin.Context) error {
-	req, err := transport.UnmarshalRequestData[OAuthRequest](c.Request)
+func (o *OAuthHandler) Handle(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	req, err := transport.UnmarshalRequestData[OAuthRequest](r)
 	if err != nil {
 		return xerrors.Errorf("%w", err)
 	}
-	storageReq, err := o.parseToken(c, req.IDToken)
+	storageReq, err := o.parseToken(ctx, req.IDToken)
 	if err != nil {
 		return xerrors.Errorf("%w", err)
 	}
 
-	s, tx, err := o.factory.NewStorageTx(c, nil)
+	s, tx, err := o.factory.NewStorageTx(ctx, nil)
 	if err != nil {
 		return xerrors.Errorf("start tx: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
 
-	user, err := s.CreateOrUpdateByExternalID(c, storageReq)
+	user, err := s.CreateOrUpdateByExternalID(ctx, storageReq)
 	if err != nil {
 		return xerrors.Errorf("create or update google user: %w", err)
 	}
@@ -80,9 +77,12 @@ func (o *OAuthHandler) Handle(c *gin.Context) error {
 		User:        user,
 		AccessToken: token,
 	}
-	c.JSON(http.StatusOK, resp)
 
-	logging.Info(c, "google sign-in done",
+	if err = transport.ServeJSONResponse(w, http.StatusOK, &resp); err != nil {
+		return err
+	}
+
+	logging.Info(ctx, "google sign-in done",
 		zap.String("username", user.Username),
 		zap.String("user_id", user.ID),
 	)
