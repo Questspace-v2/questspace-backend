@@ -21,7 +21,6 @@ func TestQuestspace(t *testing.T) {
 
 	for _, dir := range testDirs {
 		tc := ReadTestCase(t, filepath.Join(casesDir, dir))
-
 		t.Run(dir+"/"+tc.Name, func(t *testing.T) {
 			testutils.StartServer(t)
 			runner := NewTestRunner(testutils.ServerURL)

@@ -27,12 +27,12 @@ requests:
       {
         "access": "public",
         "description": "description",
-        "finish_time": "2024-04-21T14:00:00+05:00",
+        "finish_time": "2027-04-21T14:00:00+05:00",
         "max_team_cap": 4,
         "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
         "name": "name",
-        "registration_deadline": "2024-04-21T12:00:00+05:00",
-        "start_time": "2024-04-21T14:00:00+05:00"
+        "registration_deadline": "2026-04-21T12:00:00+05:00",
+        "start_time": "2026-04-21T14:00:00+05:00"
       }
 
     expected-status: 200
@@ -155,7 +155,7 @@ requests:
       }
 
   - method: POST
-    uri: /teams/$TEAM_ID/leave
+    uri: /teams/all/$TEAM_ID/leave
     authorization: $PYAVS22_TOKEN
 
     expected-status: 400

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"net/http/pprof"
 	"os"
 	"os/signal"
 	"time"
@@ -76,6 +77,16 @@ func InitApp(ctx context.Context, application *app.App) error {
 	}
 
 	r := application.Router()
+	r.H().GET("/debug/pprof/", http.HandlerFunc(pprof.Index))
+	r.H().GET("/debug/pprof/cmdline", http.HandlerFunc(pprof.Cmdline))
+	r.H().GET("/debug/pprof/profile", http.HandlerFunc(pprof.Profile))
+	r.H().GET("/debug/pprof/symbol", http.HandlerFunc(pprof.Symbol))
+	r.H().GET("/debug/pprof/trace", http.HandlerFunc(pprof.Trace))
+	r.H().GET("/debug/pprof/goroutine", pprof.Handler("goroutine"))
+	r.H().GET("/debug/pprof/heap", pprof.Handler("heap"))
+	r.H().GET("/debug/pprof/threadcreate", pprof.Handler("threadcreate"))
+	r.H().GET("/debug/pprof/block", pprof.Handler("block"))
+
 	r.H().GET("/swagger/*path", httpswagger.Handler())
 
 	authHandler := auth.NewHandler(clientFactory, httpClient, pwHasher, jwtParser)
