@@ -80,7 +80,12 @@ func ReadQuests(ctx context.Context, s storage.QuestStorage, user *storage.User,
 
 		switch field {
 		case allFieldName:
-			quests.All, err = getQuestsOfType(ctx, s, user, page, storage.GetAll, pageSize)
+			if user == nil {
+				quests.All, err = getQuestsOfType(ctx, s, user, page, storage.GetPublic, pageSize)
+			} else {
+				quests.All, err = getQuestsOfType(ctx, s, user, page, storage.GetAll, pageSize)
+			}
+
 			if err != nil {
 				return nil, xerrors.Errorf("get all: %w", err)
 			}

@@ -162,16 +162,15 @@ const defaultPageSize = 50
 // @Param		page_id		query		string     false  "Page ID to return. Mutually exclusive to multiple fields"
 // @Success		200			{object}	quests.Quests
 // @Failure		400
-// @Failure		401
 // @Router		/quest [get]
 // @Security	ApiKeyAuth
 func (h *Handler) HandleGetMany(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	uauth, err := jwt.GetUserFromContext(ctx)
-	if err != nil {
-		return xerrors.Errorf("%w", err)
+	uauth, _ := jwt.GetUserFromContext(ctx)
+	fields := transport.QueryArray(r, "fields")
+	if uauth == nil {
+		fields = []string{"all"}
 	}
 
-	fields := transport.QueryArray(r, "fields")
 	pageSizeStr := transport.Query(r, "page_size")
 	pageSize := defaultPageSize
 	if pageSizeStr != "" {

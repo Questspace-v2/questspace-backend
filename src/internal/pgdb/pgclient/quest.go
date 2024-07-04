@@ -124,6 +124,8 @@ func (c *Client) GetQuests(ctx context.Context, req *storage.GetQuestsRequest) (
 		})
 	}
 	switch req.Type {
+	case storage.GetPublic:
+		query = query.Where(sq.Eq{"q.access": "public"})
 	case storage.GetAll:
 		query = c.addAllQuestsCond(query, req.User.ID)
 	case storage.GetRegistered:

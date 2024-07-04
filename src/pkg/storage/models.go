@@ -57,9 +57,10 @@ type Quest struct {
 type GetQuestType int
 
 const (
-	GetAll        GetQuestType = 0
-	GetRegistered GetQuestType = 1
-	GetOwned      GetQuestType = 2
+	GetPublic     GetQuestType = 0
+	GetAll        GetQuestType = 1
+	GetRegistered GetQuestType = 2
+	GetOwned      GetQuestType = 3
 )
 
 type Page struct {

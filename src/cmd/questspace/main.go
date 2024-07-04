@@ -104,7 +104,7 @@ func InitApp(ctx context.Context, application *app.App) error {
 
 	questHandler := quest.NewHandler(clientFactory, httpClient, cfg.Teams.InviteLinkPrefix)
 	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).POST("/quest", transport.WrapCtxErr(questHandler.HandleCreate))
-	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).GET("/quest", transport.WrapCtxErr(questHandler.HandleGetMany))
+	r.H().Use(jwt.AuthMiddleware(jwtParser)).GET("/quest", transport.WrapCtxErr(questHandler.HandleGetMany))
 	r.H().Use(jwt.AuthMiddleware(jwtParser)).GET("/quest/:id", transport.WrapCtxErr(questHandler.HandleGet))
 	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).POST("/quest/:id", transport.WrapCtxErr(questHandler.HandleUpdate))
 	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).DELETE("/quest/:id", transport.WrapCtxErr(questHandler.HandleDelete))
