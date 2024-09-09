@@ -11,6 +11,7 @@ import (
 	"questspace/internal/questspace/quests"
 	"questspace/internal/questspace/taskgroups"
 	"questspace/internal/questspace/taskgroups/requests"
+	"questspace/internal/questspace/tasks"
 	"questspace/pkg/auth/jwt"
 	"questspace/pkg/dbnode"
 	"questspace/pkg/httperrors"
@@ -30,20 +31,16 @@ type TaskGroups []*storage.TaskGroup
 
 // HandleBulkUpdate handles PATCH quest/:id/task-groups/bulk request
 //
-// @Summary	[WIP] Patch task groups by creating new ones, delete, update and reorder all ones. Returns all exising task groups.
-// @Tags	TaskGroups
-// @Param	request	body		storage.TaskGroupsBulkUpdateRequest	true	"Requests to delete/create/update task groups"
-// @Success	200		{object}	TaskGroups
-// @Failure	400
-// @Failure	401
-// @Failure	403
-// @Router	/quest/{id}/task-groups/bulk [patch]
+// @Summary		[WIP] Patch task groups by creating new ones, delete, update and reorder all ones. Returns all exising task groups.
+// @Tags		TaskGroups
+// @Param		request	body		storage.TaskGroupsBulkUpdateRequest	true	"Requests to delete/create/update task groups"
+// @Success		200		{object}	requests.CreateFullResponse
+// @Failure		400
+// @Failure		401
+// @Failure		403
+// @Router		/quest/{id}/task-groups/bulk [patch]
+// @Security 	ApiKeyAuth
 func (h *Handler) HandleBulkUpdate(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
-	w.WriteHeader(http.StatusNotImplemented)
-	return nil
-
-	//nolint:govet
-	//TODO(svayp11): add auth
 	questID, err := transport.UUIDParam(r, "id")
 	if err != nil {
 		return xerrors.Errorf("%w", err)
@@ -54,13 +51,31 @@ func (h *Handler) HandleBulkUpdate(ctx context.Context, w http.ResponseWriter, r
 	}
 	req.QuestID = questID
 
+	uauth, err := jwt.GetUserFromContext(ctx)
+	if err != nil {
+		return xerrors.Errorf("%w", err)
+	}
+
 	s, tx, err := h.clientFactory.NewStorageTx(ctx, nil)
 	if err != nil {
 		return xerrors.Errorf("get storage client: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
 
-	updater := taskgroups.NewUpdater(s, nil)
+	quest, err := s.GetQuest(ctx, &storage.GetQuestRequest{ID: questID})
+	if err != nil {
+		if errors.Is(err, storage.ErrNotFound) {
+			return httperrors.Errorf(http.StatusNotFound, "not found quest %q", questID)
+		}
+		return xerrors.Errorf("get quest: %w", err)
+	}
+
+	if quest.Creator.ID != uauth.ID {
+		return httperrors.Errorf(http.StatusForbidden, "cannot change others' quests")
+	}
+
+	taskUpdater := tasks.NewUpdater(s)
+	updater := taskgroups.NewUpdater(s, taskUpdater)
 	tasksGroups, err := updater.BulkUpdateTaskGroups(ctx, req)
 	if err != nil {
 		return xerrors.Errorf("bulk update: %w", err)
@@ -69,7 +84,8 @@ func (h *Handler) HandleBulkUpdate(ctx context.Context, w http.ResponseWriter, r
 		return xerrors.Errorf("commit tx: %w", err)
 	}
 
-	if err = transport.ServeJSONResponse(w, http.StatusOK, tasksGroups); err != nil {
+	resp := requests.CreateFullResponse{TaskGroups: tasksGroups}
+	if err = transport.ServeJSONResponse(w, http.StatusOK, resp); err != nil {
 		return err
 	}
 	return nil
