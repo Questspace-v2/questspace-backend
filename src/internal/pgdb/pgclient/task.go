@@ -14,18 +14,29 @@ import (
 )
 
 func (c *Client) CreateTask(ctx context.Context, req *storage.CreateTaskRequest) (*storage.Task, error) {
+	values := []any{
+		req.OrderIdx,
+		req.GroupID,
+		req.Name,
+		req.Question,
+		req.Reward,
+		pgtype.FlatArray[string](req.CorrectAnswers),
+		req.Verification,
+		pgtype.FlatArray[string](req.Hints),
+		req.MediaLink,
+	}
+
 	query := sq.Insert("questspace.task").
 		Columns(
 			"order_idx", "group_id", "name", "question", "reward",
 			"correct_answers", "verification", "hints", "media_url").
-		Values(
-			req.OrderIdx, req.GroupID, req.Name, req.Question, req.Reward,
-			pgtype.FlatArray[string](req.CorrectAnswers), req.Verification, pgtype.FlatArray[string](req.Hints), req.MediaLink).
 		Suffix("RETURNING id").
 		PlaceholderFormat(sq.Dollar)
 	if req.PubTime != nil {
-		query = query.Columns("pub_time").Values(req.PubTime)
+		query = query.Columns("pub_time")
+		values = append(values, req.PubTime)
 	}
+	query = query.Values(values...)
 
 	row := query.RunWith(c.runner).QueryRowContext(ctx)
 
