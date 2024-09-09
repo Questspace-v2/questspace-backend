@@ -681,8 +681,6 @@ paths:
             $ref: '#/definitions/quests.Quests'
         "400":
           description: Bad Request
-        "401":
-          description: Unauthorized
       security:
       - ApiKeyAuth: []
       summary: Get many quests sorted by start time and finished status
@@ -955,15 +953,15 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/storage.TaskGroup'
-            type: array
+            $ref: '#/definitions/requests.CreateFullResponse'
         "400":
           description: Bad Request
         "401":
           description: Unauthorized
         "403":
           description: Forbidden
+      security:
+      - ApiKeyAuth: []
       summary: '[WIP] Patch task groups by creating new ones, delete, update and reorder
         all ones. Returns all exising task groups.'
       tags:
