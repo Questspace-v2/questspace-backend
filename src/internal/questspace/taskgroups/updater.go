@@ -236,20 +236,44 @@ func (u *Updater) BulkUpdateTaskGroups(ctx context.Context, req *storage.TaskGro
 	if err := u.createTaskGroups(ctx, taskGroups, req.Create, req.QuestID); err != nil {
 		return nil, xerrors.Errorf("%w", err)
 	}
+	if err = u.clapPack(ctx, taskGroups); err != nil {
+		return nil, xerrors.Errorf("clap task groups pack: %w", err)
+	}
 	taskGroups.ordered = taskGroups.ordered[:newLen]
-	var errs []error
-	for i, item := range taskGroups.ordered {
-		if item == nil {
-			errs = append(errs, xerrors.Errorf("index %d is empty", i))
-		}
-	}
-	if len(errs) > 0 {
-		return nil, httperrors.WrapWithCode(http.StatusBadRequest, errors.Join(errs...))
-	}
 
 	newTaskGroups, err := u.s.GetTaskGroups(ctx, &storage.GetTaskGroupsRequest{QuestID: req.QuestID, IncludeTasks: true})
 	if err != nil {
 		return nil, xerrors.Errorf("get all task groups: %w", err)
 	}
 	return newTaskGroups, nil
+}
+
+func (u *Updater) clapPack(ctx context.Context, pack *taskGroupsPacked) error {
+	var errs []error
+	var l, r int
+	for r != len(pack.ordered) {
+		if pack.ordered[r] == nil {
+			r++
+			continue
+		}
+		pack.ordered[l], pack.ordered[r] = pack.ordered[r], pack.ordered[l]
+
+		tg := pack.ordered[l]
+		if tg.OrderIdx != l {
+			// TODO(svayp11): Do clapping before database update to reduce number of roundtrips
+			newTaskGroup, err := u.s.UpdateTaskGroup(ctx, &storage.UpdateTaskGroupRequest{ID: tg.ID, QuestID: tg.Quest.ID, OrderIdx: l})
+			if err != nil {
+				errs = append(errs, err)
+			}
+			pack.ordered[l] = newTaskGroup
+		}
+
+		r++
+		l++
+	}
+	if len(errs) > 0 {
+		return xerrors.Errorf("%w", errors.Join(errs...))
+	}
+
+	return nil
 }
