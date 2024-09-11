@@ -6,14 +6,13 @@ import (
 	"strings"
 	"testing"
 
-	"questspace/pkg/httperrors"
-
 	"github.com/gofrs/uuid"
 	"github.com/golang/mock/gomock"
 	"github.com/spkg/ptr"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"questspace/pkg/httperrors"
 	"questspace/pkg/storage"
 	storagemock "questspace/pkg/storage/mocks"
 )

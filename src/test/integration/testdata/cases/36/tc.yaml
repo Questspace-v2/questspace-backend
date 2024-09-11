@@ -1,4 +1,5 @@
 name: finish-leaderboard
+ignore: true  # NOTE(svayp11): Old table interface
 requests:
   - method: POST
     uri: /auth/register

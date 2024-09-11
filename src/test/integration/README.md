@@ -20,10 +20,12 @@ All cases are written in YAML and contain series of requests and expected respon
 For single-request cases, you can write request data on the top level:
 ```yaml
 name: your testcase
+ignore: true
 method: GET
 uri: /ping
 expected-status: 200
 ```
+*NOTE: setting ignore option will result in test case success without running it*
 For many requests you need to state them inside `requests` list field:
 ```yaml
 name: your testcase
