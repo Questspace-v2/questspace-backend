@@ -24,6 +24,7 @@ type RequestCase struct {
 
 type TestCase struct {
 	Name     string        `yaml:"name"`
+	Ignore   bool          `yaml:"ignore"`
 	Requests []RequestCase `yaml:"requests"`
 }
 
@@ -31,6 +32,7 @@ func (t *TestCase) UnmarshalYAML(value *yaml.Node) error {
 	//TODO(svayp11): come up with more intelligent way to use two methods of parsing
 	type dummy struct {
 		Name     string        `yaml:"name"`
+		Ignore   bool          `yaml:"ignore"`
 		Requests []RequestCase `yaml:"requests"`
 		URI      bool          `yaml:"uri"` // dummy placeholder to fail on embedded request
 	}
@@ -38,6 +40,7 @@ func (t *TestCase) UnmarshalYAML(value *yaml.Node) error {
 	err := value.Decode(tc)
 	if err == nil {
 		t.Name = tc.Name
+		t.Ignore = tc.Ignore
 		t.Requests = tc.Requests
 		if len(tc.Requests) == 0 {
 			return fmt.Errorf("expected at least one request, but got none")
@@ -47,6 +50,7 @@ func (t *TestCase) UnmarshalYAML(value *yaml.Node) error {
 
 	type singleReqTc struct {
 		Name        string `yaml:"name"`
+		Ignore      bool   `yaml:"ignore"`
 		RequestCase `yaml:",inline"`
 	}
 
@@ -57,6 +61,7 @@ func (t *TestCase) UnmarshalYAML(value *yaml.Node) error {
 	}
 
 	t.Name = stc.Name
+	t.Ignore = stc.Ignore
 	t.Requests = []RequestCase{stc.RequestCase}
 	return nil
 }

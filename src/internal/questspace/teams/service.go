@@ -138,10 +138,10 @@ func (s *Service) DeleteTeam(ctx context.Context, user *storage.User, req *stora
 		}
 		return xerrors.Errorf("get team: %w", err)
 	}
-	if team.Captain.ID != user.ID {
+	if team.Captain.ID != user.ID && team.Quest.Creator.ID != user.ID {
 		return httperrors.New(http.StatusForbidden, "only team captain can delete their team")
 	}
-	if err := s.s.DeleteTeam(ctx, req); err != nil {
+	if err = s.s.DeleteTeam(ctx, req); err != nil {
 		return xerrors.Errorf("delete team: %w", err)
 	}
 	return nil

@@ -207,6 +207,9 @@ func TestTeamStorage_GetTeam(t *testing.T) {
 
 	recvTeamByID1, err := client.GetTeam(ctx, &storage.GetTeamRequest{ID: team1.ID})
 	require.NoError(t, err)
+	require.NotNil(t, recvTeamByID1.Quest.Creator)
+	assert.NotEmpty(t, recvTeamByID1.Quest.Creator.ID)
+
 	recvTeamByURL1, err := client.GetTeam(ctx, &storage.GetTeamRequest{InvitePath: team1.InviteLink})
 	require.NoError(t, err)
 	assert.Equal(t, recvTeamByURL1, recvTeamByID1)
@@ -216,6 +219,7 @@ func TestTeamStorage_GetTeam(t *testing.T) {
 	assert.Equal(t, team1.Captain.ID, recvTeamByID1.Captain.ID)
 	assert.Equal(t, team1.Captain.Username, recvTeamByID1.Captain.Username)
 	assert.Equal(t, team1.Captain.AvatarURL, recvTeamByID1.Captain.AvatarURL)
+	assert.Equal(t, q1.Creator.ID, recvTeamByID1.Quest.Creator.ID)
 
 	recvTeamByID2, err := client.GetTeam(ctx, &storage.GetTeamRequest{ID: team2.ID, IncludeMembers: true})
 	require.NoError(t, err)

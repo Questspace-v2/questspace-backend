@@ -63,10 +63,11 @@ func (c *Client) getTeamMembers(ctx context.Context, teamID string) ([]storage.U
 }
 
 func (c *Client) GetTeam(ctx context.Context, req *storage.GetTeamRequest) (*storage.Team, error) {
-	query := sq.Select("t.id", "t.name", "t.invite_path", "t.score", "q.id", "q.max_team_cap", "u.id", "u.username", "u.avatar_url").
+	query := sq.Select("t.id", "t.name", "t.invite_path", "t.score", "q.id", "q.max_team_cap", "u.id", "u.username", "u.avatar_url", "cr.id").
 		From("questspace.team t").
 		LeftJoin("questspace.quest q ON q.id = t.quest_id").
 		LeftJoin("questspace.user u ON t.cap_id = u.id").
+		LeftJoin("questspace.user cr ON q.creator_id = cr.id").
 		PlaceholderFormat(sq.Dollar)
 	if req.ID != "" {
 		query = query.Where(sq.Eq{"t.id": req.ID})
@@ -85,8 +86,8 @@ func (c *Client) GetTeam(ctx context.Context, req *storage.GetTeamRequest) (*sto
 	}
 
 	row := query.RunWith(c.runner).QueryRowContext(ctx)
-	team := &storage.Team{Quest: &storage.Quest{}, Captain: &storage.User{}}
-	if err := row.Scan(&team.ID, &team.Name, &team.InviteLink, &team.Score, &team.Quest.ID, &team.Quest.MaxTeamCap, &team.Captain.ID, &team.Captain.Username, &team.Captain.AvatarURL); err != nil {
+	team := &storage.Team{Quest: &storage.Quest{Creator: &storage.User{}}, Captain: &storage.User{}}
+	if err := row.Scan(&team.ID, &team.Name, &team.InviteLink, &team.Score, &team.Quest.ID, &team.Quest.MaxTeamCap, &team.Captain.ID, &team.Captain.Username, &team.Captain.AvatarURL, &team.Quest.Creator.ID); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, storage.ErrNotFound
 		}

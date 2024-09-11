@@ -11,6 +11,7 @@ import (
 func TestParseTestCases_SingleRequest(t *testing.T) {
 	data := []byte(`
 name: my testcase
+ignore: true
 uri: /ping
 expected-status: 200
 `)
@@ -18,6 +19,7 @@ expected-status: 200
 	tc := &TestCase{}
 	require.NoError(t, yaml.Unmarshal(data, tc))
 	assert.Equal(t, "my testcase", tc.Name)
+	assert.Equal(t, true, tc.Ignore)
 	require.Len(t, tc.Requests, 1)
 	assert.Equal(t, "/ping", tc.Requests[0].URI)
 	assert.Equal(t, 200, tc.Requests[0].ExpectedStatus)
@@ -26,6 +28,7 @@ expected-status: 200
 func TestParseTestCases_MultipleRequests(t *testing.T) {
 	data := []byte(`
 name: my testcase
+ignore: true
 requests:
   - uri: /ping
     expected-status: 200
@@ -36,6 +39,7 @@ requests:
 	tc := &TestCase{}
 	require.NoError(t, yaml.Unmarshal(data, tc))
 	assert.Equal(t, "my testcase", tc.Name)
+	assert.Equal(t, true, tc.Ignore)
 	require.Len(t, tc.Requests, 2)
 	assert.Equal(t, "/ping", tc.Requests[0].URI)
 	assert.Equal(t, 200, tc.Requests[0].ExpectedStatus)
