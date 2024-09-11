@@ -45,9 +45,37 @@ func TestTaskGroupStorage_CreateTaskGroup(t *testing.T) {
 		Name:     "tg1",
 		OrderIdx: 0,
 		QuestID:  quest.ID,
+		PubTime:  ptr.Time(time.Now()),
 	})
 	require.NoError(t, err)
 	assert.Equal(t, 0, tg.OrderIdx)
+}
+
+func TestTaskGroupStorage_CreateTaskGroup_Tx(t *testing.T) {
+	ctx := context.Background()
+	cl, tx := pgtest.NewEmbeddedQuestspaceTx(t)
+	client := NewClient(cl)
+
+	quest := createTestQuest(t, ctx, client, "svayp11", "quest1")
+	tg, err := client.CreateTaskGroup(ctx, &storage.CreateTaskGroupRequest{
+		Name:     "tg1",
+		OrderIdx: 0,
+		QuestID:  quest.ID,
+		PubTime:  ptr.Time(time.Now()),
+	})
+	require.NoError(t, err)
+	assert.Equal(t, 0, tg.OrderIdx)
+
+	tg1, err := client.CreateTaskGroup(ctx, &storage.CreateTaskGroupRequest{
+		Name:     "tg2",
+		OrderIdx: 0,
+		QuestID:  quest.ID,
+		PubTime:  ptr.Time(time.Now()),
+	})
+	require.NoError(t, err)
+	assert.Equal(t, 0, tg1.OrderIdx)
+
+	require.Error(t, tx.Commit())
 }
 
 func TestTaskGroupStorage_CreateTaskGroup_FailsOnIdenticalOrder(t *testing.T) {

@@ -206,20 +206,44 @@ func (u *Updater) BulkUpdate(ctx context.Context, req *storage.TasksBulkUpdateRe
 		return nil, xerrors.Errorf("create tasks: %w", err)
 	}
 
+	if err = u.clapPack(ctx, pack); err != nil {
+		return nil, xerrors.Errorf("clap tasks pack: %w", err)
+	}
 	pack.order = pack.order[:newLen]
-	var errs []error
-	for i, item := range pack.order {
-		if item == nil {
-			errs = append(errs, xerrors.Errorf("index %d is empty", i))
-		}
-	}
-	if len(errs) > 0 {
-		return nil, httperrors.WrapWithCode(http.StatusBadRequest, errors.Join(errs...))
-	}
 
 	newTasks, err := u.s.GetTasks(ctx, &storage.GetTasksRequest{GroupIDs: []string{req.GroupID}})
 	if err != nil {
 		return nil, xerrors.Errorf("get new tasks: %w", err)
 	}
 	return newTasks[req.GroupID], nil
+}
+
+func (u *Updater) clapPack(ctx context.Context, pack *tasksPacked) error {
+	var errs []error
+	var l, r int
+	for r != len(pack.order) {
+		if pack.order[r] == nil {
+			r++
+			continue
+		}
+		pack.order[l], pack.order[r] = pack.order[r], pack.order[l]
+
+		t := pack.order[l]
+		if t.OrderIdx != l {
+			// TODO(svayp11): Do clapping before database update to reduce number of roundtrips
+			newTask, err := u.s.UpdateTask(ctx, &storage.UpdateTaskRequest{ID: t.ID, OrderIdx: l})
+			if err != nil {
+				errs = append(errs, err)
+			}
+			pack.order[l] = newTask
+		}
+
+		r++
+		l++
+	}
+	if len(errs) > 0 {
+		return xerrors.Errorf("%w", errors.Join(errs...))
+	}
+
+	return nil
 }

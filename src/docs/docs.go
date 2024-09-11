@@ -166,9 +166,6 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request"
-                    },
-                    "401": {
-                        "description": "Unauthorized"
                     }
                 }
             },
@@ -579,6 +576,11 @@ const docTemplate = `{
         },
         "/quest/{id}/task-groups/bulk": {
             "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "tags": [
                     "TaskGroups"
                 ],
@@ -598,10 +600,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/storage.TaskGroup"
-                            }
+                            "$ref": "#/definitions/requests.CreateFullResponse"
                         }
                     },
                     "400": {
