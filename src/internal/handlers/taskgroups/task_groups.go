@@ -136,6 +136,10 @@ func (h *Handler) HandleCreate(ctx context.Context, w http.ResponseWriter, r *ht
 	if q.Creator.ID != uauth.ID {
 		return httperrors.Errorf(http.StatusForbidden, "cannot change others' quests")
 	}
+	quests.SetStatus(q)
+	if q.Status == storage.StatusRunning || q.Status == storage.StatusWaitResults || q.Status == storage.StatusFinished {
+		return httperrors.Errorf(http.StatusForbidden, "do not use create method when quest is already running")
+	}
 	serv := taskgroups.NewService(s, s)
 	resp, err := serv.Create(ctx, req)
 	if err != nil {
