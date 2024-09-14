@@ -11,10 +11,12 @@ import (
 	"time"
 
 	"go.uber.org/zap"
+
+	"questspace/pkg/logging"
+
 	"golang.org/x/xerrors"
 
 	"questspace/pkg/httperrors"
-	"questspace/pkg/logging"
 	"questspace/pkg/storage"
 )
 
@@ -46,17 +48,18 @@ type AnswerTaskHint struct {
 }
 
 type AnswerTask struct {
-	ID           string                   `json:"id"`
-	OrderIdx     int                      `json:"order_idx"`
-	Name         string                   `json:"name"`
-	Question     string                   `json:"question"`
-	Reward       int                      `json:"reward"`
-	Verification storage.VerificationType `json:"verification_type" enums:"auto,manual"`
-	Hints        []AnswerTaskHint         `json:"hints"`
-	Accepted     bool                     `json:"accepted"`
-	Answer       string                   `json:"answer,omitempty"`
-	PubTime      *time.Time               `json:"pub_time,omitempty"`
-	MediaLink    string                   `json:"media_link"`
+	ID              string                   `json:"id"`
+	OrderIdx        int                      `json:"order_idx"`
+	Name            string                   `json:"name"`
+	Question        string                   `json:"question"`
+	Reward          int                      `json:"reward"`
+	Verification    storage.VerificationType `json:"verification_type" enums:"auto,manual"`
+	VerificationNew storage.VerificationType `json:"verification" enums:"auto,manual"`
+	Hints           []AnswerTaskHint         `json:"hints"`
+	Accepted        bool                     `json:"accepted"`
+	Answer          string                   `json:"answer,omitempty"`
+	PubTime         *time.Time               `json:"pub_time,omitempty"`
+	MediaLink       string                   `json:"media_link"`
 }
 
 type AnswerTaskGroup struct {
@@ -95,15 +98,16 @@ func (s *Service) FillAnswerData(ctx context.Context, req *AnswerDataRequest) (*
 
 		for _, t := range tg.Tasks {
 			newT := AnswerTask{
-				ID:           t.ID,
-				OrderIdx:     t.OrderIdx,
-				Name:         t.Name,
-				Question:     t.Question,
-				Reward:       t.Reward,
-				Verification: t.Verification,
-				Hints:        make([]AnswerTaskHint, len(t.Hints)),
-				PubTime:      t.PubTime,
-				MediaLink:    t.MediaLink,
+				ID:              t.ID,
+				OrderIdx:        t.OrderIdx,
+				Name:            t.Name,
+				Question:        t.Question,
+				Reward:          t.Reward,
+				Verification:    t.Verification,
+				VerificationNew: t.Verification,
+				Hints:           make([]AnswerTaskHint, len(t.Hints)),
+				PubTime:         t.PubTime,
+				MediaLink:       t.MediaLink,
 			}
 			if ans, ok := acceptedTasks[t.ID]; ok {
 				newT.Accepted = true
@@ -386,14 +390,13 @@ func (s *Service) TryAnswer(ctx context.Context, user *storage.User, req *TryAns
 		Text:   req.Text,
 	}
 
-	logging.Info(ctx, "answer try",
-		zap.String("team_id", team.ID),
-		zap.String("team_name", team.Name),
-		zap.String("task_id", req.TaskID),
-		zap.String("text", req.Text),
-	)
-
 	if !accepted || answerData.Verification == storage.VerificationManual {
+		logging.Info(ctx, "answer try",
+			zap.String("team_id", team.ID),
+			zap.String("team_name", team.Name),
+			zap.String("task_id", req.TaskID),
+			zap.String("text", req.Text),
+		)
 		if err = s.ah.CreateAnswerTry(ctx, &tryReq); err != nil {
 			return nil, xerrors.Errorf("create answer try: %w", err)
 		}
@@ -408,6 +411,15 @@ func (s *Service) TryAnswer(ctx context.Context, user *storage.User, req *TryAns
 	score := answerData.Reward * (5 - len(taskHints)) / 5
 	tryReq.Accepted = true
 	tryReq.Score = score
+	logging.Info(ctx, "answer try",
+		zap.String("team_id", team.ID),
+		zap.String("team_name", team.Name),
+		zap.String("task_id", req.TaskID),
+		zap.String("text", req.Text),
+		zap.Int("reward", score),
+		zap.Any("taken_hints", taskHints),
+	)
+
 	if err = s.ah.CreateAnswerTry(ctx, &tryReq); err != nil {
 		return nil, xerrors.Errorf("create answer try: %w", err)
 	}
