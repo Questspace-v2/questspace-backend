@@ -394,7 +394,7 @@ func (s *Service) TryAnswer(ctx context.Context, user *storage.User, req *TryAns
 	)
 
 	if !accepted || answerData.Verification == storage.VerificationManual {
-		if err := s.ah.CreateAnswerTry(ctx, &tryReq); err != nil {
+		if err = s.ah.CreateAnswerTry(ctx, &tryReq); err != nil {
 			return nil, xerrors.Errorf("create answer try: %w", err)
 		}
 		return &TryAnswerResponse{Accepted: false, Text: req.Text}, nil
@@ -404,10 +404,11 @@ func (s *Service) TryAnswer(ctx context.Context, user *storage.User, req *TryAns
 	if err != nil {
 		return nil, xerrors.Errorf("get hints: %w", err)
 	}
-	score := answerData.Reward * (5 - len(tookHints)) / 5
+	taskHints := tookHints[req.TaskID]
+	score := answerData.Reward * (5 - len(taskHints)) / 5
 	tryReq.Accepted = true
 	tryReq.Score = score
-	if err := s.ah.CreateAnswerTry(ctx, &tryReq); err != nil {
+	if err = s.ah.CreateAnswerTry(ctx, &tryReq); err != nil {
 		return nil, xerrors.Errorf("create answer try: %w", err)
 	}
 
