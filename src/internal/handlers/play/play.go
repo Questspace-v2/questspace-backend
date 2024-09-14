@@ -353,10 +353,11 @@ func (h *Handler) HandleAddPenalty(ctx context.Context, w http.ResponseWriter, r
 		return xerrors.Errorf("%w", err)
 	}
 
-	s, err := h.clientFactory.NewStorage(ctx, dbnode.Alive)
+	s, tx, err := h.clientFactory.NewStorageTx(ctx, nil)
 	if err != nil {
 		return xerrors.Errorf("get storage: %w", err)
 	}
+	defer func() { _ = tx.Rollback() }()
 	quest, err := s.GetQuest(ctx, &storage.GetQuestRequest{ID: questID})
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
@@ -369,8 +370,11 @@ func (h *Handler) HandleAddPenalty(ctx context.Context, w http.ResponseWriter, r
 	}
 
 	srv := game.NewService(s, s, s, s)
-	if err := srv.AddPenalty(ctx, req); err != nil {
+	if err = srv.AddPenalty(ctx, req); err != nil {
 		return xerrors.Errorf("add penalty: %w", err)
+	}
+	if err = tx.Commit(); err != nil {
+		return xerrors.Errorf("commit tx: %w", err)
 	}
 	w.WriteHeader(http.StatusOK)
 	return nil

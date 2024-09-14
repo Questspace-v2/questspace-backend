@@ -196,13 +196,16 @@ func (c *Client) GetPenalties(ctx context.Context, req *storage.GetPenaltiesRequ
 }
 
 func (c *Client) CreatePenalty(ctx context.Context, req *storage.CreatePenaltyRequest) error {
-	query := sq.Insert("questspace.team_penalty").
-		Columns("team_id", "value").
-		Values(req.TeamID, req.Penalty).
-		PlaceholderFormat(sq.Dollar)
+	var err error
+	// TODO(svayp11): Refactor this abomination
+	deleteQuery := `DELETE FROM questspace.team_penalty WHERE team_id = $1`
+	if _, err = c.runner.ExecContext(ctx, deleteQuery, req.TeamID); err != nil {
+		return xerrors.Errorf("delete all previous penalties: %w", err)
+	}
 
-	if _, err := query.RunWith(c.runner).ExecContext(ctx); err != nil {
-		return xerrors.Errorf("exec query: %w", err)
+	insertQuery := `INSERT INTO questspace.team_penalty (team_id, value) VALUES ($1, $2)`
+	if _, err = c.runner.ExecContext(ctx, insertQuery, req.TeamID, req.Penalty); err != nil {
+		return xerrors.Errorf("add new penalty: %w", err)
 	}
 	return nil
 }
