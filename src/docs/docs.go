@@ -1364,6 +1364,17 @@ const docTemplate = `{
                 "reward": {
                     "type": "integer"
                 },
+                "verification": {
+                    "enum": [
+                        "auto",
+                        "manual"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/storage.VerificationType"
+                        }
+                    ]
+                },
                 "verification_type": {
                     "enum": [
                         "auto",

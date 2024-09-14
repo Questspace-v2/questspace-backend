@@ -55,6 +55,12 @@ definitions:
         type: string
       reward:
         type: integer
+      verification:
+        allOf:
+        - $ref: '#/definitions/storage.VerificationType'
+        enum:
+        - auto
+        - manual
       verification_type:
         allOf:
         - $ref: '#/definitions/storage.VerificationType'
