@@ -533,7 +533,7 @@ const docTemplate = `{
                 "tags": [
                     "TaskGroups"
                 ],
-                "summary": "Create task groups and tasks. All previously created task groups and tasks would be deleted and overridden.",
+                "summary": "[Deprecated] Create task groups and tasks. All previously created task groups and tasks would be deleted and overridden.",
                 "parameters": [
                     {
                         "type": "string",
@@ -584,7 +584,7 @@ const docTemplate = `{
                 "tags": [
                     "TaskGroups"
                 ],
-                "summary": "[WIP] Patch task groups by creating new ones, delete, update and reorder all ones. Returns all exising task groups.",
+                "summary": "Patch task groups by creating new ones, delete, update and reorder all ones. Returns all exising task groups.",
                 "parameters": [
                     {
                         "description": "Requests to delete/create/update task groups",
@@ -1362,6 +1362,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "reward": {
+                    "type": "integer"
+                },
+                "score": {
                     "type": "integer"
                 },
                 "verification": {

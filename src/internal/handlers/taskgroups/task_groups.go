@@ -31,7 +31,7 @@ type TaskGroups []*storage.TaskGroup
 
 // HandleBulkUpdate handles PATCH quest/:id/task-groups/bulk request
 //
-// @Summary		[WIP] Patch task groups by creating new ones, delete, update and reorder all ones. Returns all exising task groups.
+// @Summary		Patch task groups by creating new ones, delete, update and reorder all ones. Returns all exising task groups.
 // @Tags		TaskGroups
 // @Param		request	body		storage.TaskGroupsBulkUpdateRequest	true	"Requests to delete/create/update task groups"
 // @Success		200		{object}	requests.CreateFullResponse
@@ -93,7 +93,7 @@ func (h *Handler) HandleBulkUpdate(ctx context.Context, w http.ResponseWriter, r
 
 // HandleCreate handles POST quest/:id/task-groups request
 //
-// @Summary		Create task groups and tasks. All previously created task groups and tasks would be deleted and overridden.
+// @Summary		[Deprecated] Create task groups and tasks. All previously created task groups and tasks would be deleted and overridden.
 // @Tags		TaskGroups
 // @Param		quest_id	path		string						true	"Quest ID"
 // @Param		request		body		requests.CreateFullRequest	true	"All task groups with inner tasks to create"

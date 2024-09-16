@@ -150,6 +150,13 @@ requests:
           {
             "id": "$GROUP1_ID",
             "tasks": {
+              "update": [
+                {
+                  "id": "$TASK1_ID",
+                  "order_idx": 0,
+                  "reward": 10
+                }
+              ],
               "create": [
                 {
                   "correct_answers": [
@@ -207,7 +214,7 @@ requests:
                 "name": "task_1",
                 "order_idx": 0,
                 "question": "question",
-                "reward": 50,
+                "reward": 10,
                 "verification_type": "auto"
               },
               {
