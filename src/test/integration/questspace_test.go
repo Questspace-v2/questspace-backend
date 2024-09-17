@@ -22,6 +22,7 @@ func TestQuestspace(t *testing.T) {
 	for _, dir := range testDirs {
 		tc := ReadTestCase(t, filepath.Join(casesDir, dir))
 		tcFullName := dir + "/" + tc.Name
+
 		t.Run(tcFullName, func(t *testing.T) {
 			if tc.Ignore {
 				t.Logf("WARNING: Test case %q is ignored. Skipping...", tcFullName)
@@ -40,7 +41,6 @@ func TestQuestspace(t *testing.T) {
 					t.Fatalf(`expected status %d but got %d. Stopping test case...`, req.ExpectedStatus, code)
 				}
 			}
-
 		})
 	}
 }

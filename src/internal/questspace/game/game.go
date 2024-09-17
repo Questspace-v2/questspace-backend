@@ -11,12 +11,10 @@ import (
 	"time"
 
 	"go.uber.org/zap"
-
-	"questspace/pkg/logging"
-
 	"golang.org/x/xerrors"
 
 	"questspace/pkg/httperrors"
+	"questspace/pkg/logging"
 	"questspace/pkg/storage"
 )
 
@@ -57,6 +55,7 @@ type AnswerTask struct {
 	VerificationNew storage.VerificationType `json:"verification" enums:"auto,manual"`
 	Hints           []AnswerTaskHint         `json:"hints"`
 	Accepted        bool                     `json:"accepted"`
+	Score           int                      `json:"score"`
 	Answer          string                   `json:"answer,omitempty"`
 	PubTime         *time.Time               `json:"pub_time,omitempty"`
 	MediaLink       string                   `json:"media_link"`
@@ -111,7 +110,8 @@ func (s *Service) FillAnswerData(ctx context.Context, req *AnswerDataRequest) (*
 			}
 			if ans, ok := acceptedTasks[t.ID]; ok {
 				newT.Accepted = true
-				newT.Answer = ans
+				newT.Answer = ans.Text
+				newT.Score = ans.Score
 			}
 			for _, h := range tookHints[newT.ID] {
 				newT.Hints[h.Hint.Index].Taken = true
@@ -364,8 +364,8 @@ func (s *Service) TryAnswer(ctx context.Context, user *storage.User, req *TryAns
 	if err != nil {
 		return nil, xerrors.Errorf("get results: %w", err)
 	}
-	if acceptedText, ok := acceptedTasks[req.TaskID]; ok {
-		return &TryAnswerResponse{Accepted: true, Text: acceptedText}, nil
+	if acceptedTask, ok := acceptedTasks[req.TaskID]; ok {
+		return &TryAnswerResponse{Accepted: true, Text: acceptedTask.Text, Score: acceptedTask.Score}, nil
 	}
 
 	answerData, err := s.ts.GetAnswerData(ctx, &storage.GetTaskRequest{ID: req.TaskID})

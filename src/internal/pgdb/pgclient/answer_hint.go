@@ -80,7 +80,7 @@ WITH inserted_hint AS (
 }
 
 func (c *Client) GetAcceptedTasks(ctx context.Context, req *storage.GetAcceptedTasksRequest) (storage.AcceptedTasks, error) {
-	query := sq.Select("t.id", "at.answer").
+	query := sq.Select("t.id", "at.answer", "at.score").
 		From("questspace.answer_try at").
 		LeftJoin("questspace.task t ON at.task_id = t.id").
 		LeftJoin("questspace.task_group tg ON t.group_id = tg.id").
@@ -95,13 +95,14 @@ func (c *Client) GetAcceptedTasks(ctx context.Context, req *storage.GetAcceptedT
 
 	acceptedTasks := make(storage.AcceptedTasks)
 	for rows.Next() {
-		var id, text string
-		if err = rows.Scan(&id, &text); err != nil {
+		var task storage.AcceptedTask
+		var id string
+		if err = rows.Scan(&id, &task.Text, &task.Score); err != nil {
 			return nil, xerrors.Errorf("scan row: %w", err)
 		}
-		acceptedTasks[id] = text
+		acceptedTasks[id] = task
 	}
-	if err := rows.Err(); err != nil {
+	if err = rows.Err(); err != nil {
 		return nil, xerrors.Errorf("iter rows: %w", err)
 	}
 

@@ -55,6 +55,8 @@ definitions:
         type: string
       reward:
         type: integer
+      score:
+        type: integer
       verification:
         allOf:
         - $ref: '#/definitions/storage.VerificationType'
@@ -942,8 +944,8 @@ paths:
           description: Not Found
       security:
       - ApiKeyAuth: []
-      summary: Create task groups and tasks. All previously created task groups and
-        tasks would be deleted and overridden.
+      summary: '[Deprecated] Create task groups and tasks. All previously created
+        task groups and tasks would be deleted and overridden.'
       tags:
       - TaskGroups
   /quest/{id}/task-groups/bulk:
@@ -968,8 +970,8 @@ paths:
           description: Forbidden
       security:
       - ApiKeyAuth: []
-      summary: '[WIP] Patch task groups by creating new ones, delete, update and reorder
-        all ones. Returns all exising task groups.'
+      summary: Patch task groups by creating new ones, delete, update and reorder
+        all ones. Returns all exising task groups.
       tags:
       - TaskGroups
   /quest/{quest_id}:
