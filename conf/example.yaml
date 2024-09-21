@@ -25,3 +25,7 @@ jwt:
 
 teams:
   invite-link-prefix: https://link-to-frontend/join/
+
+validator:
+  timeout: 60s
+  max-body-size: 5242880  # 5 MiB

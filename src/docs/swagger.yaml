@@ -44,7 +44,13 @@ definitions:
       id:
         type: string
       media_link:
+        description: Deprecated
+        example: deprecated
         type: string
+      media_links:
+        items:
+          type: string
+        type: array
       name:
         type: string
       order_idx:
@@ -66,9 +72,8 @@ definitions:
       verification_type:
         allOf:
         - $ref: '#/definitions/storage.VerificationType'
-        enum:
-        - auto
-        - manual
+        description: Deprecated
+        example: deprecated
     type: object
   game.AnswerTaskGroup:
     properties:
@@ -233,7 +238,13 @@ definitions:
           type: string
         type: array
       media_link:
+        description: Deprecated
+        example: deprecated
         type: string
+      media_links:
+        items:
+          type: string
+        type: array
       name:
         type: string
       pub_time:
@@ -309,7 +320,13 @@ definitions:
           type: string
         type: array
       media_link:
+        description: Deprecated
+        example: deprecated
         type: string
+      media_links:
+        items:
+          type: string
+        type: array
       name:
         type: string
       order_idx:
@@ -403,7 +420,13 @@ definitions:
       id:
         type: string
       media_link:
+        description: Deprecated
+        example: deprecated
         type: string
+      media_links:
+        items:
+          type: string
+        type: array
       name:
         type: string
       order_idx:
@@ -534,7 +557,13 @@ definitions:
       id:
         type: string
       media_link:
+        description: Deprecated
+        example: deprecated
         type: string
+      media_links:
+        items:
+          type: string
+        type: array
       name:
         type: string
       order_idx:

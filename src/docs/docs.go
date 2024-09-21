@@ -1347,7 +1347,15 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "media_link": {
-                    "type": "string"
+                    "description": "Deprecated",
+                    "type": "string",
+                    "example": "deprecated"
+                },
+                "media_links": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "name": {
                     "type": "string"
@@ -1379,15 +1387,13 @@ const docTemplate = `{
                     ]
                 },
                 "verification_type": {
-                    "enum": [
-                        "auto",
-                        "manual"
-                    ],
+                    "description": "Deprecated",
                     "allOf": [
                         {
                             "$ref": "#/definitions/storage.VerificationType"
                         }
-                    ]
+                    ],
+                    "example": "deprecated"
                 }
             }
         },
@@ -1643,7 +1649,15 @@ const docTemplate = `{
                     }
                 },
                 "media_link": {
-                    "type": "string"
+                    "description": "Deprecated",
+                    "type": "string",
+                    "example": "deprecated"
+                },
+                "media_links": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "name": {
                     "type": "string"
@@ -1758,7 +1772,15 @@ const docTemplate = `{
                     }
                 },
                 "media_link": {
-                    "type": "string"
+                    "description": "Deprecated",
+                    "type": "string",
+                    "example": "deprecated"
+                },
+                "media_links": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "name": {
                     "type": "string"
@@ -1897,7 +1919,15 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "media_link": {
-                    "type": "string"
+                    "description": "Deprecated",
+                    "type": "string",
+                    "example": "deprecated"
+                },
+                "media_links": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "name": {
                     "type": "string"
@@ -2099,7 +2129,15 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "media_link": {
-                    "type": "string"
+                    "description": "Deprecated",
+                    "type": "string",
+                    "example": "deprecated"
+                },
+                "media_links": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "name": {
                     "type": "string"

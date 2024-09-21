@@ -7,6 +7,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
+	"questspace/internal/questspace/taskgroups/requests"
 	"questspace/pkg/storage"
 	storagemock "questspace/pkg/storage/mocks"
 )
@@ -151,7 +152,7 @@ func TestUpdater_reorderUpdatedTaskGroups(t *testing.T) {
 		},
 	}
 
-	updater := NewUpdater(nil, nil)
+	updater := NewUpdater(nil, nil, requests.NopValidator{})
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			err := updater.reorderUpdatedTaskGroups(&tc.initial, tc.reqs)
@@ -168,7 +169,7 @@ func TestUpdater_reorderUpdatedTaskGroups(t *testing.T) {
 func TestUpdater_BulkUpdateTaskGroups_DeleteLastTwo(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	s := storagemock.NewMockTaskGroupStorage(ctrl)
-	updater := NewUpdater(s, nil)
+	updater := NewUpdater(s, nil, requests.NopValidator{})
 	ctx := context.Background()
 
 	const questID = "quest-id"
@@ -200,7 +201,7 @@ func TestUpdater_BulkUpdateTaskGroups_DeleteLastTwo(t *testing.T) {
 func TestUpdater_BulkUpdateTaskGroups_CreateInTheEnd(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	s := storagemock.NewMockTaskGroupStorage(ctrl)
-	updater := NewUpdater(s, nil)
+	updater := NewUpdater(s, nil, requests.NopValidator{})
 	ctx := context.Background()
 
 	const questID = "quest-id"
@@ -236,7 +237,7 @@ func TestUpdater_BulkUpdateTaskGroups_CreateInTheEnd(t *testing.T) {
 func TestUpdater_BulkUpdateTaskGroups_UpdateWithoutReorder(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	s := storagemock.NewMockTaskGroupStorage(ctrl)
-	updater := NewUpdater(s, nil)
+	updater := NewUpdater(s, nil, requests.NopValidator{})
 	ctx := context.Background()
 
 	const questID = "quest-id"
@@ -271,7 +272,7 @@ func TestUpdater_BulkUpdateTaskGroups_UpdateWithoutReorder(t *testing.T) {
 func TestUpdater_BulkUpdateTaskGroups_DeleteWithCreateSubstitution(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	s := storagemock.NewMockTaskGroupStorage(ctrl)
-	updater := NewUpdater(s, nil)
+	updater := NewUpdater(s, nil, requests.NopValidator{})
 	ctx := context.Background()
 
 	const questID = "quest-id"
@@ -310,7 +311,7 @@ func TestUpdater_BulkUpdateTaskGroups_DeleteWithCreateSubstitution(t *testing.T)
 func TestUpdater_BulkUpdateTaskGroups_DeleteReorderAndCreate(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	s := storagemock.NewMockTaskGroupStorage(ctrl)
-	updater := NewUpdater(s, nil)
+	updater := NewUpdater(s, nil, requests.NopValidator{})
 	ctx := context.Background()
 
 	const questID = "quest-id"

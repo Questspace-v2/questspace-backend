@@ -13,10 +13,10 @@ import (
 var wantNow = time.Date(2024, time.April, 14, 12, 0, 0, 0, time.UTC)
 
 func replaceNowFunc(t *testing.T) {
-	nowFunc = func() time.Time {
+	QuestStatusNowFunc = func() time.Time {
 		return wantNow
 	}
-	t.Cleanup(func() { nowFunc = time.Now })
+	t.Cleanup(func() { QuestStatusNowFunc = time.Now })
 }
 
 func TestSetStatus(t *testing.T) {

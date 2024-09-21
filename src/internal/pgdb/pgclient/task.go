@@ -28,10 +28,25 @@ func (c *Client) CreateTask(ctx context.Context, req *storage.CreateTaskRequest)
 
 	query := sq.Insert("questspace.task").
 		Columns(
-			"order_idx", "group_id", "name", "question", "reward",
-			"correct_answers", "verification", "hints", "media_url").
+			"order_idx",
+			"group_id",
+			"name",
+			"question",
+			"reward",
+			"correct_answers",
+			"verification",
+			"hints",
+			"media_url",
+		).
 		Suffix("RETURNING id").
 		PlaceholderFormat(sq.Dollar)
+	if len(req.MediaLinks) == 0 && len(req.MediaLink) > 0 {
+		req.MediaLinks = []string{req.MediaLink}
+	}
+	if len(req.MediaLinks) > 0 {
+		query = query.Columns("media_urls")
+		values = append(values, pgtype.FlatArray[string](req.MediaLinks))
+	}
 	if req.PubTime != nil {
 		query = query.Columns("pub_time")
 		values = append(values, req.PubTime)
@@ -49,6 +64,7 @@ func (c *Client) CreateTask(ctx context.Context, req *storage.CreateTaskRequest)
 		CorrectAnswers: slices.Clone(req.CorrectAnswers),
 		Verification:   req.Verification,
 		Hints:          slices.Clone(req.Hints),
+		MediaLinks:     req.MediaLinks,
 		MediaLink:      req.MediaLink,
 		PubTime:        req.PubTime,
 	}
@@ -59,25 +75,45 @@ func (c *Client) CreateTask(ctx context.Context, req *storage.CreateTaskRequest)
 	return &task, nil
 }
 
-func (c *Client) GetTask(ctx context.Context, req *storage.GetTaskRequest) (*storage.Task, error) {
-	query := sq.Select(
-		"order_idx", "name", "question", "reward",
-		"correct_answers", "verification", "hints", "media_url", "pub_time").
-		From("questspace.task").
-		Where(sq.Eq{"id": req.ID}).
-		PlaceholderFormat(sq.Dollar)
+const getTaskQuery = `
+SELECT
+	order_idx,
+	name,
+	question,
+	reward,
+	correct_answers,
+	verification,
+	hints,
+	media_url,
+	media_urls,
+	pub_time
+FROM questspace.task
+	WHERE id = $1
+`
 
-	row := query.RunWith(c.runner).QueryRowContext(ctx)
+func (c *Client) GetTask(ctx context.Context, req *storage.GetTaskRequest) (*storage.Task, error) {
+	row := c.runner.QueryRowContext(ctx, getTaskQuery, req.ID)
 	task := storage.Task{ID: req.ID}
 	pgMap := pgtype.NewMap()
 	if err := row.Scan(
-		&task.OrderIdx, &task.Name, &task.Question, &task.Reward,
-		pgMap.SQLScanner(&task.CorrectAnswers), &task.Verification,
-		pgMap.SQLScanner(&task.Hints), &task.MediaLink, &task.PubTime); err != nil {
+		&task.OrderIdx,
+		&task.Name,
+		&task.Question,
+		&task.Reward,
+		pgMap.SQLScanner(&task.CorrectAnswers),
+		&task.Verification,
+		pgMap.SQLScanner(&task.Hints),
+		&task.MediaLink,
+		pgMap.SQLScanner(&task.MediaLinks),
+		&task.PubTime,
+	); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, storage.ErrNotFound
 		}
 		return nil, xerrors.Errorf("scan row: %w", err)
+	}
+	if len(task.MediaLinks) == 0 && len(task.MediaLink) > 0 {
+		task.MediaLinks = []string{task.MediaLink}
 	}
 
 	return &task, nil
@@ -104,8 +140,19 @@ func (c *Client) GetAnswerData(ctx context.Context, req *storage.GetTaskRequest)
 
 func (c *Client) GetTasks(ctx context.Context, req *storage.GetTasksRequest) (storage.GetTasksResponse, error) {
 	query := sq.Select(
-		"t.id", "t.order_idx", "t.name", "t.question", "t.reward", "t.group_id",
-		"t.correct_answers", "t.verification", "t.hints", "t.media_url", "t.pub_time").
+		"t.id",
+		"t.order_idx",
+		"t.name",
+		"t.question",
+		"t.reward",
+		"t.group_id",
+		"t.correct_answers",
+		"t.verification",
+		"t.hints",
+		"t.media_url",
+		"t.media_urls",
+		"t.pub_time",
+	).
 		From("questspace.task t").
 		OrderBy("t.group_id", "t.order_idx ASC").
 		PlaceholderFormat(sq.Dollar)
@@ -129,10 +176,23 @@ func (c *Client) GetTasks(ctx context.Context, req *storage.GetTasksRequest) (st
 	for rows.Next() {
 		task := storage.Task{Group: &storage.TaskGroup{}}
 		if err := rows.Scan(
-			&task.ID, &task.OrderIdx, &task.Name, &task.Question, &task.Reward, &task.Group.ID,
-			pgMap.SQLScanner(&task.CorrectAnswers), &task.Verification,
-			pgMap.SQLScanner(&task.Hints), &task.MediaLink, &task.PubTime); err != nil {
+			&task.ID,
+			&task.OrderIdx,
+			&task.Name,
+			&task.Question,
+			&task.Reward,
+			&task.Group.ID,
+			pgMap.SQLScanner(&task.CorrectAnswers),
+			&task.Verification,
+			pgMap.SQLScanner(&task.Hints),
+			&task.MediaLink,
+			pgMap.SQLScanner(&task.MediaLinks),
+			&task.PubTime,
+		); err != nil {
 			return nil, xerrors.Errorf("scan row: %w", err)
+		}
+		if len(task.MediaLinks) == 0 && len(task.MediaLink) > 0 {
+			task.MediaLinks = []string{task.MediaLink}
 		}
 
 		group := tasks[task.Group.ID]
@@ -152,12 +212,22 @@ func (c *Client) UpdateTask(ctx context.Context, req *storage.UpdateTaskRequest)
 	query := sq.Update("questspace.task").
 		Set("order_idx", req.OrderIdx).
 		Where(sq.Eq{"id": req.ID}).
-		Suffix("RETURNING order_idx, name, question, reward, correct_answers, verification, hints, media_url, pub_time").
+		Suffix(`RETURNING 
+			order_idx, 
+			name, 
+			question, 
+			reward, 
+			correct_answers, 
+			verification, 
+			hints, 
+			media_url, 
+			media_urls, 
+			pub_time`).
 		PlaceholderFormat(sq.Dollar)
-	if req.Name != "" {
+	if len(req.Name) > 0 {
 		query = query.Set("name", req.Name)
 	}
-	if req.Question != "" {
+	if len(req.Question) > 0 {
 		query = query.Set("question", req.Question)
 	}
 	if req.Reward != 0 {
@@ -169,8 +239,11 @@ func (c *Client) UpdateTask(ctx context.Context, req *storage.UpdateTaskRequest)
 	if len(req.Hints) > 0 {
 		query = query.Set("hints", pgtype.FlatArray[string](req.Hints))
 	}
-	if req.MediaLink != "" {
+	if len(req.MediaLink) > 0 {
 		query = query.Set("media_url", req.MediaLink)
+	}
+	if len(req.MediaLinks) > 0 {
+		query = query.Set("media_urls", pgtype.FlatArray[string](req.MediaLinks))
 	}
 	if req.PubTime != nil {
 		query = query.Set("pub_time", req.PubTime)
@@ -180,13 +253,24 @@ func (c *Client) UpdateTask(ctx context.Context, req *storage.UpdateTaskRequest)
 	task := storage.Task{ID: req.ID}
 	pgMap := pgtype.NewMap()
 	if err := row.Scan(
-		&task.OrderIdx, &task.Name, &task.Question, &task.Reward,
-		pgMap.SQLScanner(&task.CorrectAnswers), &task.Verification,
-		pgMap.SQLScanner(&task.Hints), &task.MediaLink, &task.PubTime); err != nil {
+		&task.OrderIdx,
+		&task.Name,
+		&task.Question,
+		&task.Reward,
+		pgMap.SQLScanner(&task.CorrectAnswers),
+		&task.Verification,
+		pgMap.SQLScanner(&task.Hints),
+		&task.MediaLink,
+		pgMap.SQLScanner(&task.MediaLinks),
+		&task.PubTime,
+	); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, storage.ErrNotFound
 		}
 		return nil, xerrors.Errorf("scan row: %w", err)
+	}
+	if len(task.MediaLinks) == 0 && len(task.MediaLink) > 0 {
+		task.MediaLinks = []string{task.MediaLink}
 	}
 
 	return &task, nil

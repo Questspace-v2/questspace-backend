@@ -44,6 +44,7 @@ func TestTaskStorage_CreateTask(t *testing.T) {
 	taskReq1.GroupID = tg.ID
 	task, err := client.CreateTask(ctx, &taskReq1)
 	require.NoError(t, err)
+	assert.NotEmpty(t, task.MediaLinks)
 	assert.NotEmpty(t, task.ID)
 }
 

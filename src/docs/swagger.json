@@ -1336,7 +1336,15 @@
                     "type": "string"
                 },
                 "media_link": {
-                    "type": "string"
+                    "description": "Deprecated",
+                    "type": "string",
+                    "example": "deprecated"
+                },
+                "media_links": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "name": {
                     "type": "string"
@@ -1368,15 +1376,13 @@
                     ]
                 },
                 "verification_type": {
-                    "enum": [
-                        "auto",
-                        "manual"
-                    ],
+                    "description": "Deprecated",
                     "allOf": [
                         {
                             "$ref": "#/definitions/storage.VerificationType"
                         }
-                    ]
+                    ],
+                    "example": "deprecated"
                 }
             }
         },
@@ -1632,7 +1638,15 @@
                     }
                 },
                 "media_link": {
-                    "type": "string"
+                    "description": "Deprecated",
+                    "type": "string",
+                    "example": "deprecated"
+                },
+                "media_links": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "name": {
                     "type": "string"
@@ -1747,7 +1761,15 @@
                     }
                 },
                 "media_link": {
-                    "type": "string"
+                    "description": "Deprecated",
+                    "type": "string",
+                    "example": "deprecated"
+                },
+                "media_links": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "name": {
                     "type": "string"
@@ -1886,7 +1908,15 @@
                     "type": "string"
                 },
                 "media_link": {
-                    "type": "string"
+                    "description": "Deprecated",
+                    "type": "string",
+                    "example": "deprecated"
+                },
+                "media_links": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "name": {
                     "type": "string"
@@ -2088,7 +2118,15 @@
                     "type": "string"
                 },
                 "media_link": {
-                    "type": "string"
+                    "description": "Deprecated",
+                    "type": "string",
+                    "example": "deprecated"
+                },
+                "media_links": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "name": {
                     "type": "string"

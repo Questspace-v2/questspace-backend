@@ -119,6 +119,9 @@ requests:
                 ],
                 "id": "$SET$:TASK1_ID",
                 "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
+                "media_links": [
+                  "https://api.dicebear.com/8.x/thumbs/svg"
+                ],
                 "name": "task_1",
                 "order_idx": 0,
                 "question": "question",
@@ -134,6 +137,9 @@ requests:
                 ],
                 "id": "$SET$:TASK2_ID",
                 "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
+                "media_links": [
+                  "https://api.dicebear.com/8.x/thumbs/svg"
+                ],
                 "name": "task_2",
                 "order_idx": 1,
                 "question": "notquestion",

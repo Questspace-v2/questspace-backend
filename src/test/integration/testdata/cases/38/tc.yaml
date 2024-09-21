@@ -115,6 +115,9 @@ requests:
                 ],
                 "id": "$SET$:TASK1_ID",
                 "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
+                "media_links": [
+                  "https://api.dicebear.com/8.x/thumbs/svg"
+                ],
                 "name": "task_1",
                 "order_idx": 0,
                 "question": "question",
@@ -130,6 +133,9 @@ requests:
                 ],
                 "id": "$SET$:TASK2_ID",
                 "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
+                "media_links": [
+                  "https://api.dicebear.com/8.x/thumbs/svg"
+                ],
                 "name": "task_2",
                 "order_idx": 1,
                 "question": "notquestion",
@@ -165,7 +171,9 @@ requests:
                   "hints": [
                     "str"
                   ],
-                  "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
+                  "media_links": [
+                    "https://api.dicebear.com/8.x/thumbs/svg"
+                  ],
                   "name": "task_3",
                   "question": "question",
                   "reward": 50,
@@ -179,7 +187,9 @@ requests:
                   "hints": [
                     "not_str"
                   ],
-                  "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
+                  "media_links": [
+                    "https://api.dicebear.com/8.x/thumbs/svg"
+                  ],
                   "name": "task_4",
                   "question": "notquestion",
                   "reward": 500,
@@ -211,6 +221,9 @@ requests:
                 ],
                 "id": "$TASK1_ID",
                 "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
+                "media_links": [
+                  "https://api.dicebear.com/8.x/thumbs/svg"
+                ],
                 "name": "task_1",
                 "order_idx": 0,
                 "question": "question",
@@ -226,6 +239,9 @@ requests:
                 ],
                 "id": "$TASK2_ID",
                 "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
+                "media_links": [
+                  "https://api.dicebear.com/8.x/thumbs/svg"
+                ],
                 "name": "task_2",
                 "order_idx": 1,
                 "question": "notquestion",
@@ -240,7 +256,9 @@ requests:
                   "str"
                 ],
                 "id": "$SET$:TASK3_ID",
-                "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
+                "media_links": [
+                  "https://api.dicebear.com/8.x/thumbs/svg"
+                ],
                 "name": "task_3",
                 "order_idx": 2,
                 "question": "question",
@@ -255,7 +273,9 @@ requests:
                   "not_str"
                 ],
                 "id": "$SET$:TASK4_ID",
-                "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
+                "media_links": [
+                  "https://api.dicebear.com/8.x/thumbs/svg"
+                ],
                 "name": "task_4",
                 "order_idx": 3,
                 "question": "notquestion",

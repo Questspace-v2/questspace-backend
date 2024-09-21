@@ -184,7 +184,9 @@ type CreateTaskRequest struct {
 	Verification   VerificationType `json:"verification"`
 	Hints          []string         `json:"hints"`
 	PubTime        *time.Time       `json:"pub_time"`
-	MediaLink      string           `json:"media_link"`
+	MediaLinks     []string         `json:"media_links,omitempty"`
+	// Deprecated
+	MediaLink string `json:"media_link" example:"deprecated"`
 }
 
 type GetTaskRequest struct {
@@ -210,7 +212,9 @@ type UpdateTaskRequest struct {
 	Verification   VerificationType `json:"verification"`
 	Hints          []string         `json:"hints"`
 	PubTime        *time.Time       `json:"pub_time"`
-	MediaLink      string           `json:"media_link"`
+	MediaLinks     []string         `json:"media_links,omitempty"`
+	// Deprecated
+	MediaLink string `json:"media_link" example:"deprecated"`
 }
 
 type DeleteTaskRequest struct {
