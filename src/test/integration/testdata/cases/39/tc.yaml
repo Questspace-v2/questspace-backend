@@ -70,7 +70,9 @@ requests:
                 "hints": [
                   "str"
                 ],
-                "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
+                "media_links": [
+                  "https://api.dicebear.com/8.x/thumbs/svg"
+                ],
                 "name": "task_1",
                 "pub_time": "2024-04-18T14:00:00+05:00",
                 "question": "question",
@@ -84,7 +86,9 @@ requests:
                 "hints": [
                   "not_str"
                 ],
-                "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
+                "media_links": [
+                  "https://api.dicebear.com/8.x/thumbs/svg"
+                ],
                 "name": "task_2",
                 "pub_time": "2024-04-18T14:00:00+05:00",
                 "question": "notquestion",
@@ -114,7 +118,9 @@ requests:
                   "str"
                 ],
                 "id": "$SET$:TASK1_ID",
-                "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
+                "media_links": [
+                  "https://api.dicebear.com/8.x/thumbs/svg"
+                ],
                 "name": "task_1",
                 "order_idx": 0,
                 "question": "question",
@@ -129,7 +135,9 @@ requests:
                   "not_str"
                 ],
                 "id": "$SET$:TASK2_ID",
-                "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
+                "media_links": [
+                  "https://api.dicebear.com/8.x/thumbs/svg"
+                ],
                 "name": "task_2",
                 "order_idx": 1,
                 "question": "notquestion",
@@ -178,7 +186,9 @@ requests:
                   "not_str"
                 ],
                 "id": "$TASK2_ID",
-                "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
+                "media_links": [
+                  "https://api.dicebear.com/8.x/thumbs/svg"
+                ],
                 "name": "task_2",
                 "order_idx": 0,
                 "question": "notquestion",

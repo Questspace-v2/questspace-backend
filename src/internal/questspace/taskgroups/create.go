@@ -66,6 +66,7 @@ func (s *Service) Create(ctx context.Context, req *requests.CreateFullRequest) (
 				Name:           t.Name,
 				Question:       t.Question,
 				MediaLink:      t.MediaLink,
+				MediaLinks:     t.MediaLinks,
 				Reward:         t.Reward,
 				CorrectAnswers: t.CorrectAnswers,
 				Hints:          t.Hints,

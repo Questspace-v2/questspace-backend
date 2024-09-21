@@ -46,19 +46,22 @@ type AnswerTaskHint struct {
 }
 
 type AnswerTask struct {
-	ID              string                   `json:"id"`
-	OrderIdx        int                      `json:"order_idx"`
-	Name            string                   `json:"name"`
-	Question        string                   `json:"question"`
-	Reward          int                      `json:"reward"`
-	Verification    storage.VerificationType `json:"verification_type" enums:"auto,manual"`
-	VerificationNew storage.VerificationType `json:"verification" enums:"auto,manual"`
-	Hints           []AnswerTaskHint         `json:"hints"`
-	Accepted        bool                     `json:"accepted"`
-	Score           int                      `json:"score"`
-	Answer          string                   `json:"answer,omitempty"`
-	PubTime         *time.Time               `json:"pub_time,omitempty"`
-	MediaLink       string                   `json:"media_link"`
+	ID           string                   `json:"id"`
+	OrderIdx     int                      `json:"order_idx"`
+	Name         string                   `json:"name"`
+	Question     string                   `json:"question"`
+	Reward       int                      `json:"reward"`
+	Verification storage.VerificationType `json:"verification" enums:"auto,manual"`
+	Hints        []AnswerTaskHint         `json:"hints"`
+	Accepted     bool                     `json:"accepted"`
+	Score        int                      `json:"score"`
+	Answer       string                   `json:"answer,omitempty"`
+	PubTime      *time.Time               `json:"pub_time,omitempty"`
+	MediaLinks   []string                 `json:"media_links,omitempty"`
+	// Deprecated
+	MediaLink string `json:"media_link,omitempty" example:"deprecated"`
+	// Deprecated
+	VerificationType storage.VerificationType `json:"verification_type" example:"deprecated"`
 }
 
 type AnswerTaskGroup struct {
@@ -97,16 +100,17 @@ func (s *Service) FillAnswerData(ctx context.Context, req *AnswerDataRequest) (*
 
 		for _, t := range tg.Tasks {
 			newT := AnswerTask{
-				ID:              t.ID,
-				OrderIdx:        t.OrderIdx,
-				Name:            t.Name,
-				Question:        t.Question,
-				Reward:          t.Reward,
-				Verification:    t.Verification,
-				VerificationNew: t.Verification,
-				Hints:           make([]AnswerTaskHint, len(t.Hints)),
-				PubTime:         t.PubTime,
-				MediaLink:       t.MediaLink,
+				ID:               t.ID,
+				OrderIdx:         t.OrderIdx,
+				Name:             t.Name,
+				Question:         t.Question,
+				Reward:           t.Reward,
+				Verification:     t.Verification,
+				VerificationType: t.Verification,
+				Hints:            make([]AnswerTaskHint, len(t.Hints)),
+				PubTime:          t.PubTime,
+				MediaLink:        t.MediaLink,
+				MediaLinks:       t.MediaLinks,
 			}
 			if ans, ok := acceptedTasks[t.ID]; ok {
 				newT.Accepted = true

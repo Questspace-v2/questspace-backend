@@ -145,10 +145,10 @@ type Task struct {
 	Verification   VerificationType `json:"verification_type" enums:"auto,manual"`
 	Hints          []string         `json:"hints"`
 	PubTime        *time.Time       `json:"pub_time,omitempty"`
-	MediaLink      string           `json:"media_link"`
+	MediaLinks     []string         `json:"media_links,omitempty"`
+	// Deprecated
+	MediaLink string `json:"media_link,omitempty" example:"deprecated"`
 }
-
-//TODO(svayp11): commit the rest of play-mode
 
 type AnswerTry struct {
 	Team       *Team

@@ -14,7 +14,9 @@ type CreateTaskRequest struct {
 	Verification   storage.VerificationType `json:"verification" enums:"auto,manual"`
 	Hints          []string                 `json:"hints" maxLength:"3"`
 	PubTime        *time.Time               `json:"pub_time,omitempty"`
-	MediaLink      string                   `json:"media_link"`
+	MediaLinks     []string                 `json:"media_links,omitempty"`
+	// Deprecated
+	MediaLink string `json:"media_link" example:"deprecated"`
 }
 
 type CreateRequest struct {
