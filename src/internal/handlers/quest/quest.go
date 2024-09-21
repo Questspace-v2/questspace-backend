@@ -114,6 +114,9 @@ func (h *Handler) HandleGet(ctx context.Context, w http.ResponseWriter, r *http.
 		}
 		return xerrors.Errorf("get quest: %w", err)
 	}
+	hasBrief := quest.HasBrief
+	quest.HasBrief = false
+	quest.Brief = ""
 
 	quests.SetStatus(quest)
 	resp := TeamQuestResponse{Quest: quest}
@@ -143,6 +146,9 @@ func (h *Handler) HandleGet(ctx context.Context, w http.ResponseWriter, r *http.
 		} else {
 			logging.Error(ctx, "get leaderboard", zap.Error(err))
 		}
+	}
+	if (quest.Status == storage.StatusOnRegistration || quest.Status == storage.StatusRegistrationDone) && resp.Team != nil {
+		resp.Quest.HasBrief = hasBrief
 	}
 
 	if err = transport.ServeJSONResponse(w, http.StatusOK, resp); err != nil {

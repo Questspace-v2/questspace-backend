@@ -261,11 +261,15 @@ definitions:
     properties:
       access:
         $ref: '#/definitions/storage.AccessType'
+      brief:
+        type: string
       description:
         type: string
       finish_time:
         example: "2024-04-21T14:00:00+05:00"
         type: string
+      has_brief:
+        type: boolean
       max_team_cap:
         type: integer
       media_link:
@@ -352,6 +356,8 @@ definitions:
     properties:
       access:
         $ref: '#/definitions/storage.AccessType'
+      brief:
+        type: string
       creator:
         $ref: '#/definitions/storage.User'
       description:
@@ -359,6 +365,8 @@ definitions:
       finish_time:
         example: "2024-04-21T14:00:00+05:00"
         type: string
+      has_brief:
+        type: boolean
       id:
         type: string
       max_team_cap:
@@ -479,10 +487,14 @@ definitions:
     properties:
       access:
         $ref: '#/definitions/storage.AccessType'
+      brief:
+        type: string
       description:
         type: string
       finish_time:
         type: string
+      has_brief:
+        type: boolean
       max_team_cap:
         type: integer
       media_link:

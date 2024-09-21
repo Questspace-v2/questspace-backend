@@ -72,7 +72,7 @@ type AnswerTaskGroup struct {
 type AnswerDataResponse struct {
 	Quest      *storage.Quest    `json:"quest"`
 	Team       *storage.Team     `json:"team"`
-	TaskGroups []AnswerTaskGroup `json:"task_groups"`
+	TaskGroups []AnswerTaskGroup `json:"task_groups,omitempty"`
 }
 
 func (s *Service) FillAnswerData(ctx context.Context, req *AnswerDataRequest) (*AnswerDataResponse, error) {

@@ -42,6 +42,8 @@ type CreateQuestRequest struct {
 	FinishTime           *time.Time `json:"finish_time,omitempty" example:"2024-04-21T14:00:00+05:00"`
 	MediaLink            string     `json:"media_link"`
 	MaxTeamCap           *int       `json:"max_team_cap,omitempty"`
+	HasBrief             bool       `json:"has_brief,omitempty"`
+	Brief                string     `json:"brief,omitempty"`
 }
 
 type GetQuestRequest struct {
@@ -70,6 +72,8 @@ type UpdateQuestRequest struct {
 	FinishTime           *time.Time `json:"finish_time,omitempty"`
 	MediaLink            string     `json:"media_link,omitempty"`
 	MaxTeamCap           *int       `json:"max_team_cap,omitempty"`
+	HasBrief             bool       `json:"has_brief,omitempty"`
+	Brief                string     `json:"brief,omitempty"`
 }
 
 type DeleteQuestRequest struct {
