@@ -12,9 +12,31 @@ import (
 )
 
 func (c *Client) CreateQuest(ctx context.Context, req *storage.CreateQuestRequest) (*storage.Quest, error) {
-	values := []interface{}{req.Name, req.Description, req.MediaLink, req.RegistrationDeadline, req.StartTime, req.FinishTime, string(req.Access), req.Creator.ID}
+	values := []any{
+		req.Name,
+		req.Description,
+		req.MediaLink,
+		req.RegistrationDeadline,
+		req.StartTime,
+		req.FinishTime,
+		string(req.Access),
+		req.Creator.ID,
+		req.HasBrief,
+		req.Brief,
+	}
 	query := sq.Insert("questspace.quest").
-		Columns("name", "description", "media_link", "registration_deadline", "start_time", "finish_time", "access", "creator_id").
+		Columns(
+			"name",
+			"description",
+			"media_link",
+			"registration_deadline",
+			"start_time",
+			"finish_time",
+			"access",
+			"creator_id",
+			"has_brief",
+			"brief",
+		).
 		Suffix("RETURNING id").
 		PlaceholderFormat(sq.Dollar)
 	if req.MaxTeamCap != nil {
@@ -37,6 +59,8 @@ func (c *Client) CreateQuest(ctx context.Context, req *storage.CreateQuestReques
 		},
 		RegistrationDeadline: req.RegistrationDeadline,
 		MaxTeamCap:           req.MaxTeamCap,
+		HasBrief:             req.HasBrief,
+		Brief:                req.Brief,
 	}
 	if err := row.Scan(&quest.ID); err != nil {
 		return nil, xerrors.Errorf("scan row: %w", err)
@@ -44,25 +68,52 @@ func (c *Client) CreateQuest(ctx context.Context, req *storage.CreateQuestReques
 	return &quest, nil
 }
 
-func (c *Client) GetQuest(ctx context.Context, req *storage.GetQuestRequest) (*storage.Quest, error) {
-	query := sq.Select(
-		"q.id", "q.name", "q.description", "q.media_link", "q.registration_deadline",
-		"q.start_time", "q.finish_time", "q.access", "q.max_team_cap", "q.finished",
-		"u.id", "u.username", "u.avatar_url",
-	).From("questspace.quest q").
-		LeftJoin("questspace.user u ON u.id = q.creator_id").
-		Where(sq.Eq{"q.id": req.ID}).
-		PlaceholderFormat(sq.Dollar)
+const getQuestQuery = `
+SELECT 
+	q.id, 
+	q.name, 
+	q.description, 
+	q.media_link, 
+	q.registration_deadline, 
+	q.start_time, 
+	q.finish_time,
+	q.access,
+	q.max_team_cap,
+	q.finished,
+	q.has_brief,
+	q.brief,
+	u.id,
+	u.username,
+	u.avatar_url
+FROM questspace.quest q LEFT JOIN questspace.user u ON u.id = q.creator_id
+	WHERE q.id = $1
+`
 
-	row := query.RunWith(c.runner).QueryRowContext(ctx)
+func (c *Client) GetQuest(ctx context.Context, req *storage.GetQuestRequest) (*storage.Quest, error) {
+	row := c.runner.QueryRowContext(ctx, getQuestQuery, req.ID)
 	var (
 		q                     storage.Quest
 		creatorName           sql.NullString
 		userId, userAvatarURL sql.NullString
 		finished              bool
 	)
-	if err := row.Scan(&q.ID, &q.Name, &q.Description, &q.MediaLink, &q.RegistrationDeadline,
-		&q.StartTime, &q.FinishTime, &q.Access, &q.MaxTeamCap, &finished, &userId, &creatorName, &userAvatarURL); err != nil {
+	if err := row.Scan(
+		&q.ID,
+		&q.Name,
+		&q.Description,
+		&q.MediaLink,
+		&q.RegistrationDeadline,
+		&q.StartTime,
+		&q.FinishTime,
+		&q.Access,
+		&q.MaxTeamCap,
+		&finished,
+		&q.HasBrief,
+		&q.Brief,
+		&userId,
+		&creatorName,
+		&userAvatarURL,
+	); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, storage.ErrNotFound
 		}
@@ -192,19 +243,31 @@ func (c *Client) GetQuests(ctx context.Context, req *storage.GetQuestsRequest) (
 func (c *Client) UpdateQuest(ctx context.Context, req *storage.UpdateQuestRequest) (*storage.Quest, error) {
 	query := sq.Update("questspace.quest").
 		Where(sq.Eq{"id": req.ID}).
-		Suffix("RETURNING id, name, description, media_link, creator_id, " +
-			"registration_deadline, start_time, finish_time, access, max_team_cap, finished").
+		Suffix(`RETURNING
+		id,
+		name,
+		description,
+		media_link,
+		creator_id,
+		registration_deadline,
+		start_time,
+		finish_time,
+		access,
+		max_team_cap,
+		finished,
+		has_brief,
+		brief`).
 		PlaceholderFormat(sq.Dollar)
-	if req.Name != "" {
+	if len(req.Name) > 0 {
 		query = query.Set("name", req.Name)
 	}
-	if req.MediaLink != "" {
+	if len(req.MediaLink) > 0 {
 		query = query.Set("media_link", req.MediaLink)
 	}
-	if req.Description != "" {
+	if len(req.Description) > 0 {
 		query = query.Set("description", req.Description)
 	}
-	if req.Access != "" {
+	if len(req.Access) > 0 {
 		query = query.Set("access", req.Access)
 	}
 	if req.RegistrationDeadline != nil {
@@ -219,6 +282,12 @@ func (c *Client) UpdateQuest(ctx context.Context, req *storage.UpdateQuestReques
 	if req.MaxTeamCap != nil {
 		query = query.Set("max_team_cap", req.MaxTeamCap)
 	}
+	if req.HasBrief {
+		query = query.Set("has_brief", req.HasBrief)
+	}
+	if len(req.Brief) > 0 {
+		query = query.Set("brief", req.Brief)
+	}
 
 	row := query.RunWith(c.runner).QueryRowContext(ctx)
 	var (
@@ -226,8 +295,21 @@ func (c *Client) UpdateQuest(ctx context.Context, req *storage.UpdateQuestReques
 		creatorID sql.NullString
 		finished  bool
 	)
-	if err := row.Scan(&q.ID, &q.Name, &q.Description, &q.MediaLink, &creatorID,
-		&q.RegistrationDeadline, &q.StartTime, &q.FinishTime, &q.Access, &q.MaxTeamCap, &finished); err != nil {
+	if err := row.Scan(
+		&q.ID,
+		&q.Name,
+		&q.Description,
+		&q.MediaLink,
+		&creatorID,
+		&q.RegistrationDeadline,
+		&q.StartTime,
+		&q.FinishTime,
+		&q.Access,
+		&q.MaxTeamCap,
+		&finished,
+		&q.HasBrief,
+		&q.Brief,
+	); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, storage.ErrNotFound
 		}

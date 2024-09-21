@@ -52,6 +52,8 @@ type Quest struct {
 	MediaLink            string      `json:"media_link"`
 	MaxTeamCap           *int        `json:"max_team_cap,omitempty"`
 	Status               QuestStatus `json:"status" enums:"ON_REGISTRATION,REGISTRATION_DONE,RUNNING,WAIT_RESULTS,FINISHED"`
+	HasBrief             bool        `json:"has_brief,omitempty"`
+	Brief                string      `json:"brief,omitempty"`
 }
 
 type GetQuestType int

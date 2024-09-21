@@ -1687,12 +1687,18 @@ const docTemplate = `{
                 "access": {
                     "$ref": "#/definitions/storage.AccessType"
                 },
+                "brief": {
+                    "type": "string"
+                },
                 "description": {
                     "type": "string"
                 },
                 "finish_time": {
                     "type": "string",
                     "example": "2024-04-21T14:00:00+05:00"
+                },
+                "has_brief": {
+                    "type": "boolean"
                 },
                 "max_team_cap": {
                     "type": "integer"
@@ -1824,6 +1830,9 @@ const docTemplate = `{
                 "access": {
                     "$ref": "#/definitions/storage.AccessType"
                 },
+                "brief": {
+                    "type": "string"
+                },
                 "creator": {
                     "$ref": "#/definitions/storage.User"
                 },
@@ -1833,6 +1842,9 @@ const docTemplate = `{
                 "finish_time": {
                     "type": "string",
                     "example": "2024-04-21T14:00:00+05:00"
+                },
+                "has_brief": {
+                    "type": "boolean"
                 },
                 "id": {
                     "type": "string"
@@ -2016,11 +2028,17 @@ const docTemplate = `{
                 "access": {
                     "$ref": "#/definitions/storage.AccessType"
                 },
+                "brief": {
+                    "type": "string"
+                },
                 "description": {
                     "type": "string"
                 },
                 "finish_time": {
                     "type": "string"
+                },
+                "has_brief": {
+                    "type": "boolean"
                 },
                 "max_team_cap": {
                     "type": "integer"

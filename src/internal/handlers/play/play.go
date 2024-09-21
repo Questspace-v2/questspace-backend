@@ -67,7 +67,31 @@ func (h *Handler) HandleGet(ctx context.Context, w http.ResponseWriter, r *http.
 		}
 		return xerrors.Errorf("get quest: %w", err)
 	}
+
 	quests.SetStatus(quest)
+	if quest.Status == storage.StatusOnRegistration || quest.Status == storage.StatusRegistrationDone {
+		team, err := s.GetTeam(ctx, &storage.GetTeamRequest{
+			UserRegistration: &storage.UserRegistration{
+				UserID:  uauth.ID,
+				QuestID: questID,
+			},
+		})
+		if err != nil {
+			if errors.Is(err, storage.ErrNotFound) {
+				return httperrors.New(http.StatusForbidden, "cannot see brief message without registration")
+			}
+			return xerrors.Errorf("get team: %w", err)
+		}
+		resp := game.AnswerDataResponse{
+			Quest: quest,
+			Team:  team,
+		}
+		if err = transport.ServeJSONResponse(w, http.StatusOK, resp); err != nil {
+			return err
+		}
+		return nil
+	}
+
 	if quest.Status != storage.StatusRunning {
 		return httperrors.New(http.StatusNotAcceptable, "cannot get tasks before quest start")
 	}

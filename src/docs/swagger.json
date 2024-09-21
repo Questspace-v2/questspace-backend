@@ -1676,12 +1676,18 @@
                 "access": {
                     "$ref": "#/definitions/storage.AccessType"
                 },
+                "brief": {
+                    "type": "string"
+                },
                 "description": {
                     "type": "string"
                 },
                 "finish_time": {
                     "type": "string",
                     "example": "2024-04-21T14:00:00+05:00"
+                },
+                "has_brief": {
+                    "type": "boolean"
                 },
                 "max_team_cap": {
                     "type": "integer"
@@ -1813,6 +1819,9 @@
                 "access": {
                     "$ref": "#/definitions/storage.AccessType"
                 },
+                "brief": {
+                    "type": "string"
+                },
                 "creator": {
                     "$ref": "#/definitions/storage.User"
                 },
@@ -1822,6 +1831,9 @@
                 "finish_time": {
                     "type": "string",
                     "example": "2024-04-21T14:00:00+05:00"
+                },
+                "has_brief": {
+                    "type": "boolean"
                 },
                 "id": {
                     "type": "string"
@@ -2005,11 +2017,17 @@
                 "access": {
                     "$ref": "#/definitions/storage.AccessType"
                 },
+                "brief": {
+                    "type": "string"
+                },
                 "description": {
                     "type": "string"
                 },
                 "finish_time": {
                     "type": "string"
+                },
+                "has_brief": {
+                    "type": "boolean"
                 },
                 "max_team_cap": {
                     "type": "integer"
