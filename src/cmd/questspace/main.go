@@ -25,6 +25,7 @@ import (
 	"questspace/internal/handlers/teams"
 	"questspace/internal/handlers/user"
 	"questspace/internal/hasher"
+	"questspace/internal/images"
 	"questspace/internal/pgdb"
 	"questspace/pkg/auth/jwt"
 	"questspace/pkg/cors"
@@ -59,8 +60,9 @@ func InitApp(ctx context.Context, application *app.App) error {
 	nodePicker := dbnode.NewBasicPicker(cl)
 	clientFactory := pgdb.NewQuestspaceClientFactory(nodePicker)
 	httpClient := http.Client{
-		Timeout: time.Minute,
+		Timeout: 5 * time.Minute,
 	}
+	imageValidator := images.NewValidator(&httpClient, &cfg.Validator)
 
 	pwHasher := hasher.NewBCryptHasher(cfg.HashCost)
 	jwtSecret, err := cfg.JWT.Secret.Read()
@@ -122,7 +124,7 @@ func InitApp(ctx context.Context, application *app.App) error {
 	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).POST("/teams/all/:id/leave", transport.WrapCtxErr(teamsHandler.HandleLeave))
 	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).DELETE("/teams/all/:id/:user_id", transport.WrapCtxErr(teamsHandler.HandleRemoveUser))
 
-	taskGroupHandler := taskgroups.NewHandler(clientFactory)
+	taskGroupHandler := taskgroups.NewHandler(clientFactory, &imageValidator)
 	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).PATCH("/quest/:id/task-groups/bulk", transport.WrapCtxErr(taskGroupHandler.HandleBulkUpdate))
 	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).POST("/quest/:id/task-groups", transport.WrapCtxErr(taskGroupHandler.HandleCreate))
 	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).GET("/quest/:id/task-groups", transport.WrapCtxErr(taskGroupHandler.HandleGet))

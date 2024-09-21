@@ -18,8 +18,8 @@ type Service struct {
 	updater *Updater
 }
 
-func NewService(tg storage.TaskGroupStorage, ts storage.TaskStorage) *Service {
-	upd := NewUpdater(tg, tasks.NewUpdater(ts)) // ts
+func NewService(tg storage.TaskGroupStorage, ts storage.TaskStorage, v requests.ImageValidator) *Service {
+	upd := NewUpdater(tg, tasks.NewUpdater(ts), v)
 	return &Service{
 		tg:      tg,
 		updater: upd,

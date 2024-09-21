@@ -54,6 +54,10 @@ jwt:
 
 teams:
   invite-link-prefix: {{ .InviteLinkPrefix }}
+
+validator:
+  timeout: 60s
+  max-body-size: 5242880  # 5 MiB
 `
 
 type configTmplParams struct {

@@ -20,11 +20,15 @@ import (
 )
 
 type Handler struct {
-	clientFactory pgdb.QuestspaceClientFactory
+	clientFactory  pgdb.QuestspaceClientFactory
+	imageValidator requests.ImageValidator
 }
 
-func NewHandler(c pgdb.QuestspaceClientFactory) *Handler {
-	return &Handler{clientFactory: c}
+func NewHandler(c pgdb.QuestspaceClientFactory, v requests.ImageValidator) *Handler {
+	return &Handler{
+		clientFactory:  c,
+		imageValidator: v,
+	}
 }
 
 type TaskGroups []*storage.TaskGroup
@@ -75,7 +79,7 @@ func (h *Handler) HandleBulkUpdate(ctx context.Context, w http.ResponseWriter, r
 	}
 
 	taskUpdater := tasks.NewUpdater(s)
-	updater := taskgroups.NewUpdater(s, taskUpdater)
+	updater := taskgroups.NewUpdater(s, taskUpdater, h.imageValidator)
 	tasksGroups, err := updater.BulkUpdateTaskGroups(ctx, req)
 	if err != nil {
 		return xerrors.Errorf("bulk update: %w", err)
@@ -140,7 +144,7 @@ func (h *Handler) HandleCreate(ctx context.Context, w http.ResponseWriter, r *ht
 	if q.Status == storage.StatusRunning || q.Status == storage.StatusWaitResults || q.Status == storage.StatusFinished {
 		return httperrors.Errorf(http.StatusForbidden, "do not use create method when quest is already running")
 	}
-	serv := taskgroups.NewService(s, s)
+	serv := taskgroups.NewService(s, s, h.imageValidator)
 	resp, err := serv.Create(ctx, req)
 	if err != nil {
 		return xerrors.Errorf("create taskgroups: %w", err)

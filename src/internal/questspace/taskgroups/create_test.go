@@ -15,7 +15,7 @@ import (
 func TestService_Create_Basic(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	s := storagemock.NewMockQuestSpaceStorage(ctrl)
-	serv := NewService(s, s)
+	serv := NewService(s, s, requests.NopValidator{})
 	ctx := context.Background()
 
 	req := requests.CreateFullRequest{

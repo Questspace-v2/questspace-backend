@@ -9,14 +9,16 @@ import (
 	"golang.org/x/xerrors"
 
 	"questspace/internal/questspace/permutations"
+	"questspace/internal/questspace/taskgroups/requests"
 	"questspace/internal/questspace/tasks"
 	"questspace/pkg/httperrors"
 	"questspace/pkg/storage"
 )
 
 type Updater struct {
-	s           storage.TaskGroupStorage
-	taskUpdater *tasks.Updater
+	s               storage.TaskGroupStorage
+	taskUpdater     *tasks.Updater
+	imageValidateor requests.ImageValidator
 }
 
 type taskGroupsPacked struct {
@@ -24,10 +26,11 @@ type taskGroupsPacked struct {
 	ordered []*storage.TaskGroup
 }
 
-func NewUpdater(s storage.TaskGroupStorage, taskUpdater *tasks.Updater) *Updater {
+func NewUpdater(s storage.TaskGroupStorage, taskUpdater *tasks.Updater, v requests.ImageValidator) *Updater {
 	return &Updater{
-		s:           s,
-		taskUpdater: taskUpdater,
+		s:               s,
+		taskUpdater:     taskUpdater,
+		imageValidateor: v,
 	}
 }
 
@@ -215,6 +218,9 @@ func (u *Updater) createTaskGroups(ctx context.Context, taskGroups *taskGroupsPa
 }
 
 func (u *Updater) BulkUpdateTaskGroups(ctx context.Context, req *storage.TaskGroupsBulkUpdateRequest) ([]storage.TaskGroup, error) {
+	if err := u.validateImageURLs(ctx, req); err != nil {
+		return nil, err
+	}
 	taskGroups, err := u.getOldTaskGroups(ctx, req.QuestID)
 	if err != nil {
 		return nil, xerrors.Errorf("get old task groups: %w", err)
@@ -246,6 +252,40 @@ func (u *Updater) BulkUpdateTaskGroups(ctx context.Context, req *storage.TaskGro
 		return nil, xerrors.Errorf("get all task groups: %w", err)
 	}
 	return newTaskGroups, nil
+}
+
+func (u *Updater) validateImageURLs(ctx context.Context, req *storage.TaskGroupsBulkUpdateRequest) error {
+	var imageURLs []string
+	for _, createTGReq := range req.Create {
+		for _, createTaskReq := range createTGReq.Tasks {
+			imageURLs = append(imageURLs, createTaskReq.MediaLinks...)
+		}
+	}
+	for _, updateTgReq := range req.Update {
+		if updateTgReq.Tasks == nil {
+			continue
+		}
+		for _, createTaskReq := range updateTgReq.Tasks.Create {
+			imageURLs = append(imageURLs, createTaskReq.MediaLinks...)
+		}
+		for _, updateTaskReq := range updateTgReq.Tasks.Update {
+			imageURLs = append(imageURLs, updateTaskReq.MediaLinks...)
+		}
+	}
+	uniqueURLs := make(map[string]struct{}, len(imageURLs))
+	for _, imageURL := range imageURLs {
+		uniqueURLs[imageURL] = struct{}{}
+	}
+
+	imageURLs = make([]string, 0, len(uniqueURLs))
+	for imageURL := range uniqueURLs {
+		imageURLs = append(imageURLs, imageURL)
+	}
+
+	if err := u.imageValidateor.ValidateImageURLs(ctx, imageURLs...); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (u *Updater) clapPack(ctx context.Context, pack *taskGroupsPacked) error {

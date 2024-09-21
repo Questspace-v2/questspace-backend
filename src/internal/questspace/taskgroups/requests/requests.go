@@ -1,10 +1,21 @@
 package requests
 
 import (
+	"context"
 	"time"
 
 	"questspace/pkg/storage"
 )
+
+type ImageValidator interface {
+	ValidateImageURLs(context.Context, ...string) error
+}
+
+type NopValidator struct{}
+
+func (n NopValidator) ValidateImageURLs(ctx context.Context, urls ...string) error {
+	return nil
+}
 
 type CreateTaskRequest struct {
 	Name           string                   `json:"name"`

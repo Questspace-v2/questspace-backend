@@ -24,3 +24,7 @@ jwt:
 
 teams:
   invite-link-prefix: https://google.com/
+
+validator:
+  timeout: 60s
+  max-body-size: 5242880  # 5 MiB
