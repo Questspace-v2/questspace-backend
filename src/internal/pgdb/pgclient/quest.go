@@ -282,11 +282,11 @@ func (c *Client) UpdateQuest(ctx context.Context, req *storage.UpdateQuestReques
 	if req.MaxTeamCap != nil {
 		query = query.Set("max_team_cap", req.MaxTeamCap)
 	}
-	if req.HasBrief {
-		query = query.Set("has_brief", req.HasBrief)
+	if req.HasBrief != nil {
+		query = query.Set("has_brief", *req.HasBrief)
 	}
-	if len(req.Brief) > 0 {
-		query = query.Set("brief", req.Brief)
+	if req.Brief != nil {
+		query = query.Set("brief", *req.Brief)
 	}
 
 	row := query.RunWith(c.runner).QueryRowContext(ctx)

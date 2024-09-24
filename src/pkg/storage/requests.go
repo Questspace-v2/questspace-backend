@@ -72,8 +72,8 @@ type UpdateQuestRequest struct {
 	FinishTime           *time.Time `json:"finish_time,omitempty"`
 	MediaLink            string     `json:"media_link,omitempty"`
 	MaxTeamCap           *int       `json:"max_team_cap,omitempty"`
-	HasBrief             bool       `json:"has_brief,omitempty"`
-	Brief                string     `json:"brief,omitempty"`
+	HasBrief             *bool      `json:"has_brief,omitempty"`
+	Brief                *string    `json:"brief,omitempty"`
 }
 
 type DeleteQuestRequest struct {
@@ -214,7 +214,7 @@ type UpdateTaskRequest struct {
 	PubTime        *time.Time       `json:"pub_time"`
 	MediaLinks     []string         `json:"media_links,omitempty"`
 	// Deprecated
-	MediaLink string `json:"media_link" example:"deprecated"`
+	MediaLink *string `json:"media_link" example:"deprecated"`
 }
 
 type DeleteTaskRequest struct {

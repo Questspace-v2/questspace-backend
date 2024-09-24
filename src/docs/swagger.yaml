@@ -437,12 +437,17 @@ definitions:
         type: string
       reward:
         type: integer
-      verification_type:
+      verification:
         allOf:
         - $ref: '#/definitions/storage.VerificationType'
         enum:
         - auto
         - manual
+      verification_type:
+        allOf:
+        - $ref: '#/definitions/storage.VerificationType'
+        description: Deprecated
+        example: deprecated
     type: object
   storage.TaskGroup:
     properties:

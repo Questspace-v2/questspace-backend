@@ -1944,7 +1944,7 @@ const docTemplate = `{
                 "reward": {
                     "type": "integer"
                 },
-                "verification_type": {
+                "verification": {
                     "enum": [
                         "auto",
                         "manual"
@@ -1954,6 +1954,15 @@ const docTemplate = `{
                             "$ref": "#/definitions/storage.VerificationType"
                         }
                     ]
+                },
+                "verification_type": {
+                    "description": "Deprecated",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/storage.VerificationType"
+                        }
+                    ],
+                    "example": "deprecated"
                 }
             }
         },
