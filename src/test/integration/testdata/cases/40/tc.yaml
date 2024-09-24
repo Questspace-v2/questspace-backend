@@ -1,4 +1,4 @@
-name: bulk-update-quest-new-tasks
+name: bulk-update-quest-update-media-links
 requests:
   - method: POST
     uri: /auth/register
@@ -70,7 +70,9 @@ requests:
                 "hints": [
                   "str"
                 ],
-                "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
+                "media_links": [
+                  "https://api.dicebear.com/8.x/thumbs/svg"
+                ],
                 "name": "task_1",
                 "pub_time": "2024-04-18T14:00:00+05:00",
                 "question": "question",
@@ -84,7 +86,9 @@ requests:
                 "hints": [
                   "not_str"
                 ],
-                "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
+                "media_links": [
+                  "https://api.dicebear.com/8.x/thumbs/svg"
+                ],
                 "name": "task_2",
                 "pub_time": "2024-04-18T14:00:00+05:00",
                 "question": "notquestion",
@@ -114,7 +118,6 @@ requests:
                   "str"
                 ],
                 "id": "$SET$:TASK1_ID",
-                "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
                 "media_links": [
                   "https://api.dicebear.com/8.x/thumbs/svg"
                 ],
@@ -133,7 +136,6 @@ requests:
                   "not_str"
                 ],
                 "id": "$SET$:TASK2_ID",
-                "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
                 "media_links": [
                   "https://api.dicebear.com/8.x/thumbs/svg"
                 ],
@@ -157,46 +159,17 @@ requests:
         "update": [
           {
             "id": "$GROUP1_ID",
+            "order_idx": 0,
             "tasks": {
               "update": [
                 {
                   "id": "$TASK1_ID",
-                  "order_idx": 0,
-                  "reward": 10
-                }
-              ],
-              "create": [
-                {
-                  "correct_answers": [
-                    "string"
-                  ],
-                  "hints": [
-                    "str"
-                  ],
-                  "media_links": [
-                    "https://api.dicebear.com/8.x/thumbs/svg"
-                  ],
-                  "name": "task_3",
-                  "question": "question",
-                  "reward": 50,
-                  "order_idx": 2,
-                  "verification": "auto"
+                  "order_idx": 0
                 },
                 {
-                  "correct_answers": [
-                    "not_string"
-                  ],
-                  "hints": [
-                    "not_str"
-                  ],
-                  "media_links": [
-                    "https://api.dicebear.com/8.x/thumbs/svg"
-                  ],
-                  "name": "task_4",
-                  "question": "notquestion",
-                  "reward": 500,
-                  "order_idx": 3,
-                  "verification": "auto"
+                  "id": "$TASK2_ID",
+                  "order_idx": 1,
+                  "media_links": []
                 }
               ]
             }
@@ -222,49 +195,11 @@ requests:
                   "str"
                 ],
                 "id": "$TASK1_ID",
-                "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
                 "media_links": [
                   "https://api.dicebear.com/8.x/thumbs/svg"
                 ],
                 "name": "task_1",
                 "order_idx": 0,
-                "question": "question",
-                "reward": 10,
-                "verification": "auto",
-                "verification_type": "auto"
-              },
-              {
-                "correct_answers": [
-                  "not_string"
-                ],
-                "hints": [
-                  "not_str"
-                ],
-                "id": "$TASK2_ID",
-                "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
-                "media_links": [
-                  "https://api.dicebear.com/8.x/thumbs/svg"
-                ],
-                "name": "task_2",
-                "order_idx": 1,
-                "question": "notquestion",
-                "reward": 500,
-                "verification": "auto",
-                "verification_type": "auto"
-              },
-              {
-                "correct_answers": [
-                  "string"
-                ],
-                "hints": [
-                  "str"
-                ],
-                "id": "$SET$:TASK3_ID",
-                "media_links": [
-                  "https://api.dicebear.com/8.x/thumbs/svg"
-                ],
-                "name": "task_3",
-                "order_idx": 2,
                 "question": "question",
                 "reward": 50,
                 "verification": "auto",
@@ -277,12 +212,9 @@ requests:
                 "hints": [
                   "not_str"
                 ],
-                "id": "$SET$:TASK4_ID",
-                "media_links": [
-                  "https://api.dicebear.com/8.x/thumbs/svg"
-                ],
-                "name": "task_4",
-                "order_idx": 3,
+                "id": "$TASK2_ID",
+                "name": "task_2",
+                "order_idx": 1,
                 "question": "notquestion",
                 "reward": 500,
                 "verification": "auto",

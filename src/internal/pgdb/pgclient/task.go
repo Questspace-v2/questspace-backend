@@ -56,17 +56,18 @@ func (c *Client) CreateTask(ctx context.Context, req *storage.CreateTaskRequest)
 	row := query.RunWith(c.runner).QueryRowContext(ctx)
 
 	task := storage.Task{
-		Group:          &storage.TaskGroup{ID: req.GroupID},
-		Name:           req.Name,
-		OrderIdx:       req.OrderIdx,
-		Question:       req.Question,
-		Reward:         req.Reward,
-		CorrectAnswers: slices.Clone(req.CorrectAnswers),
-		Verification:   req.Verification,
-		Hints:          slices.Clone(req.Hints),
-		MediaLinks:     req.MediaLinks,
-		MediaLink:      req.MediaLink,
-		PubTime:        req.PubTime,
+		Group:           &storage.TaskGroup{ID: req.GroupID},
+		Name:            req.Name,
+		OrderIdx:        req.OrderIdx,
+		Question:        req.Question,
+		Reward:          req.Reward,
+		CorrectAnswers:  slices.Clone(req.CorrectAnswers),
+		Verification:    req.Verification,
+		VerificationNew: req.Verification,
+		Hints:           slices.Clone(req.Hints),
+		MediaLinks:      req.MediaLinks,
+		MediaLink:       req.MediaLink,
+		PubTime:         req.PubTime,
 	}
 	if err := row.Scan(&task.ID); err != nil {
 		return nil, xerrors.Errorf("scan row: %w", err)
@@ -115,6 +116,7 @@ func (c *Client) GetTask(ctx context.Context, req *storage.GetTaskRequest) (*sto
 	if len(task.MediaLinks) == 0 && len(task.MediaLink) > 0 {
 		task.MediaLinks = []string{task.MediaLink}
 	}
+	task.VerificationNew = task.Verification
 
 	return &task, nil
 }
@@ -134,6 +136,7 @@ func (c *Client) GetAnswerData(ctx context.Context, req *storage.GetTaskRequest)
 		}
 		return nil, xerrors.Errorf("scan row: %w", err)
 	}
+	task.VerificationNew = task.Verification
 
 	return &task, nil
 }
@@ -194,6 +197,7 @@ func (c *Client) GetTasks(ctx context.Context, req *storage.GetTasksRequest) (st
 		if len(task.MediaLinks) == 0 && len(task.MediaLink) > 0 {
 			task.MediaLinks = []string{task.MediaLink}
 		}
+		task.VerificationNew = task.Verification
 
 		group := tasks[task.Group.ID]
 		group = append(group, task)
@@ -239,10 +243,10 @@ func (c *Client) UpdateTask(ctx context.Context, req *storage.UpdateTaskRequest)
 	if len(req.Hints) > 0 {
 		query = query.Set("hints", pgtype.FlatArray[string](req.Hints))
 	}
-	if len(req.MediaLink) > 0 {
-		query = query.Set("media_url", req.MediaLink)
+	if req.MediaLink != nil {
+		query = query.Set("media_url", *req.MediaLink)
 	}
-	if len(req.MediaLinks) > 0 {
+	if req.MediaLinks != nil {
 		query = query.Set("media_urls", pgtype.FlatArray[string](req.MediaLinks))
 	}
 	if req.PubTime != nil {
@@ -272,6 +276,7 @@ func (c *Client) UpdateTask(ctx context.Context, req *storage.UpdateTaskRequest)
 	if len(task.MediaLinks) == 0 && len(task.MediaLink) > 0 {
 		task.MediaLinks = []string{task.MediaLink}
 	}
+	task.VerificationNew = task.Verification
 
 	return &task, nil
 }

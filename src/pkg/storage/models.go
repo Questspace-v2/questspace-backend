@@ -135,17 +135,19 @@ type TaskGroup struct {
 }
 
 type Task struct {
-	ID             string           `json:"id"`
-	OrderIdx       int              `json:"order_idx"`
-	Group          *TaskGroup       `json:"-"`
-	Name           string           `json:"name"`
-	Question       string           `json:"question"`
-	Reward         int              `json:"reward"`
-	CorrectAnswers []string         `json:"correct_answers"`
-	Verification   VerificationType `json:"verification_type" enums:"auto,manual"`
-	Hints          []string         `json:"hints"`
-	PubTime        *time.Time       `json:"pub_time,omitempty"`
-	MediaLinks     []string         `json:"media_links,omitempty"`
+	ID             string     `json:"id"`
+	OrderIdx       int        `json:"order_idx"`
+	Group          *TaskGroup `json:"-"`
+	Name           string     `json:"name"`
+	Question       string     `json:"question"`
+	Reward         int        `json:"reward"`
+	CorrectAnswers []string   `json:"correct_answers"`
+	// Deprecated
+	Verification    VerificationType `json:"verification_type" example:"deprecated"`
+	VerificationNew VerificationType `json:"verification" enums:"auto,manual"`
+	Hints           []string         `json:"hints"`
+	PubTime         *time.Time       `json:"pub_time,omitempty"`
+	MediaLinks      []string         `json:"media_links,omitempty"`
 	// Deprecated
 	MediaLink string `json:"media_link,omitempty" example:"deprecated"`
 }

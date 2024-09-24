@@ -123,6 +123,7 @@ requests:
                 "order_idx": 0,
                 "question": "question",
                 "reward": 50,
+                "verification": "auto",
                 "verification_type": "auto"
               },
               {
@@ -141,6 +142,7 @@ requests:
                 "order_idx": 1,
                 "question": "notquestion",
                 "reward": 500,
+                "verification": "auto",
                 "verification_type": "auto"
               }
             ]
@@ -293,6 +295,7 @@ requests:
                 "order_idx": 0,
                 "question": "question",
                 "reward": 50,
+                "verification": "auto",
                 "verification_type": "auto"
               },
               {
@@ -311,6 +314,7 @@ requests:
                 "order_idx": 1,
                 "question": "notquestion",
                 "reward": 500,
+                "verification": "auto",
                 "verification_type": "auto"
               }
             ]
