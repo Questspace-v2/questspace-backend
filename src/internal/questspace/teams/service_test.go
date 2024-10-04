@@ -6,7 +6,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gofrs/uuid"
 	"github.com/golang/mock/gomock"
 	"github.com/spkg/ptr"
 	"github.com/stretchr/testify/assert"
@@ -27,11 +26,11 @@ func TestService_CreateTeam(t *testing.T) {
 	service := NewService(s, linkPrefix)
 
 	creator := storage.User{
-		ID:        uuid.Must(uuid.NewV4()).String(),
+		ID:        storage.NewID(),
 		Username:  "svayp11",
 		AvatarURL: "https://ya.ru",
 	}
-	questID := uuid.Must(uuid.NewV4()).String()
+	questID := storage.NewID()
 
 	req := storage.CreateTeamRequest{
 		Creator: &creator,
@@ -40,7 +39,7 @@ func TestService_CreateTeam(t *testing.T) {
 	}
 
 	createdTeam := storage.Team{
-		ID:           uuid.Must(uuid.NewV4()).String(),
+		ID:           storage.NewID(),
 		Name:         req.Name,
 		Captain:      &creator,
 		Quest:        &storage.Quest{ID: questID, MaxTeamCap: ptr.Int(5)},
@@ -51,7 +50,7 @@ func TestService_CreateTeam(t *testing.T) {
 
 	gomock.InOrder(
 		s.EXPECT().
-			GetTeams(ctx, &storage.GetTeamsRequest{User: &creator, QuestIDs: []string{questID}}).
+			GetTeams(ctx, &storage.GetTeamsRequest{User: &creator, QuestIDs: []storage.ID{questID}}).
 			Return(nil, nil),
 
 		s.EXPECT().CreateTeam(ctx, &req).Return(&createdTeam, nil),
@@ -77,11 +76,11 @@ func TestTeamService_CreateTeam_AlreadyMember(t *testing.T) {
 	service := NewService(s, linkPrefix)
 
 	creator := storage.User{
-		ID:        uuid.Must(uuid.NewV4()).String(),
+		ID:        storage.NewID(),
 		Username:  "svayp11",
 		AvatarURL: "https://ya.ru",
 	}
-	questID := uuid.Must(uuid.NewV4()).String()
+	questID := storage.NewID()
 
 	req := storage.CreateTeamRequest{
 		Creator: &creator,
@@ -91,7 +90,7 @@ func TestTeamService_CreateTeam_AlreadyMember(t *testing.T) {
 
 	gomock.InOrder(
 		s.EXPECT().
-			GetTeams(ctx, &storage.GetTeamsRequest{User: &creator, QuestIDs: []string{questID}}).
+			GetTeams(ctx, &storage.GetTeamsRequest{User: &creator, QuestIDs: []storage.ID{questID}}).
 			Return([]storage.Team{{}, {}, {}}, nil),
 	)
 
@@ -111,7 +110,7 @@ func TestTeamService_JoinTeam(t *testing.T) {
 	service := NewService(s, linkPrefix)
 
 	newMember := storage.User{
-		ID:        uuid.Must(uuid.NewV4()).String(),
+		ID:        storage.NewID(),
 		Username:  "svayp11",
 		AvatarURL: "https://ya.ru",
 	}
@@ -120,13 +119,13 @@ func TestTeamService_JoinTeam(t *testing.T) {
 		InvitePath: "inviteme",
 	}
 
-	questID := uuid.Must(uuid.NewV4()).String()
+	questID := storage.NewID()
 	teamCreator := storage.User{
-		ID:       uuid.Must(uuid.NewV4()).String(),
+		ID:       storage.NewID(),
 		Username: "prikotletka",
 	}
 	team := storage.Team{
-		ID:   uuid.Must(uuid.NewV4()).String(),
+		ID:   storage.NewID(),
 		Name: "team2",
 		Quest: &storage.Quest{
 			ID: questID,
@@ -142,7 +141,7 @@ func TestTeamService_JoinTeam(t *testing.T) {
 			Return(&team, nil),
 
 		s.EXPECT().
-			GetTeams(ctx, &storage.GetTeamsRequest{User: &newMember, QuestIDs: []string{questID}}).
+			GetTeams(ctx, &storage.GetTeamsRequest{User: &newMember, QuestIDs: []storage.ID{questID}}).
 			Return(nil, nil),
 
 		s.EXPECT().JoinTeam(ctx, &req).Return(&newMember, nil),
@@ -163,7 +162,7 @@ func TestTeamService_JoinTeam_AlreadyInvited(t *testing.T) {
 	service := NewService(s, linkPrefix)
 
 	oldMember := storage.User{
-		ID:        uuid.Must(uuid.NewV4()).String(),
+		ID:        storage.NewID(),
 		Username:  "svayp11",
 		AvatarURL: "https://ya.ru",
 	}
@@ -172,13 +171,13 @@ func TestTeamService_JoinTeam_AlreadyInvited(t *testing.T) {
 		InvitePath: "inviteme",
 	}
 
-	questID := uuid.Must(uuid.NewV4()).String()
+	questID := storage.NewID()
 	teamCreator := storage.User{
-		ID:       uuid.Must(uuid.NewV4()).String(),
+		ID:       storage.NewID(),
 		Username: "prikotletka",
 	}
 	team := storage.Team{
-		ID:   uuid.Must(uuid.NewV4()).String(),
+		ID:   storage.NewID(),
 		Name: "team2",
 		Quest: &storage.Quest{
 			ID: questID,
@@ -207,18 +206,18 @@ func TestTeamService_LeaveTeam(t *testing.T) {
 	service := NewService(s, linkPrefix)
 
 	oldMember := storage.User{
-		ID:        uuid.Must(uuid.NewV4()).String(),
+		ID:        storage.NewID(),
 		Username:  "svayp11",
 		AvatarURL: "https://ya.ru",
 	}
 
-	questID := uuid.Must(uuid.NewV4()).String()
+	questID := storage.NewID()
 	teamCreator := storage.User{
-		ID:       uuid.Must(uuid.NewV4()).String(),
+		ID:       storage.NewID(),
 		Username: "prikotletka",
 	}
 	team := storage.Team{
-		ID:   uuid.Must(uuid.NewV4()).String(),
+		ID:   storage.NewID(),
 		Name: "team2",
 		Quest: &storage.Quest{
 			ID: questID,

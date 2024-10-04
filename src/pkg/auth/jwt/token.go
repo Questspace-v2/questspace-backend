@@ -45,7 +45,7 @@ func (p *TokenParser) ParseToken(tokenStr string) (*storage.User, error) {
 
 	if claims, ok := token.Claims.(*questspaceClaims); ok {
 		return &storage.User{
-			ID:        claims.ID,
+			ID:        storage.ID(claims.ID),
 			Username:  claims.Issuer,
 			AvatarURL: claims.Avatar,
 		}, nil
@@ -58,7 +58,7 @@ func (p *TokenParser) CreateToken(user *storage.User) (string, error) {
 		Admin:  false, // TODO(svayp11): Implement admin role
 		Avatar: user.AvatarURL,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ID:     user.ID,
+			ID:     user.ID.String(),
 			Issuer: user.Username,
 		},
 	}

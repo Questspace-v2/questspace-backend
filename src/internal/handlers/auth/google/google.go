@@ -84,7 +84,7 @@ func (o *OAuthHandler) Handle(ctx context.Context, w http.ResponseWriter, r *htt
 
 	logging.Info(ctx, "google sign-in done",
 		zap.String("username", user.Username),
-		zap.String("user_id", user.ID),
+		zap.Stringer("user_id", user.ID),
 	)
 
 	return nil

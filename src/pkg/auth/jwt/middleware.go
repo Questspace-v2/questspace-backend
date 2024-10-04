@@ -36,7 +36,7 @@ func middleware(parser Parser, strict bool) transport.Middleware {
 			}
 
 			logCtx := logging.AddFieldsToContextLogger(r.Context(), zap.Dict("user",
-				zap.String("id", user.ID),
+				zap.Stringer("id", user.ID),
 				zap.String("username", user.Username),
 			))
 

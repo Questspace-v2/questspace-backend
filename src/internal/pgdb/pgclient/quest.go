@@ -120,7 +120,7 @@ func (c *Client) GetQuest(ctx context.Context, req *storage.GetQuestRequest) (*s
 		return nil, xerrors.Errorf("scan row: %w", err)
 	}
 	if userId.Valid {
-		q.Creator = &storage.User{ID: userId.String}
+		q.Creator = &storage.User{ID: storage.ID(userId.String)}
 	}
 	if q.Creator != nil && userAvatarURL.Valid {
 		q.Creator.AvatarURL = userAvatarURL.String
@@ -134,7 +134,7 @@ func (c *Client) GetQuest(ctx context.Context, req *storage.GetQuestRequest) (*s
 	return &q, nil
 }
 
-func (c *Client) addAllQuestsCond(query sq.SelectBuilder, userID string) sq.SelectBuilder {
+func (c *Client) addAllQuestsCond(query sq.SelectBuilder, userID storage.ID) sq.SelectBuilder {
 	const allExpr = `(q.access = 'public' OR (q.access = 'link_only' AND EXISTS(
 	SELECT 1 FROM questspace.registration r
 		LEFT JOIN questspace.team t ON t.id = r.team_id
@@ -144,7 +144,7 @@ func (c *Client) addAllQuestsCond(query sq.SelectBuilder, userID string) sq.Sele
 	return query
 }
 
-func (c *Client) addRegisteredQuestsCond(query sq.SelectBuilder, userID string) sq.SelectBuilder {
+func (c *Client) addRegisteredQuestsCond(query sq.SelectBuilder, userID storage.ID) sq.SelectBuilder {
 	const registeredExpr = `EXISTS(
 	SELECT 1 FROM questspace.registration r
 		LEFT JOIN questspace.team t ON t.id = r.team_id
@@ -154,7 +154,7 @@ func (c *Client) addRegisteredQuestsCond(query sq.SelectBuilder, userID string) 
 	return query
 }
 
-func (c *Client) addOwnedQuestsCond(query sq.SelectBuilder, userID string) sq.SelectBuilder {
+func (c *Client) addOwnedQuestsCond(query sq.SelectBuilder, userID storage.ID) sq.SelectBuilder {
 	query = query.Where(sq.Eq{"q.creator_id": userID})
 	return query
 }
@@ -210,7 +210,7 @@ func (c *Client) GetQuests(ctx context.Context, req *storage.GetQuestsRequest) (
 		}
 
 		if userId.Valid {
-			q.Creator = &storage.User{ID: userId.String}
+			q.Creator = &storage.User{ID: storage.ID(userId.String)}
 		}
 		if q.Creator != nil && username.Valid {
 			q.Creator.Username = username.String
@@ -316,7 +316,7 @@ func (c *Client) UpdateQuest(ctx context.Context, req *storage.UpdateQuestReques
 		return nil, xerrors.Errorf("scan row: %w", err)
 	}
 	if creatorID.Valid {
-		q.Creator = &storage.User{ID: creatorID.String}
+		q.Creator = &storage.User{ID: storage.ID(creatorID.String)}
 	}
 	if finished {
 		q.Status = storage.StatusFinished

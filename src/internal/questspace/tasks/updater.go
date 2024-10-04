@@ -24,12 +24,12 @@ func NewUpdater(s storage.TaskStorage) *Updater {
 }
 
 type tasksPacked struct {
-	byID  map[string]*storage.Task
+	byID  map[storage.ID]*storage.Task
 	order []*storage.Task
 }
 
 func fromSlice(s []storage.Task) *tasksPacked {
-	byID := make(map[string]*storage.Task, len(s))
+	byID := make(map[storage.ID]*storage.Task, len(s))
 	order := make([]*storage.Task, 0, len(s))
 	for _, t := range s {
 		t := t
@@ -147,7 +147,7 @@ func (u *Updater) updateTasks(ctx context.Context, tasks *tasksPacked, updateReq
 	return nil
 }
 
-func (u *Updater) createTasks(ctx context.Context, tasks *tasksPacked, createReqs []storage.CreateTaskRequest, groupID string) error {
+func (u *Updater) createTasks(ctx context.Context, tasks *tasksPacked, createReqs []storage.CreateTaskRequest, groupID storage.ID) error {
 	var errs []error
 	for _, createReq := range createReqs {
 		if tasks.order[createReq.OrderIdx] != nil {
@@ -179,7 +179,7 @@ func (u *Updater) createTasks(ctx context.Context, tasks *tasksPacked, createReq
 // BulkUpdate
 // TODO: unit-tests
 func (u *Updater) BulkUpdate(ctx context.Context, req *storage.TasksBulkUpdateRequest) ([]storage.Task, error) {
-	oldTasks, err := u.s.GetTasks(ctx, &storage.GetTasksRequest{GroupIDs: []string{req.GroupID}})
+	oldTasks, err := u.s.GetTasks(ctx, &storage.GetTasksRequest{GroupIDs: []storage.ID{req.GroupID}})
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return nil, httperrors.Errorf(http.StatusNotFound, "quest %q not found", req.QuestID)
@@ -211,7 +211,7 @@ func (u *Updater) BulkUpdate(ctx context.Context, req *storage.TasksBulkUpdateRe
 	}
 	pack.order = pack.order[:newLen]
 
-	newTasks, err := u.s.GetTasks(ctx, &storage.GetTasksRequest{GroupIDs: []string{req.GroupID}})
+	newTasks, err := u.s.GetTasks(ctx, &storage.GetTasksRequest{GroupIDs: []storage.ID{req.GroupID}})
 	if err != nil {
 		return nil, xerrors.Errorf("get new tasks: %w", err)
 	}

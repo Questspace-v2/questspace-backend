@@ -99,7 +99,7 @@ func (h *Handler) HandleBasicSignUp(ctx context.Context, w http.ResponseWriter, 
 
 	logging.Info(ctx, "basic registration done",
 		zap.String("username", user.Username),
-		zap.String("user_id", user.ID),
+		zap.Stringer("user_id", user.ID),
 	)
 	return nil
 }

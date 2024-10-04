@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/gofrs/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -73,7 +72,7 @@ func TestUserStorage_GetUser_NotFound(t *testing.T) {
 	ctx := context.Background()
 	client := NewClient(pgtest.NewEmbeddedQuestspaceDB(t))
 
-	gotByID, err := client.GetUser(ctx, &storage.GetUserRequest{ID: uuid.Must(uuid.NewV4()).String()})
+	gotByID, err := client.GetUser(ctx, &storage.GetUserRequest{ID: storage.NewID()})
 	require.Error(t, err)
 	assert.ErrorIs(t, err, storage.ErrNotFound)
 	assert.Nil(t, gotByID)
@@ -133,7 +132,7 @@ func TestUserStorage_UpdateUser_NotFound(t *testing.T) {
 	ctx := context.Background()
 	client := NewClient(pgtest.NewEmbeddedQuestspaceDB(t))
 
-	upd, err := client.UpdateUser(ctx, &storage.UpdateUserRequest{ID: uuid.Must(uuid.NewV4()).String(), Username: newUsername})
+	upd, err := client.UpdateUser(ctx, &storage.UpdateUserRequest{ID: storage.NewID(), Username: newUsername})
 	require.Error(t, err)
 	assert.ErrorIs(t, err, storage.ErrNotFound)
 	assert.Nil(t, upd)
@@ -143,7 +142,7 @@ func TestUserStorage_UpdateUser_ErrorOnEmptyRequest(t *testing.T) {
 	ctx := context.Background()
 	client := NewClient(pgtest.NewEmbeddedQuestspaceDB(t))
 
-	upd, err := client.UpdateUser(ctx, &storage.UpdateUserRequest{ID: uuid.Must(uuid.NewV4()).String()})
+	upd, err := client.UpdateUser(ctx, &storage.UpdateUserRequest{ID: storage.NewID()})
 	require.Error(t, err)
 	assert.ErrorIs(t, err, storage.ErrValidation)
 	assert.Nil(t, upd)
@@ -195,7 +194,7 @@ func TestUserStorage_GetUserPasswordHash_NotFound(t *testing.T) {
 	ctx := context.Background()
 	client := NewClient(pgtest.NewEmbeddedQuestspaceDB(t))
 
-	pwHash, err := client.GetUserPasswordHash(ctx, &storage.GetUserRequest{ID: uuid.Must(uuid.NewV4()).String()})
+	pwHash, err := client.GetUserPasswordHash(ctx, &storage.GetUserRequest{ID: storage.NewID()})
 	require.Error(t, err)
 	assert.ErrorIs(t, err, storage.ErrNotFound)
 	assert.Empty(t, pwHash)

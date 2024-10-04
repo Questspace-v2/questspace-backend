@@ -63,7 +63,7 @@ func TestService_Create_Basic(t *testing.T) {
 			Quest:    &storage.Quest{ID: req.QuestID},
 		}, nil),
 
-		s.EXPECT().GetTasks(ctx, &storage.GetTasksRequest{GroupIDs: []string{"tg1"}}).Return(nil, nil),
+		s.EXPECT().GetTasks(ctx, &storage.GetTasksRequest{GroupIDs: []storage.ID{"tg1"}}).Return(nil, nil),
 
 		s.EXPECT().CreateTask(ctx, &createTaskReq).Return(&storage.Task{
 			ID:           "t1",
@@ -75,7 +75,7 @@ func TestService_Create_Basic(t *testing.T) {
 			Verification: req.TaskGroups[0].Tasks[0].Verification,
 		}, nil),
 
-		s.EXPECT().GetTasks(ctx, &storage.GetTasksRequest{GroupIDs: []string{"tg1"}}).Return(nil, nil),
+		s.EXPECT().GetTasks(ctx, &storage.GetTasksRequest{GroupIDs: []storage.ID{"tg1"}}).Return(nil, nil),
 
 		s.EXPECT().GetTaskGroups(ctx, &storage.GetTaskGroupsRequest{QuestID: req.QuestID, IncludeTasks: true}).Return(nil, nil),
 	)

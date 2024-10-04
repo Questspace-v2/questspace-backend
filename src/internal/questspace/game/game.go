@@ -46,7 +46,7 @@ type AnswerTaskHint struct {
 }
 
 type AnswerTask struct {
-	ID           string                   `json:"id"`
+	ID           storage.ID               `json:"id"`
 	OrderIdx     int                      `json:"order_idx"`
 	Name         string                   `json:"name"`
 	Question     string                   `json:"question"`
@@ -65,7 +65,7 @@ type AnswerTask struct {
 }
 
 type AnswerTaskGroup struct {
-	ID       string       `json:"id"`
+	ID       storage.ID   `json:"id"`
 	OrderIdx int          `json:"order_idx"`
 	Name     string       `json:"name"`
 	PubTime  *time.Time   `json:"pub_time,omitempty"`
@@ -141,7 +141,7 @@ type TaskResult struct {
 }
 
 type TeamResult struct {
-	TeamID                string
+	TeamID                storage.ID
 	TeamName              string
 	TotalScore            int
 	TaskScore             int
@@ -174,8 +174,8 @@ type TeamResults struct {
 	TaskGroups []storage.TaskGroup `json:"task_groups"`
 }
 
-func (s *Service) GetResults(ctx context.Context, questID string) (*TeamResults, error) {
-	teams, err := s.tms.GetTeams(ctx, &storage.GetTeamsRequest{QuestIDs: []string{questID}})
+func (s *Service) GetResults(ctx context.Context, questID storage.ID) (*TeamResults, error) {
+	teams, err := s.tms.GetTeams(ctx, &storage.GetTeamsRequest{QuestIDs: []storage.ID{questID}})
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return nil, httperrors.Errorf(http.StatusNotFound, "quest %q not found", questID)
@@ -244,9 +244,9 @@ func (s *Service) GetResults(ctx context.Context, questID string) (*TeamResults,
 }
 
 type LeaderboardRow struct {
-	TeamID                string `json:"team_id"`
-	TeamName              string `json:"team_name"`
-	Score                 int    `json:"score"`
+	TeamID                storage.ID `json:"team_id"`
+	TeamName              string     `json:"team_name"`
+	Score                 int        `json:"score"`
 	lastCorrectAnswerTime *time.Time
 }
 
@@ -254,8 +254,8 @@ type LeaderboardResponse struct {
 	Rows []LeaderboardRow `json:"rows"`
 }
 
-func (s *Service) GetLeaderboard(ctx context.Context, questID string) (*LeaderboardResponse, error) {
-	teams, err := s.tms.GetTeams(ctx, &storage.GetTeamsRequest{QuestIDs: []string{questID}})
+func (s *Service) GetLeaderboard(ctx context.Context, questID storage.ID) (*LeaderboardResponse, error) {
+	teams, err := s.tms.GetTeams(ctx, &storage.GetTeamsRequest{QuestIDs: []storage.ID{questID}})
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return nil, httperrors.Errorf(http.StatusNotFound, "quest %q not found", questID)
@@ -304,9 +304,9 @@ func (s *Service) GetLeaderboard(ctx context.Context, questID string) (*Leaderbo
 }
 
 type TakeHintRequest struct {
-	QuestID string `json:"-"`
-	TaskID  string `json:"task_id"`
-	Index   int    `json:"index"`
+	QuestID storage.ID `json:"-"`
+	TaskID  storage.ID `json:"task_id"`
+	Index   int        `json:"index"`
 }
 
 func (s *Service) TakeHint(ctx context.Context, user *storage.User, req *TakeHintRequest) (*storage.Hint, error) {
@@ -345,9 +345,9 @@ func (s *Service) TakeHint(ctx context.Context, user *storage.User, req *TakeHin
 }
 
 type TryAnswerRequest struct {
-	QuestID string `json:"-"`
-	TaskID  string `json:"task_id"`
-	Text    string `json:"text"`
+	QuestID storage.ID `json:"-"`
+	TaskID  storage.ID `json:"task_id"`
+	Text    string     `json:"text"`
 }
 
 type TryAnswerResponse struct {
@@ -396,9 +396,9 @@ func (s *Service) TryAnswer(ctx context.Context, user *storage.User, req *TryAns
 
 	if !accepted || answerData.Verification == storage.VerificationManual {
 		logging.Info(ctx, "answer try",
-			zap.String("team_id", team.ID),
+			zap.Stringer("team_id", team.ID),
 			zap.String("team_name", team.Name),
-			zap.String("task_id", req.TaskID),
+			zap.Stringer("task_id", req.TaskID),
 			zap.String("text", req.Text),
 		)
 		if err = s.ah.CreateAnswerTry(ctx, &tryReq); err != nil {
@@ -416,9 +416,9 @@ func (s *Service) TryAnswer(ctx context.Context, user *storage.User, req *TryAns
 	tryReq.Accepted = true
 	tryReq.Score = score
 	logging.Info(ctx, "answer try",
-		zap.String("team_id", team.ID),
+		zap.Stringer("team_id", team.ID),
 		zap.String("team_name", team.Name),
-		zap.String("task_id", req.TaskID),
+		zap.Stringer("task_id", req.TaskID),
 		zap.String("text", req.Text),
 		zap.Int("reward", score),
 		zap.Any("taken_hints", taskHints),
@@ -432,9 +432,9 @@ func (s *Service) TryAnswer(ctx context.Context, user *storage.User, req *TryAns
 }
 
 type AddPenaltyRequest struct {
-	QuestID string `json:"-"`
-	TeamID  string `json:"team_id"`
-	Penalty int    `json:"penalty"`
+	QuestID storage.ID `json:"-"`
+	TeamID  storage.ID `json:"team_id"`
+	Penalty int        `json:"penalty"`
 }
 
 func (s *Service) AddPenalty(ctx context.Context, req *AddPenaltyRequest) error {

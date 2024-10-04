@@ -26,7 +26,7 @@ func NewService(s storage.TeamStorage, inviteLinkPrefix string) *Service {
 }
 
 func (s *Service) CreateTeam(ctx context.Context, req *storage.CreateTeamRequest) (*storage.Team, error) {
-	exisingTeams, err := s.s.GetTeams(ctx, &storage.GetTeamsRequest{User: req.Creator, QuestIDs: []string{req.QuestID}})
+	exisingTeams, err := s.s.GetTeams(ctx, &storage.GetTeamsRequest{User: req.Creator, QuestIDs: []storage.ID{req.QuestID}})
 	if err != nil {
 		return nil, xerrors.Errorf("get existing teams for user %s: %w", req.Creator.ID, err)
 	}
@@ -49,7 +49,7 @@ func (s *Service) CreateTeam(ctx context.Context, req *storage.CreateTeamRequest
 	return team, nil
 }
 
-func (s *Service) GetTeam(ctx context.Context, teamID string) (*storage.Team, error) {
+func (s *Service) GetTeam(ctx context.Context, teamID storage.ID) (*storage.Team, error) {
 	team, err := s.s.GetTeam(ctx, &storage.GetTeamRequest{ID: teamID, IncludeMembers: true})
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
@@ -61,8 +61,8 @@ func (s *Service) GetTeam(ctx context.Context, teamID string) (*storage.Team, er
 	return team, nil
 }
 
-func (s *Service) GetQuestTeams(ctx context.Context, questID string) ([]storage.Team, error) {
-	teams, err := s.s.GetTeams(ctx, &storage.GetTeamsRequest{QuestIDs: []string{questID}, IncludeMembers: true})
+func (s *Service) GetQuestTeams(ctx context.Context, questID storage.ID) ([]storage.Team, error) {
+	teams, err := s.s.GetTeams(ctx, &storage.GetTeamsRequest{QuestIDs: []storage.ID{questID}, IncludeMembers: true})
 	if err != nil {
 		return nil, xerrors.Errorf("get teams: %w", err)
 	}
@@ -107,7 +107,7 @@ func (s *Service) JoinTeam(ctx context.Context, req *storage.JoinTeamRequest) (*
 		}
 	}
 
-	exisingTeams, err := s.s.GetTeams(ctx, &storage.GetTeamsRequest{User: req.User, QuestIDs: []string{team.Quest.ID}})
+	exisingTeams, err := s.s.GetTeams(ctx, &storage.GetTeamsRequest{User: req.User, QuestIDs: []storage.ID{team.Quest.ID}})
 	if err != nil {
 		return nil, xerrors.Errorf("get existing teams for user %s: %w", req.User.ID, err)
 	}
@@ -168,7 +168,7 @@ func (s *Service) ChangeLeader(ctx context.Context, user *storage.User, req *sto
 	return newTeam, nil
 }
 
-func (s *Service) LeaveTeam(ctx context.Context, user *storage.User, teamID, newCaptainID string) (*storage.Team, error) {
+func (s *Service) LeaveTeam(ctx context.Context, user *storage.User, teamID, newCaptainID storage.ID) (*storage.Team, error) {
 	team, err := s.s.GetTeam(ctx, &storage.GetTeamRequest{ID: teamID, IncludeMembers: true})
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
@@ -197,9 +197,9 @@ func (s *Service) LeaveTeam(ctx context.Context, user *storage.User, teamID, new
 		}
 
 		logging.Info(ctx, "new captain",
-			zap.String("team_id", teamID),
-			zap.String("old_captain", user.ID),
-			zap.String("new_captain", newCaptainID),
+			zap.Stringer("team_id", teamID),
+			zap.Stringer("old_captain", user.ID),
+			zap.Stringer("new_captain", newCaptainID),
 		)
 	}
 

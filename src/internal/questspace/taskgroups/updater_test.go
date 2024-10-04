@@ -33,7 +33,7 @@ func TestUpdater_reorderUpdatedTaskGroups(t *testing.T) {
 		{
 			name: "no reorders",
 			initial: taskGroupsPacked{
-				byID: map[string]*storage.TaskGroup{
+				byID: map[storage.ID]*storage.TaskGroup{
 					"1": &taskGroupsForTest[0],
 					"2": &taskGroupsForTest[1],
 					"3": &taskGroupsForTest[2],
@@ -42,7 +42,7 @@ func TestUpdater_reorderUpdatedTaskGroups(t *testing.T) {
 			},
 			reqs: []storage.UpdateTaskGroupRequest{{ID: "1", Name: "Changed name"}},
 			expected: taskGroupsPacked{
-				byID: map[string]*storage.TaskGroup{
+				byID: map[storage.ID]*storage.TaskGroup{
 					"1": &taskGroupsForTest[0],
 					"2": &taskGroupsForTest[1],
 					"3": &taskGroupsForTest[2],
@@ -53,7 +53,7 @@ func TestUpdater_reorderUpdatedTaskGroups(t *testing.T) {
 		{
 			name: "one short circular reorder",
 			initial: taskGroupsPacked{
-				byID: map[string]*storage.TaskGroup{
+				byID: map[storage.ID]*storage.TaskGroup{
 					"1": &taskGroupsForTest[0],
 					"2": &taskGroupsForTest[1],
 					"3": &taskGroupsForTest[2],
@@ -62,7 +62,7 @@ func TestUpdater_reorderUpdatedTaskGroups(t *testing.T) {
 			},
 			reqs: []storage.UpdateTaskGroupRequest{{ID: "1", OrderIdx: 1}, {ID: "2", OrderIdx: 0}},
 			expected: taskGroupsPacked{
-				byID: map[string]*storage.TaskGroup{
+				byID: map[storage.ID]*storage.TaskGroup{
 					"1": &taskGroupsForTest[0],
 					"2": &taskGroupsForTest[1],
 					"3": &taskGroupsForTest[2],
@@ -73,7 +73,7 @@ func TestUpdater_reorderUpdatedTaskGroups(t *testing.T) {
 		{
 			name: "one short chain reorder",
 			initial: taskGroupsPacked{
-				byID: map[string]*storage.TaskGroup{
+				byID: map[storage.ID]*storage.TaskGroup{
 					"1": &taskGroupsForTest[0],
 					"3": &taskGroupsForTest[2],
 				},
@@ -81,7 +81,7 @@ func TestUpdater_reorderUpdatedTaskGroups(t *testing.T) {
 			},
 			reqs: []storage.UpdateTaskGroupRequest{{ID: "1", OrderIdx: 2}, {ID: "3", OrderIdx: 1}},
 			expected: taskGroupsPacked{
-				byID: map[string]*storage.TaskGroup{
+				byID: map[storage.ID]*storage.TaskGroup{
 					"1": &taskGroupsForTest[0],
 					"3": &taskGroupsForTest[2],
 				},
@@ -91,7 +91,7 @@ func TestUpdater_reorderUpdatedTaskGroups(t *testing.T) {
 		{
 			name: "one short and one circular",
 			initial: taskGroupsPacked{
-				byID: map[string]*storage.TaskGroup{
+				byID: map[storage.ID]*storage.TaskGroup{
 					"1": &taskGroupsForTest[0],
 					"2": &taskGroupsForTest[1],
 					"3": &taskGroupsForTest[2],
@@ -115,7 +115,7 @@ func TestUpdater_reorderUpdatedTaskGroups(t *testing.T) {
 				{ID: "4", OrderIdx: 5},
 			},
 			expected: taskGroupsPacked{
-				byID: map[string]*storage.TaskGroup{
+				byID: map[storage.ID]*storage.TaskGroup{
 					"1": &taskGroupsForTest[0],
 					"2": &taskGroupsForTest[1],
 					"3": &taskGroupsForTest[2],
@@ -140,7 +140,7 @@ func TestUpdater_reorderUpdatedTaskGroups(t *testing.T) {
 		{
 			name: "error on more than one items in one index",
 			initial: taskGroupsPacked{
-				byID: map[string]*storage.TaskGroup{
+				byID: map[storage.ID]*storage.TaskGroup{
 					"1": &taskGroupsForTest[0],
 					"2": &taskGroupsForTest[1],
 					"3": &taskGroupsForTest[2],

@@ -267,7 +267,7 @@ func (h *Handler) HandleDelete(ctx context.Context, w http.ResponseWriter, r *ht
 }
 
 type ChangeLeaderRequest struct {
-	NewCaptainID string `json:"new_captain_id"`
+	NewCaptainID storage.ID `json:"new_captain_id"`
 }
 
 // HandleChangeLeader handles POST /teams/:id/captain request
@@ -329,7 +329,10 @@ func (h *Handler) HandleLeave(ctx context.Context, w http.ResponseWriter, r *htt
 	if err != nil {
 		return xerrors.Errorf("%w", err)
 	}
-	newCaptainID := transport.Query(r, "new_captain")
+	newCaptainID, err := transport.UUIDParam(r, "new_captain")
+	if err != nil && !errors.Is(err, storage.ErrNotFound) {
+		return xerrors.Errorf("%w", err)
+	}
 	uauth, err := jwt.GetUserFromContext(ctx)
 	if err != nil {
 		return xerrors.Errorf("%w", err)
