@@ -10,8 +10,16 @@ import (
 const usedAlg = "HS256"
 
 //go:generate mockgen -source=token.go -destination mocks/token.go -package mocks
-type Parser interface {
+type TokenVendingMachine interface {
+	TokenEncoder
+	TokenParser
+}
+
+type TokenParser interface {
 	ParseToken(tokenStr string) (*storage.User, error)
+}
+
+type TokenEncoder interface {
 	CreateToken(user *storage.User) (string, error)
 }
 
@@ -22,15 +30,15 @@ type questspaceClaims struct {
 	jwt.RegisteredClaims
 }
 
-type TokenParser struct {
+type VendingMachine struct {
 	secret []byte
 }
 
-func NewTokenParser(sec []byte) *TokenParser {
-	return &TokenParser{secret: sec}
+func NewTokenParser(sec []byte) *VendingMachine {
+	return &VendingMachine{secret: sec}
 }
 
-func (p *TokenParser) ParseToken(tokenStr string) (*storage.User, error) {
+func (p *VendingMachine) ParseToken(tokenStr string) (*storage.User, error) {
 	token, err := jwt.ParseWithClaims(tokenStr, &questspaceClaims{}, func(t *jwt.Token) (interface{}, error) {
 		if t.Method.Alg() != usedAlg {
 			return nil, xerrors.Errorf("unexpected signing method: %v", t.Method.Alg())
@@ -53,7 +61,7 @@ func (p *TokenParser) ParseToken(tokenStr string) (*storage.User, error) {
 	return nil, xerrors.New("invalid token")
 }
 
-func (p *TokenParser) CreateToken(user *storage.User) (string, error) {
+func (p *VendingMachine) CreateToken(user *storage.User) (string, error) {
 	claims := questspaceClaims{
 		Admin:  false, // TODO(svayp11): Implement admin role
 		Avatar: user.AvatarURL,
@@ -76,7 +84,7 @@ type nopParser struct {
 	Token string
 }
 
-func NewNopParser(neededUser *storage.User, neededToken string) Parser {
+func NewNopParser(neededUser *storage.User, neededToken string) TokenVendingMachine {
 	return &nopParser{User: neededUser, Token: neededToken}
 }
 

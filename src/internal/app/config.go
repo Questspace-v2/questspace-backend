@@ -6,22 +6,22 @@ import (
 	"golang.org/x/xerrors"
 	"gopkg.in/yaml.v3"
 
-	"questspace/internal/handlers/auth/google"
 	"questspace/internal/handlers/teams"
 	"questspace/internal/images"
 	"questspace/internal/pgdb/pgconfig"
+	"questspace/internal/questspace/authservice/googleservice"
 	"questspace/pkg/auth/jwt"
 	"questspace/pkg/cors"
 )
 
 type Config struct {
-	DB        pgconfig.Config `yaml:"db"`
-	HashCost  int             `yaml:"hash-cost"`
-	CORS      cors.Config     `yaml:"cors"`
-	JWT       jwt.Config      `yaml:"jwt"`
-	Teams     teams.Config    `yaml:"teams"`
-	Google    google.Config   `yaml:"google-oauth"`
-	Validator images.Config   `yaml:"validator"`
+	DB        pgconfig.Config      `yaml:"db"`
+	HashCost  int                  `yaml:"hash-cost"`
+	CORS      cors.Config          `yaml:"cors"`
+	JWT       jwt.Config           `yaml:"jwt"`
+	Teams     teams.Config         `yaml:"teams"`
+	Google    googleservice.Config `yaml:"google-oauth"`
+	Validator images.Config        `yaml:"validator"`
 }
 
 func UnmarshallConfigFromFile(path string) (*Config, error) {
