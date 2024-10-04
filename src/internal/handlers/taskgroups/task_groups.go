@@ -80,7 +80,7 @@ func (h *Handler) HandleBulkUpdate(ctx context.Context, w http.ResponseWriter, r
 
 	taskUpdater := tasks.NewUpdater(s)
 	updater := taskgroups.NewUpdater(s, taskUpdater, h.imageValidator)
-	tasksGroups, err := updater.BulkUpdateTaskGroups(ctx, req)
+	tasksGroups, err := updater.BulkUpdateTaskGroups(ctx, &req)
 	if err != nil {
 		return xerrors.Errorf("bulk update: %w", err)
 	}
@@ -145,7 +145,7 @@ func (h *Handler) HandleCreate(ctx context.Context, w http.ResponseWriter, r *ht
 		return httperrors.Errorf(http.StatusForbidden, "do not use create method when quest is already running")
 	}
 	serv := taskgroups.NewService(s, s, h.imageValidator)
-	resp, err := serv.Create(ctx, req)
+	resp, err := serv.Create(ctx, &req)
 	if err != nil {
 		return xerrors.Errorf("create taskgroups: %w", err)
 	}

@@ -76,7 +76,7 @@ func (h *Handler) HandleBasicSignUp(ctx context.Context, w http.ResponseWriter, 
 		return xerrors.Errorf("get storage client: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
-	user, err := s.CreateUser(ctx, req)
+	user, err := s.CreateUser(ctx, &req)
 	if err != nil {
 		if errors.Is(err, storage.ErrExists) {
 			return httperrors.Errorf(http.StatusBadRequest, "user %q already exits", req.Username)

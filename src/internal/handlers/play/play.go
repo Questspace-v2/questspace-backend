@@ -394,7 +394,7 @@ func (h *Handler) HandleAddPenalty(ctx context.Context, w http.ResponseWriter, r
 	}
 
 	srv := game.NewService(s, s, s, s)
-	if err = srv.AddPenalty(ctx, req); err != nil {
+	if err = srv.AddPenalty(ctx, &req); err != nil {
 		return xerrors.Errorf("add penalty: %w", err)
 	}
 	if err = tx.Commit(); err != nil {

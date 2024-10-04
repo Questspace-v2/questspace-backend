@@ -64,7 +64,7 @@ func (h *Handler) HandleCreate(ctx context.Context, w http.ResponseWriter, r *ht
 	if err != nil {
 		return xerrors.Errorf("get storage client: %w", err)
 	}
-	quest, err := s.CreateQuest(ctx, req)
+	quest, err := s.CreateQuest(ctx, &req)
 	if err != nil {
 		return xerrors.Errorf("create quest: %w", err)
 	}
@@ -245,7 +245,7 @@ func (h *Handler) HandleUpdate(ctx context.Context, w http.ResponseWriter, r *ht
 		return xerrors.Errorf("get storage: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
-	quest, err := s.UpdateQuest(ctx, req)
+	quest, err := s.UpdateQuest(ctx, &req)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return httperrors.Errorf(http.StatusNotFound, "not found quest with id %q", req.ID)
