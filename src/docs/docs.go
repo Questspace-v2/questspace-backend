@@ -1554,6 +1554,12 @@ const docTemplate = `{
         "quest.TeamQuestResponse": {
             "type": "object",
             "properties": {
+                "all_teams": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/storage.Team"
+                    }
+                },
                 "leaderboard": {
                     "$ref": "#/definitions/game.LeaderboardResponse"
                 },
