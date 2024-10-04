@@ -4,11 +4,16 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
 	"questspace/test/testutils"
+)
+
+const (
+	RunTCkey = "RUN_TC"
 )
 
 func TestMain(m *testing.M) {
@@ -19,6 +24,8 @@ func TestQuestspace(t *testing.T) {
 	casesDir := path.Join("./testdata", "cases")
 	testDirs := ListTestDirs(t, casesDir)
 
+	runTC := os.Getenv(RunTCkey)
+
 	for _, dir := range testDirs {
 		tc := ReadTestCase(t, filepath.Join(casesDir, dir))
 		tcFullName := dir + "/" + tc.Name
@@ -26,6 +33,10 @@ func TestQuestspace(t *testing.T) {
 		t.Run(tcFullName, func(t *testing.T) {
 			if tc.Ignore {
 				t.Logf("WARNING: Test case %q is ignored. Skipping...", tcFullName)
+				return
+			}
+			if len(runTC) != 0 && !strings.HasPrefix(tcFullName, runTC+"/") {
+				t.Logf("WARNING: Test case %q is ignored by %s. Skipping...", tcFullName, RunTCkey)
 				return
 			}
 			testutils.StartServer(t)

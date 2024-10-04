@@ -53,15 +53,16 @@ requests:
         "status": "RUNNING"
       }
 
-  - method: POST
-    uri: /quest/$QUEST_ID/task-groups
+  - method: PATCH
+    uri: /quest/$QUEST_ID/task-groups/bulk
     authorization: $SVAYP11_TOKEN
     json-input: >
       {
-        "task_groups": [
+        "create": [
           {
             "name": "group_1",
             "pub_time": "2024-04-18T14:00:00+05:00",
+            "order_idx": 0,
             "tasks": [
               {
                 "correct_answers": [
@@ -74,6 +75,7 @@ requests:
                   "https://api.dicebear.com/8.x/thumbs/svg"
                 ],
                 "name": "task_1",
+                "order_idx": 0,
                 "pub_time": "2024-04-18T14:00:00+05:00",
                 "question": "question",
                 "reward": 50,
@@ -90,6 +92,7 @@ requests:
                   "https://api.dicebear.com/8.x/thumbs/svg"
                 ],
                 "name": "task_2",
+                "order_idx": 1,
                 "pub_time": "2024-04-18T14:00:00+05:00",
                 "question": "notquestion",
                 "reward": 500,
@@ -111,36 +114,38 @@ requests:
             "pub_time": "$ANY$",
             "tasks": [
               {
+                "id": "$SET$:TASK1_ID",
                 "correct_answers": [
                   "string"
                 ],
                 "hints": [
                   "str"
                 ],
-                "id": "$SET$:TASK1_ID",
                 "media_links": [
                   "https://api.dicebear.com/8.x/thumbs/svg"
                 ],
                 "name": "task_1",
                 "order_idx": 0,
+                "pub_time": "2024-04-18T14:00:00Z",
                 "question": "question",
                 "reward": 50,
                 "verification": "auto",
                 "verification_type": "auto"
               },
               {
+                "id": "$SET$:TASK2_ID",
                 "correct_answers": [
                   "not_string"
                 ],
                 "hints": [
                   "not_str"
                 ],
-                "id": "$SET$:TASK2_ID",
                 "media_links": [
                   "https://api.dicebear.com/8.x/thumbs/svg"
                 ],
                 "name": "task_2",
                 "order_idx": 1,
+                "pub_time": "2024-04-18T14:00:00Z",
                 "question": "notquestion",
                 "reward": 500,
                 "verification": "auto",
@@ -200,6 +205,7 @@ requests:
                 ],
                 "name": "task_1",
                 "order_idx": 0,
+                "pub_time": "2024-04-18T14:00:00Z",
                 "question": "question",
                 "reward": 50,
                 "verification": "auto",
@@ -215,6 +221,7 @@ requests:
                 "id": "$TASK2_ID",
                 "name": "task_2",
                 "order_idx": 1,
+                "pub_time": "2024-04-18T14:00:00Z",
                 "question": "notquestion",
                 "reward": 500,
                 "verification": "auto",

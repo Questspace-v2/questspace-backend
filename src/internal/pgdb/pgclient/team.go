@@ -106,7 +106,7 @@ func (c *Client) GetTeam(ctx context.Context, req *storage.GetTeamRequest) (*sto
 func (c *Client) GetTeams(ctx context.Context, req *storage.GetTeamsRequest) ([]storage.Team, error) {
 	query := sq.Select("t.id", "t.name", "u.id", "u.username", "u.avatar_url").
 		From("questspace.team t").
-		LeftJoin("questspace.user u ON t.captain_id = u.id").
+		LeftJoin("questspace.user u ON t.cap_id = u.id").
 		OrderBy("t.name ASC").
 		PlaceholderFormat(sq.Dollar)
 	if req.User != nil {
