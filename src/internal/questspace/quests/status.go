@@ -1,19 +1,15 @@
 package quests
 
 import (
-	"time"
-
+	"questspace/internal/qtime"
 	"questspace/pkg/storage"
 )
-
-// TODO(svayp11): Replace this func in integration tests
-var QuestStatusNowFunc = time.Now
 
 func SetStatus(q *storage.Quest) {
 	if q.Status == storage.StatusFinished {
 		return
 	}
-	now := QuestStatusNowFunc()
+	now := qtime.Now()
 	if q.RegistrationDeadline != nil && q.RegistrationDeadline.After(now) ||
 		q.RegistrationDeadline == nil && q.StartTime.After(now) {
 		q.Status = storage.StatusOnRegistration

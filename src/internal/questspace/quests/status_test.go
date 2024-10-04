@@ -7,16 +7,17 @@ import (
 	"github.com/spkg/ptr"
 	"github.com/stretchr/testify/assert"
 
+	"questspace/internal/qtime"
 	"questspace/pkg/storage"
 )
 
 var wantNow = time.Date(2024, time.April, 14, 12, 0, 0, 0, time.UTC)
 
 func replaceNowFunc(t *testing.T) {
-	QuestStatusNowFunc = func() time.Time {
+	questStatusNowFunc := func() time.Time {
 		return wantNow
 	}
-	t.Cleanup(func() { QuestStatusNowFunc = time.Now })
+	qtime.SetNowFunc(t, questStatusNowFunc)
 }
 
 func TestSetStatus(t *testing.T) {
