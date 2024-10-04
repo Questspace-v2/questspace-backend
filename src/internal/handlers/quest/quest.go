@@ -86,6 +86,7 @@ type TeamQuestResponse struct {
 	Quest       *storage.Quest            `json:"quest"`
 	Team        *storage.Team             `json:"team,omitempty"`
 	Leaderboard *game.LeaderboardResponse `json:"leaderboard,omitempty"`
+	AllTeams    []storage.Team            `json:"all_teams,omitempty"`
 }
 
 // HandleGet handles GET /quest/:id request
@@ -136,6 +137,11 @@ func (h *Handler) HandleGet(ctx context.Context, w http.ResponseWriter, r *http.
 			team.InviteLink = h.inviteLinkPrefix + team.InviteLink
 		}
 		resp.Team = team
+	}
+
+	resp.AllTeams, err = s.GetTeams(ctx, &storage.GetTeamsRequest{QuestIDs: []string{questID}})
+	if err != nil {
+		return xerrors.Errorf("get teams: %w", err)
 	}
 
 	if quest.Status == storage.StatusFinished {

@@ -104,8 +104,9 @@ func (c *Client) GetTeam(ctx context.Context, req *storage.GetTeamRequest) (*sto
 }
 
 func (c *Client) GetTeams(ctx context.Context, req *storage.GetTeamsRequest) ([]storage.Team, error) {
-	query := sq.Select("t.id", "t.name").
+	query := sq.Select("t.id", "t.name", "u.id", "u.username", "u.avatar_url").
 		From("questspace.team t").
+		LeftJoin("questspace.user u ON t.captain_id = u.id").
 		OrderBy("t.name ASC").
 		PlaceholderFormat(sq.Dollar)
 	if req.User != nil {
@@ -127,9 +128,23 @@ func (c *Client) GetTeams(ctx context.Context, req *storage.GetTeamsRequest) ([]
 		teams []storage.Team
 	)
 	for rows.Next() {
-		var team storage.Team
-		if err := rows.Scan(&team.ID, &team.Name); err != nil {
+		team := storage.Team{
+			Captain: &storage.User{},
+		}
+		if err := rows.Scan(
+			&team.ID,
+			&team.Name,
+			&team.Captain.ID,
+			&team.Captain.Username,
+			&team.Captain.AvatarURL,
+		); err != nil {
 			return nil, xerrors.Errorf("scan row: %w", err)
+		}
+		if req.IncludeMembers {
+			team.Members, err = c.getTeamMembers(ctx, team.ID)
+			if err != nil {
+				return nil, xerrors.Errorf("get team members: %w", err)
+			}
 		}
 		teams = append(teams, team)
 	}

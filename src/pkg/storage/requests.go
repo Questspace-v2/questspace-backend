@@ -103,8 +103,9 @@ type GetTeamRequest struct {
 }
 
 type GetTeamsRequest struct {
-	User     *User
-	QuestIDs []string
+	User           *User
+	QuestIDs       []string
+	IncludeMembers bool
 }
 
 type ChangeTeamNameRequest struct {

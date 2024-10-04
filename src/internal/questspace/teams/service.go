@@ -62,7 +62,7 @@ func (s *Service) GetTeam(ctx context.Context, teamID string) (*storage.Team, er
 }
 
 func (s *Service) GetQuestTeams(ctx context.Context, questID string) ([]storage.Team, error) {
-	teams, err := s.s.GetTeams(ctx, &storage.GetTeamsRequest{QuestIDs: []string{questID}})
+	teams, err := s.s.GetTeams(ctx, &storage.GetTeamsRequest{QuestIDs: []string{questID}, IncludeMembers: true})
 	if err != nil {
 		return nil, xerrors.Errorf("get teams: %w", err)
 	}
