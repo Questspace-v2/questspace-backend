@@ -125,6 +125,62 @@ requests:
       }
 
   - method: GET
+    uri: /quest/$QUEST_ID
+    authorization: $PYAVS22_TOKEN
+    
+    expected-status: 200
+    expected-json: >
+      {
+        "quest": {
+          "access": "public",
+          "creator": {
+            "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+            "id": "$USER_ID",
+            "username": "svayp11"
+          },
+          "description": "description",
+          "finish_time": "$ANY$",
+          "id": "$SET$:QUEST_ID",
+          "max_team_cap": 4,
+          "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
+          "name": "name",
+          "registration_deadline": "$ANY$",
+          "start_time": "$ANY$",
+          "status": "ON_REGISTRATION"
+        },
+        "team": {
+          "captain": {
+            "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+            "id": "$USER_ID2",
+            "username": "pyavs22"
+          },
+          "id": "$TEAM_ID",
+          "invite_link": "$INVITE_LINK",
+          "members": [
+            {
+              "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+              "id": "$USER_ID2",
+              "username": "pyavs22"
+            }
+          ],
+          "name": "dream_team",
+          "score": 0
+        },
+        "all_teams": [
+          {
+            "captain": {
+              "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+              "id": "$USER_ID2",
+              "username": "pyavs22"
+            },
+            "id": "$TEAM_ID",
+            "name": "dream_team",
+            "score": 0
+          }
+        ]
+      }
+
+  - method: GET
     uri: /teams/join/$INVITE_LINK
     authorization: $SYAVP33_TOKEN
 

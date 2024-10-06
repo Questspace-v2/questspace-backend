@@ -23,6 +23,7 @@ import (
 	"questspace/internal/handlers/quest"
 	"questspace/internal/handlers/taskgroups"
 	"questspace/internal/handlers/teams"
+	"questspace/internal/handlers/testhandlers"
 	"questspace/internal/handlers/user"
 	"questspace/internal/hasher"
 	"questspace/internal/images"
@@ -79,6 +80,8 @@ func InitApp(ctx context.Context, application *app.App) error {
 	}
 
 	r := application.Router()
+	r.H().GET("/internal/testing/wait", transport.WrapCtxErr(testhandlers.HandleWait))
+
 	r.H().GET("/debug/pprof/", http.HandlerFunc(pprof.Index))
 	r.H().GET("/debug/pprof/cmdline", http.HandlerFunc(pprof.Cmdline))
 	r.H().GET("/debug/pprof/profile", http.HandlerFunc(pprof.Profile))

@@ -9,19 +9,20 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"golang.org/x/xerrors"
 
+	"questspace/internal/qtime"
 	"questspace/pkg/storage"
 )
 
 const createTeamQuery = `
 WITH created_team AS (
-	INSERT INTO questspace.team (name, quest_id, cap_id) VALUES ($1, $2, $3)
+	INSERT INTO questspace.team (name, quest_id, cap_id, time_created) VALUES ($1, $2, $3, $4)
 	RETURNING id, name, link_id, cap_id
 ) SELECT t.id, t.name, t.link_id, u.id, u.username, u.avatar_url
 FROM created_team t LEFT JOIN questspace.user u ON t.cap_id = u.id
 `
 
 func (c *Client) CreateTeam(ctx context.Context, req *storage.CreateTeamRequest) (*storage.Team, error) {
-	sqlQuery := sq.Expr(createTeamQuery, req.Name, req.QuestID, req.Creator.ID)
+	sqlQuery := sq.Expr(createTeamQuery, req.Name, req.QuestID, req.Creator.ID, qtime.Now())
 
 	row := sq.QueryRowContextWith(ctx, c.runner, sqlQuery)
 	team := &storage.Team{Captain: &storage.User{}}
@@ -104,9 +105,10 @@ func (c *Client) GetTeam(ctx context.Context, req *storage.GetTeamRequest) (*sto
 }
 
 func (c *Client) GetTeams(ctx context.Context, req *storage.GetTeamsRequest) ([]storage.Team, error) {
-	query := sq.Select("t.id", "t.name").
+	query := sq.Select("t.id", "t.name", "u.id", "u.username", "u.avatar_url").
 		From("questspace.team t").
-		OrderBy("t.name ASC").
+		LeftJoin("questspace.user u ON t.cap_id = u.id").
+		OrderBy("t.time_created, t.name ASC").
 		PlaceholderFormat(sq.Dollar)
 	if req.User != nil {
 		query = query.
@@ -127,9 +129,23 @@ func (c *Client) GetTeams(ctx context.Context, req *storage.GetTeamsRequest) ([]
 		teams []storage.Team
 	)
 	for rows.Next() {
-		var team storage.Team
-		if err := rows.Scan(&team.ID, &team.Name); err != nil {
+		team := storage.Team{
+			Captain: &storage.User{},
+		}
+		if err := rows.Scan(
+			&team.ID,
+			&team.Name,
+			&team.Captain.ID,
+			&team.Captain.Username,
+			&team.Captain.AvatarURL,
+		); err != nil {
 			return nil, xerrors.Errorf("scan row: %w", err)
+		}
+		if req.IncludeMembers {
+			team.Members, err = c.getTeamMembers(ctx, team.ID)
+			if err != nil {
+				return nil, xerrors.Errorf("get team members: %w", err)
+			}
 		}
 		teams = append(teams, team)
 	}

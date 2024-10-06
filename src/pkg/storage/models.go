@@ -113,7 +113,7 @@ type Team struct {
 	Quest        *Quest `json:"-"`
 	Captain      *User  `json:"captain,omitempty"`
 	Score        int    `json:"score"`
-	InviteLink   string `json:"invite_link"`
+	InviteLink   string `json:"invite_link,omitempty"`
 	InviteLinkID int64  `json:"-"`
 	Members      []User `json:"members,omitempty"`
 }

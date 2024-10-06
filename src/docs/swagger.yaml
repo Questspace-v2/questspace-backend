@@ -176,6 +176,10 @@ definitions:
     type: object
   quest.TeamQuestResponse:
     properties:
+      all_teams:
+        items:
+          $ref: '#/definitions/storage.Team'
+        type: array
       leaderboard:
         $ref: '#/definitions/game.LeaderboardResponse'
       quest:

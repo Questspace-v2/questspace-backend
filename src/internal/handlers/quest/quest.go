@@ -86,6 +86,7 @@ type TeamQuestResponse struct {
 	Quest       *storage.Quest            `json:"quest"`
 	Team        *storage.Team             `json:"team,omitempty"`
 	Leaderboard *game.LeaderboardResponse `json:"leaderboard,omitempty"`
+	AllTeams    []storage.Team            `json:"all_teams,omitempty"`
 }
 
 // HandleGet handles GET /quest/:id request
@@ -115,6 +116,7 @@ func (h *Handler) HandleGet(ctx context.Context, w http.ResponseWriter, r *http.
 		return xerrors.Errorf("get quest: %w", err)
 	}
 	hasBrief := quest.HasBrief
+	brief := quest.Brief
 	quest.HasBrief = false
 	quest.Brief = ""
 
@@ -138,6 +140,11 @@ func (h *Handler) HandleGet(ctx context.Context, w http.ResponseWriter, r *http.
 		resp.Team = team
 	}
 
+	resp.AllTeams, err = s.GetTeams(ctx, &storage.GetTeamsRequest{QuestIDs: []string{questID}})
+	if err != nil {
+		return xerrors.Errorf("get teams: %w", err)
+	}
+
 	if quest.Status == storage.StatusFinished {
 		srv := game.NewService(s, s, s, s)
 		leaderboard, err := srv.GetLeaderboard(ctx, questID)
@@ -147,7 +154,7 @@ func (h *Handler) HandleGet(ctx context.Context, w http.ResponseWriter, r *http.
 			logging.Error(ctx, "get leaderboard", zap.Error(err))
 		}
 	}
-	if (quest.Status == storage.StatusOnRegistration || quest.Status == storage.StatusRegistrationDone) && resp.Team != nil {
+	if (quest.Status == storage.StatusOnRegistration || quest.Status == storage.StatusRegistrationDone) && resp.Team != nil && len(brief) > 0 {
 		resp.Quest.HasBrief = hasBrief
 	}
 
