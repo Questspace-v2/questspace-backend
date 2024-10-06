@@ -52,17 +52,41 @@ const (
 	StatusFinished
 )
 
-var questStatusToStr = map[QuestStatus]string{
-	StatusUnspecified:      "",
-	StatusOnRegistration:   "ON_REGISTRATION",
-	StatusRegistrationDone: "REGISTRATION_DONE",
-	StatusRunning:          "RUNNING",
-	StatusWaitResults:      "WAIT_RESULTS",
-	StatusFinished:         "FINISHED",
-}
+var (
+	questStatusToStr = map[QuestStatus]string{
+		StatusUnspecified:      "",
+		StatusOnRegistration:   "ON_REGISTRATION",
+		StatusRegistrationDone: "REGISTRATION_DONE",
+		StatusRunning:          "RUNNING",
+		StatusWaitResults:      "WAIT_RESULTS",
+		StatusFinished:         "FINISHED",
+	}
+	strToQuestStatus = map[string]QuestStatus{
+		"":                  StatusUnspecified,
+		"ON_REGISTRATION":   StatusOnRegistration,
+		"REGISTRATION_DONE": StatusRegistrationDone,
+		"RUNNING":           StatusRunning,
+		"WAIT_RESULTS":      StatusWaitResults,
+		"FINISHED":          StatusFinished,
+	}
+)
 
 func (q QuestStatus) String() string {
 	return questStatusToStr[q]
+}
+
+func (q *QuestStatus) UnmarshalJSON(data []byte) error {
+	if len(data) <= 2 {
+		*q = StatusUnspecified
+		return nil
+	}
+	str := string(data[1 : len(data)-1])
+	status, ok := strToQuestStatus[str]
+	if !ok {
+		return xerrors.Errorf("unknown status %q", str)
+	}
+	*q = status
+	return nil
 }
 
 func (q QuestStatus) MarshalJSON() ([]byte, error) {
@@ -92,7 +116,7 @@ type Quest struct {
 	FinishTime           *time.Time  `json:"finish_time,omitempty" example:"2024-04-21T14:00:00+05:00"`
 	MediaLink            string      `json:"media_link"`
 	MaxTeamCap           *int        `json:"max_team_cap,omitempty"`
-	Status               QuestStatus `json:"status" enums:"ON_REGISTRATION,REGISTRATION_DONE,RUNNING,WAIT_RESULTS,FINISHED"`
+	Status               QuestStatus `json:"status"`
 	HasBrief             bool        `json:"has_brief,omitempty"`
 	Brief                string      `json:"brief,omitempty"`
 }

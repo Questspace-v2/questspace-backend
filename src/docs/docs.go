@@ -260,6 +260,93 @@ const docTemplate = `{
                 }
             }
         },
+        "/quest/{id}/answer_log": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "PlayMode"
+                ],
+                "summary": "Get paginated answer logs",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Task group ID",
+                        "name": "task_group",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Task ID",
+                        "name": "task",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Team ID",
+                        "name": "team",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "user",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Return only accepted answers",
+                        "name": "accepted_only",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Return new answers first (descending)",
+                        "name": "desc",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 50,
+                        "description": "Number of answers to return for each field",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number to return. Mutually exclusive to page_id",
+                        "name": "page_no",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Page ID to return. Mutually exclusive to page_no",
+                        "name": "page_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/game.AnswerLogResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    }
+                }
+            }
+        },
         "/quest/{id}/hint": {
             "post": {
                 "security": [
@@ -1356,6 +1443,61 @@ const docTemplate = `{
                 }
             }
         },
+        "game.AnswerLog": {
+            "type": "object",
+            "properties": {
+                "accepted": {
+                    "type": "boolean"
+                },
+                "answer": {
+                    "type": "string"
+                },
+                "answer_time": {
+                    "type": "string"
+                },
+                "task": {
+                    "type": "string"
+                },
+                "task_group": {
+                    "type": "string"
+                },
+                "task_group_id": {
+                    "type": "string"
+                },
+                "task_id": {
+                    "type": "string"
+                },
+                "team": {
+                    "type": "string"
+                },
+                "team_id": {
+                    "type": "string"
+                },
+                "user": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "game.AnswerLogResponse": {
+            "type": "object",
+            "properties": {
+                "answer_logs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/game.AnswerLog"
+                    }
+                },
+                "next_page_token": {
+                    "type": "integer"
+                },
+                "total_pages": {
+                    "type": "integer"
+                }
+            }
+        },
         "game.AnswerTask": {
             "type": "object",
             "properties": {
@@ -1898,16 +2040,28 @@ const docTemplate = `{
                     "example": "2024-04-14T14:00:00+05:00"
                 },
                 "status": {
-                    "type": "string",
-                    "enum": [
-                        "ON_REGISTRATION",
-                        "REGISTRATION_DONE",
-                        "RUNNING",
-                        "WAIT_RESULTS",
-                        "FINISHED"
-                    ]
+                    "$ref": "#/definitions/storage.QuestStatus"
                 }
             }
+        },
+        "storage.QuestStatus": {
+            "type": "integer",
+            "enum": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5
+            ],
+            "x-enum-varnames": [
+                "StatusUnspecified",
+                "StatusOnRegistration",
+                "StatusRegistrationDone",
+                "StatusRunning",
+                "StatusWaitResults",
+                "StatusFinished"
+            ]
         },
         "storage.Task": {
             "type": "object",
