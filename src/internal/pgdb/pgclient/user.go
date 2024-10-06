@@ -25,7 +25,7 @@ func (c *Client) CreateUser(ctx context.Context, req *storage.CreateUserRequest)
 	}
 	row := query.Values(values...).RunWith(c.runner).QueryRowContext(ctx)
 
-	var id string
+	var id storage.ID
 	if err := row.Scan(&id); err != nil {
 		if pgErr := new(pgconn.PgError); errors.As(err, &pgErr) && pgErr.Code == uniqueViolationCode {
 			return nil, storage.ErrExists

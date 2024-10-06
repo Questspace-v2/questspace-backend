@@ -22,7 +22,7 @@ type Updater struct {
 }
 
 type taskGroupsPacked struct {
-	byID    map[string]*storage.TaskGroup
+	byID    map[storage.ID]*storage.TaskGroup
 	ordered []*storage.TaskGroup
 }
 
@@ -34,7 +34,7 @@ func NewUpdater(s storage.TaskGroupStorage, taskUpdater *tasks.Updater, v reques
 	}
 }
 
-func (u *Updater) getOldTaskGroups(ctx context.Context, questID string) (*taskGroupsPacked, error) {
+func (u *Updater) getOldTaskGroups(ctx context.Context, questID storage.ID) (*taskGroupsPacked, error) {
 	oldTaskGroups, err := u.s.GetTaskGroups(ctx, &storage.GetTaskGroupsRequest{QuestID: questID})
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
@@ -43,7 +43,7 @@ func (u *Updater) getOldTaskGroups(ctx context.Context, questID string) (*taskGr
 		return nil, xerrors.Errorf("read task groups: %w", err)
 	}
 
-	taskGroupIDMap := make(map[string]*storage.TaskGroup, len(oldTaskGroups))
+	taskGroupIDMap := make(map[storage.ID]*storage.TaskGroup, len(oldTaskGroups))
 	ordered := make([]*storage.TaskGroup, 0, len(oldTaskGroups))
 	for _, tg := range oldTaskGroups {
 		tg := tg
@@ -151,7 +151,7 @@ func (u *Updater) reorderUpdatedTaskGroups(taskGroups *taskGroupsPacked, updateR
 	return nil
 }
 
-func (u *Updater) updateTaskGroups(ctx context.Context, taskGroups *taskGroupsPacked, updateReqs []storage.UpdateTaskGroupRequest, questID string) error {
+func (u *Updater) updateTaskGroups(ctx context.Context, taskGroups *taskGroupsPacked, updateReqs []storage.UpdateTaskGroupRequest, questID storage.ID) error {
 	var errs []error
 	for _, updateReq := range updateReqs {
 		updateReq := updateReq
@@ -178,7 +178,7 @@ func (u *Updater) updateTaskGroups(ctx context.Context, taskGroups *taskGroupsPa
 	return nil
 }
 
-func (u *Updater) createTaskGroups(ctx context.Context, taskGroups *taskGroupsPacked, createReqs []storage.CreateTaskGroupRequest, questID string) error {
+func (u *Updater) createTaskGroups(ctx context.Context, taskGroups *taskGroupsPacked, createReqs []storage.CreateTaskGroupRequest, questID storage.ID) error {
 	var errs []error
 	for _, createReq := range createReqs {
 		if taskGroups.ordered[createReq.OrderIdx] != nil {

@@ -39,7 +39,7 @@ func (c *Client) GetHintTakes(ctx context.Context, req *storage.GetHintTakesRequ
 			return nil, xerrors.Errorf("scan row: %w", err)
 		}
 		if len(allHints) < ht.Hint.Index {
-			logging.Error(ctx, "took hint with index more than amount of hints", zap.String("task_id", ht.TaskID))
+			logging.Error(ctx, "took hint with index more than amount of hints", zap.Stringer("task_id", ht.TaskID))
 			continue
 		}
 		ht.Hint.Text = allHints[ht.Hint.Index]
@@ -96,7 +96,7 @@ func (c *Client) GetAcceptedTasks(ctx context.Context, req *storage.GetAcceptedT
 	acceptedTasks := make(storage.AcceptedTasks)
 	for rows.Next() {
 		var task storage.AcceptedTask
-		var id string
+		var id storage.ID
 		if err = rows.Scan(&id, &task.Text, &task.Score); err != nil {
 			return nil, xerrors.Errorf("scan row: %w", err)
 		}
@@ -150,7 +150,7 @@ func (c *Client) GetScoreResults(ctx context.Context, req *storage.GetResultsReq
 		}
 		taskRes := scoreRes[res.TeamID]
 		if taskRes == nil {
-			taskRes = make(map[string]storage.SingleTaskResult)
+			taskRes = make(map[storage.ID]storage.SingleTaskResult)
 		}
 		taskRes[res.TaskID] = res
 		scoreRes[res.TeamID] = taskRes

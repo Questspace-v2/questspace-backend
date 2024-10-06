@@ -64,7 +64,7 @@ func (h *Handler) HandleCreate(ctx context.Context, w http.ResponseWriter, r *ht
 	if err != nil {
 		return xerrors.Errorf("get storage client: %w", err)
 	}
-	quest, err := s.CreateQuest(ctx, req)
+	quest, err := s.CreateQuest(ctx, &req)
 	if err != nil {
 		return xerrors.Errorf("create quest: %w", err)
 	}
@@ -74,9 +74,9 @@ func (h *Handler) HandleCreate(ctx context.Context, w http.ResponseWriter, r *ht
 	}
 
 	logging.Info(ctx, "created quest",
-		zap.String("quest_id", quest.ID),
+		zap.Stringer("quest_id", quest.ID),
 		zap.String("quest_name", quest.Name),
-		zap.String("creator_id", uauth.ID),
+		zap.Stringer("creator_id", uauth.ID),
 		zap.String("creator_name", uauth.Username),
 	)
 	return nil
@@ -140,7 +140,7 @@ func (h *Handler) HandleGet(ctx context.Context, w http.ResponseWriter, r *http.
 		resp.Team = team
 	}
 
-	resp.AllTeams, err = s.GetTeams(ctx, &storage.GetTeamsRequest{QuestIDs: []string{questID}})
+	resp.AllTeams, err = s.GetTeams(ctx, &storage.GetTeamsRequest{QuestIDs: []storage.ID{questID}})
 	if err != nil {
 		return xerrors.Errorf("get teams: %w", err)
 	}
@@ -245,7 +245,7 @@ func (h *Handler) HandleUpdate(ctx context.Context, w http.ResponseWriter, r *ht
 		return xerrors.Errorf("get storage: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
-	quest, err := s.UpdateQuest(ctx, req)
+	quest, err := s.UpdateQuest(ctx, &req)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return httperrors.Errorf(http.StatusNotFound, "not found quest with id %q", req.ID)

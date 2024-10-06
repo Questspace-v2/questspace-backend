@@ -28,7 +28,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/google.OAuthRequest"
+                            "$ref": "#/definitions/authtypes.GoogleOAuthRequest"
                         }
                     }
                 ],
@@ -36,7 +36,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/auth.Response"
+                            "$ref": "#/definitions/authtypes.Response"
                         }
                     },
                     "400": {
@@ -53,12 +53,12 @@ const docTemplate = `{
                 "summary": "Register new user and return auth data",
                 "parameters": [
                     {
-                        "description": "Create user request",
+                        "description": "User data to use for sign-up",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/storage.CreateUserRequest"
+                            "$ref": "#/definitions/authtypes.BasicSignUpRequest"
                         }
                     }
                 ],
@@ -66,7 +66,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/auth.Response"
+                            "$ref": "#/definitions/authtypes.Response"
                         }
                     },
                     "400": {
@@ -86,12 +86,12 @@ const docTemplate = `{
                 "summary": "Sign in to user account and return auth data",
                 "parameters": [
                     {
-                        "description": "Sign in request",
+                        "description": "Username with password",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/auth.SignInRequest"
+                            "$ref": "#/definitions/authtypes.BasicSignInRequest"
                         }
                     }
                 ],
@@ -99,7 +99,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/auth.Response"
+                            "$ref": "#/definitions/authtypes.Response"
                         }
                     },
                     "400": {
@@ -1224,7 +1224,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/auth.Response"
+                            "$ref": "#/definitions/authtypes.Response"
                         }
                     },
                     "401": {
@@ -1278,25 +1278,53 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "auth.Response": {
-            "type": "object",
-            "properties": {
-                "access_token": {
-                    "type": "string"
-                },
-                "user": {
-                    "$ref": "#/definitions/storage.User"
-                }
-            }
-        },
-        "auth.SignInRequest": {
+        "authtypes.BasicSignInRequest": {
             "type": "object",
             "properties": {
                 "password": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "12345"
                 },
                 "username": {
+                    "type": "string",
+                    "example": "svayp11"
+                }
+            }
+        },
+        "authtypes.BasicSignUpRequest": {
+            "type": "object",
+            "properties": {
+                "avatar_url": {
+                    "type": "string",
+                    "example": "https://api.dicebear.com/7.x/thumbs/svg"
+                },
+                "password": {
+                    "type": "string",
+                    "example": "12345"
+                },
+                "username": {
+                    "type": "string",
+                    "example": "svayp11"
+                }
+            }
+        },
+        "authtypes.GoogleOAuthRequest": {
+            "type": "object",
+            "properties": {
+                "id_token": {
                     "type": "string"
+                }
+            }
+        },
+        "authtypes.Response": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+                },
+                "user": {
+                    "$ref": "#/definitions/usertypes.User"
                 }
             }
         },
@@ -1517,14 +1545,6 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "text": {
-                    "type": "string"
-                }
-            }
-        },
-        "google.OAuthRequest": {
-            "type": "object",
-            "properties": {
-                "id_token": {
                     "type": "string"
                 }
             }
@@ -1805,23 +1825,6 @@ const docTemplate = `{
                 },
                 "verification": {
                     "$ref": "#/definitions/storage.VerificationType"
-                }
-            }
-        },
-        "storage.CreateUserRequest": {
-            "type": "object",
-            "properties": {
-                "avatar_url": {
-                    "type": "string",
-                    "example": "https://api.dicebear.com/7.x/thumbs/svg"
-                },
-                "password": {
-                    "type": "string",
-                    "example": "12345"
-                },
-                "username": {
-                    "type": "string",
-                    "example": "svayp11"
                 }
             }
         },
@@ -2256,6 +2259,23 @@ const docTemplate = `{
                 },
                 "username": {
                     "type": "string"
+                }
+            }
+        },
+        "usertypes.User": {
+            "type": "object",
+            "properties": {
+                "avatar_url": {
+                    "type": "string",
+                    "example": "https://api.dicebear.com/7.x/thumbs/svg"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "0f1151b0-a81f-4bea-80e7-82deae0a5528"
+                },
+                "username": {
+                    "type": "string",
+                    "example": "svayp11"
                 }
             }
         }

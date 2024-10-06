@@ -5,8 +5,19 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"golang.org/x/xerrors"
 )
+
+type ID string
+
+func NewID() ID {
+	return ID(uuid.Must(uuid.NewV4()).String())
+}
+
+func (id ID) String() string {
+	return string(id)
+}
 
 type AccessType string
 
@@ -41,7 +52,7 @@ const (
 )
 
 type Quest struct {
-	ID                   string      `json:"id"`
+	ID                   ID          `json:"id"`
 	Name                 string      `json:"name"`
 	Description          string      `json:"description,omitempty"`
 	Access               AccessType  `json:"access"`
@@ -108,7 +119,7 @@ func (p *Page) ID() string {
 }
 
 type Team struct {
-	ID           string `json:"id"`
+	ID           ID     `json:"id"`
 	Name         string `json:"name"`
 	Quest        *Quest `json:"-"`
 	Captain      *User  `json:"captain,omitempty"`
@@ -119,14 +130,14 @@ type Team struct {
 }
 
 type User struct {
-	ID        string `json:"id"`
+	ID        ID     `json:"id"`
 	Username  string `json:"username"`
 	Password  string `json:"-"`
 	AvatarURL string `json:"avatar_url,omitempty"`
 }
 
 type TaskGroup struct {
-	ID       string     `json:"id"`
+	ID       ID         `json:"id"`
 	OrderIdx int        `json:"order_idx"`
 	Quest    *Quest     `json:"-"`
 	Name     string     `json:"name"`
@@ -135,7 +146,7 @@ type TaskGroup struct {
 }
 
 type Task struct {
-	ID             string     `json:"id"`
+	ID             ID         `json:"id"`
 	OrderIdx       int        `json:"order_idx"`
 	Group          *TaskGroup `json:"-"`
 	Name           string     `json:"name"`
@@ -154,7 +165,7 @@ type Task struct {
 
 type AnswerTry struct {
 	Team       *Team
-	TaskID     string
+	TaskID     ID
 	Answer     string
 	AnswerTime *time.Time
 }
@@ -165,37 +176,37 @@ type Hint struct {
 }
 
 type HintTake struct {
-	TaskID string
+	TaskID ID
 	Hint   Hint
 }
 
-type HintTakes map[string][]HintTake
+type HintTakes map[ID][]HintTake
 
 type AcceptedTask struct {
 	Text  string
 	Score int
 }
 
-type AcceptedTasks map[string]AcceptedTask
+type AcceptedTasks map[ID]AcceptedTask
 
 type SingleTaskResult struct {
-	TeamID    string
+	TeamID    ID
 	TeamName  string
-	GroupID   string
+	GroupID   ID
 	GroupName string
-	TaskID    string
+	TaskID    ID
 	TaskName  string
 	Score     int
 	ScoreTime *time.Time
 }
 
 // ScoreResults [team_id] -> [task_id] -> Result
-type ScoreResults map[string]map[string]SingleTaskResult
+type ScoreResults map[ID]map[ID]SingleTaskResult
 
 type Penalty struct {
-	TeamID string
+	TeamID ID
 	Value  int
 }
 
 // TeamPenalties [team_id] -> []Penalty
-type TeamPenalties map[string][]Penalty
+type TeamPenalties map[ID][]Penalty

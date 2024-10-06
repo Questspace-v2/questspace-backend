@@ -8,9 +8,10 @@ import (
 
 	"golang.org/x/xerrors"
 
-	"questspace/internal/handlers/auth"
 	"questspace/internal/hasher"
 	"questspace/internal/pgdb"
+	"questspace/internal/questspace/authservice/authtypes"
+	"questspace/internal/questspace/userservice/usertypes"
 	"questspace/internal/validate"
 	"questspace/pkg/auth/jwt"
 	"questspace/pkg/dbnode"
@@ -65,10 +66,10 @@ type UpdateHandler struct {
 	clientFactory  pgdb.QuestspaceClientFactory
 	fetcher        http.Client
 	pwHasher       hasher.Hasher
-	tokenGenerator jwt.Parser
+	tokenGenerator jwt.TokenVendingMachine
 }
 
-func NewUpdateHandler(cf pgdb.QuestspaceClientFactory, f http.Client, h hasher.Hasher, g jwt.Parser) *UpdateHandler {
+func NewUpdateHandler(cf pgdb.QuestspaceClientFactory, f http.Client, h hasher.Hasher, g jwt.TokenVendingMachine) *UpdateHandler {
 	return &UpdateHandler{
 		clientFactory:  cf,
 		fetcher:        f,
@@ -88,7 +89,7 @@ type UpdatePublicDataRequest struct {
 // @Tags		Users
 // @Param		user_id	path	string							true	"User ID"
 // @Param		request	body	user.UpdatePublicDataRequest	true	"Public data to set for user"
-// @Success		200	{object}	auth.Response
+// @Success		200	{object}	authtypes.Response
 // @Failure		401
 // @Failure		403
 // @Failure		404
@@ -138,8 +139,12 @@ func (h *UpdateHandler) HandleUser(ctx context.Context, w http.ResponseWriter, r
 		return xerrors.Errorf("commit tx: %w", err)
 	}
 
-	resp := auth.Response{
-		User:        user,
+	resp := authtypes.Response{
+		User: usertypes.User{
+			ID:        user.ID,
+			Username:  user.Username,
+			AvatarURL: user.AvatarURL,
+		},
 		AccessToken: token,
 	}
 	if err = transport.ServeJSONResponse(w, http.StatusOK, &resp); err != nil {

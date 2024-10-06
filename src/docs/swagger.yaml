@@ -1,17 +1,37 @@
 definitions:
-  auth.Response:
-    properties:
-      access_token:
-        type: string
-      user:
-        $ref: '#/definitions/storage.User'
-    type: object
-  auth.SignInRequest:
+  authtypes.BasicSignInRequest:
     properties:
       password:
+        example: "12345"
         type: string
       username:
+        example: svayp11
         type: string
+    type: object
+  authtypes.BasicSignUpRequest:
+    properties:
+      avatar_url:
+        example: https://api.dicebear.com/7.x/thumbs/svg
+        type: string
+      password:
+        example: "12345"
+        type: string
+      username:
+        example: svayp11
+        type: string
+    type: object
+  authtypes.GoogleOAuthRequest:
+    properties:
+      id_token:
+        type: string
+    type: object
+  authtypes.Response:
+    properties:
+      access_token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+        type: string
+      user:
+        $ref: '#/definitions/usertypes.User'
     type: object
   game.AddPenaltyRequest:
     properties:
@@ -153,11 +173,6 @@ definitions:
       score:
         type: integer
       text:
-        type: string
-    type: object
-  google.OAuthRequest:
-    properties:
-      id_token:
         type: string
     type: object
   play.TakeHintRequest:
@@ -343,18 +358,6 @@ definitions:
         type: integer
       verification:
         $ref: '#/definitions/storage.VerificationType'
-    type: object
-  storage.CreateUserRequest:
-    properties:
-      avatar_url:
-        example: https://api.dicebear.com/7.x/thumbs/svg
-        type: string
-      password:
-        example: "12345"
-        type: string
-      username:
-        example: svayp11
-        type: string
     type: object
   storage.DeleteTaskGroupRequest:
     properties:
@@ -641,6 +644,18 @@ definitions:
       username:
         type: string
     type: object
+  usertypes.User:
+    properties:
+      avatar_url:
+        example: https://api.dicebear.com/7.x/thumbs/svg
+        type: string
+      id:
+        example: 0f1151b0-a81f-4bea-80e7-82deae0a5528
+        type: string
+      username:
+        example: svayp11
+        type: string
+    type: object
 info:
   contact: {}
 paths:
@@ -652,12 +667,12 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/google.OAuthRequest'
+          $ref: '#/definitions/authtypes.GoogleOAuthRequest'
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/auth.Response'
+            $ref: '#/definitions/authtypes.Response'
         "400":
           description: Bad Request
       summary: Register new or sign in old user using Google OAuth2.0
@@ -666,17 +681,17 @@ paths:
   /auth/register:
     post:
       parameters:
-      - description: Create user request
+      - description: User data to use for sign-up
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/storage.CreateUserRequest'
+          $ref: '#/definitions/authtypes.BasicSignUpRequest'
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/auth.Response'
+            $ref: '#/definitions/authtypes.Response'
         "400":
           description: Bad Request
         "415":
@@ -687,17 +702,17 @@ paths:
   /auth/sign-in:
     post:
       parameters:
-      - description: Sign in request
+      - description: Username with password
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/auth.SignInRequest'
+          $ref: '#/definitions/authtypes.BasicSignInRequest'
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/auth.Response'
+            $ref: '#/definitions/authtypes.Response'
         "400":
           description: Bad Request
         "403":
@@ -1423,7 +1438,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/auth.Response'
+            $ref: '#/definitions/authtypes.Response'
         "401":
           description: Unauthorized
         "403":

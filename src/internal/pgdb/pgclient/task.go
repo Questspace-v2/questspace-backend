@@ -175,7 +175,7 @@ func (c *Client) GetTasks(ctx context.Context, req *storage.GetTasksRequest) (st
 	defer func() { _ = rows.Close() }()
 
 	pgMap := pgtype.NewMap()
-	tasks := make(map[string][]storage.Task)
+	tasks := make(storage.GetTasksResponse)
 	for rows.Next() {
 		task := storage.Task{Group: &storage.TaskGroup{}}
 		if err := rows.Scan(

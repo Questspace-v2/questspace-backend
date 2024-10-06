@@ -135,13 +135,13 @@ func TestTaskStorage_GetTasks(t *testing.T) {
 	task3, err := client.CreateTask(ctx, &taskReq3)
 	require.NoError(t, err)
 
-	g1Tasks, err := client.GetTasks(ctx, &storage.GetTasksRequest{GroupIDs: []string{tg1.ID}})
+	g1Tasks, err := client.GetTasks(ctx, &storage.GetTasksRequest{GroupIDs: []storage.ID{tg1.ID}})
 	require.NoError(t, err)
 	require.Len(t, g1Tasks, 1)
 	require.Len(t, g1Tasks[tg1.ID], 2)
 	assert.Equal(t, []storage.Task{*task2, *task1}, g1Tasks[tg1.ID])
 
-	g2Tasks, err := client.GetTasks(ctx, &storage.GetTasksRequest{GroupIDs: []string{tg2.ID}})
+	g2Tasks, err := client.GetTasks(ctx, &storage.GetTasksRequest{GroupIDs: []storage.ID{tg2.ID}})
 	require.NoError(t, err)
 	require.Len(t, g2Tasks, 1)
 	require.Len(t, g2Tasks[tg2.ID], 1)

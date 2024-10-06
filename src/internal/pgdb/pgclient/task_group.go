@@ -49,7 +49,7 @@ func (c *Client) GetTaskGroup(ctx context.Context, req *storage.GetTaskGroupRequ
 		return nil, xerrors.Errorf("scan row: %w", err)
 	}
 	if req.IncludeTasks {
-		tasks, err := c.GetTasks(ctx, &storage.GetTasksRequest{GroupIDs: []string{req.ID}})
+		tasks, err := c.GetTasks(ctx, &storage.GetTasksRequest{GroupIDs: []storage.ID{req.ID}})
 		if err != nil {
 			return nil, xerrors.Errorf("get tasks: %w", err)
 		}
@@ -75,7 +75,7 @@ func (c *Client) GetTaskGroups(ctx context.Context, req *storage.GetTaskGroupsRe
 	defer func() { _ = rows.Close() }()
 
 	var taskGroups []storage.TaskGroup
-	var groupIDs []string
+	var groupIDs []storage.ID
 	for rows.Next() {
 		if err := rows.Err(); err != nil {
 			return nil, xerrors.Errorf("iter rows: %w", err)

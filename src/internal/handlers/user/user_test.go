@@ -7,8 +7,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/gofrs/uuid"
-
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
@@ -25,8 +23,8 @@ import (
 )
 
 var (
-	existentID    = uuid.Must(uuid.NewV4())
-	nonExistentID = uuid.Must(uuid.NewV4())
+	existentID    = storage.NewID()
+	nonExistentID = storage.NewID()
 )
 
 func TestGetHandler_CommonCases(t *testing.T) {
@@ -40,20 +38,20 @@ func TestGetHandler_CommonCases(t *testing.T) {
 		{
 			name:       "ok",
 			id:         existentID.String(),
-			getReq:     &storage.GetUserRequest{ID: existentID.String()},
+			getReq:     &storage.GetUserRequest{ID: existentID},
 			statusCode: http.StatusOK,
 		},
 		{
 			name:       "not found",
 			id:         nonExistentID.String(),
-			getReq:     &storage.GetUserRequest{ID: nonExistentID.String()},
+			getReq:     &storage.GetUserRequest{ID: nonExistentID},
 			getErr:     storage.ErrNotFound,
 			statusCode: http.StatusNotFound,
 		},
 		{
 			name:       "internal error",
 			id:         existentID.String(),
-			getReq:     &storage.GetUserRequest{ID: existentID.String()},
+			getReq:     &storage.GetUserRequest{ID: existentID},
 			getErr:     xerrors.New("oops"),
 			statusCode: http.StatusInternalServerError,
 		},
@@ -94,12 +92,12 @@ func TestUpdateHandler_HandleUser(t *testing.T) {
 	router.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).POST("/user/:id", transport.WrapCtxErr(handler.HandleUser))
 
 	oldUser := storage.User{
-		ID:        existentID.String(),
+		ID:        existentID,
 		Username:  "old_username",
 		AvatarURL: "https://api.dicebear.com/7.x/thumbs/svg?seed=123132",
 	}
 	expectedUser := storage.User{
-		ID:        existentID.String(),
+		ID:        existentID,
 		Username:  "another_username",
 		AvatarURL: "https://api.dicebear.com/7.x/thumbs/svg?seed=123132",
 	}
@@ -136,7 +134,7 @@ func TestUpdateHandler_HandlePassword(t *testing.T) {
 	router.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).POST("/user/:id/password", transport.WrapCtxErr(handler.HandlePassword))
 
 	oldUser := storage.User{
-		ID:        existentID.String(),
+		ID:        existentID,
 		Username:  "username",
 		AvatarURL: "https://api.dicebear.com/7.x/thumbs/svg?seed=123132",
 	}

@@ -149,12 +149,12 @@ func TestTeamStorage_GetTeams(t *testing.T) {
 	team3, err := client.CreateTeam(ctx, &tReq3)
 	require.NoError(t, err)
 
-	u1q1Teams, err := client.GetTeams(ctx, &storage.GetTeamsRequest{User: user1, QuestIDs: []string{q1.ID}})
+	u1q1Teams, err := client.GetTeams(ctx, &storage.GetTeamsRequest{User: user1, QuestIDs: []storage.ID{q1.ID}})
 	require.NoError(t, err)
 	require.Len(t, u1q1Teams, 1)
 	assert.Equal(t, team1.ID, u1q1Teams[0].ID)
 
-	u1q2Teams, err := client.GetTeams(ctx, &storage.GetTeamsRequest{User: user1, QuestIDs: []string{q2.ID}})
+	u1q2Teams, err := client.GetTeams(ctx, &storage.GetTeamsRequest{User: user1, QuestIDs: []storage.ID{q2.ID}})
 	require.NoError(t, err)
 	require.Len(t, u1q2Teams, 1)
 	assert.Equal(t, team3.ID, u1q2Teams[0].ID)

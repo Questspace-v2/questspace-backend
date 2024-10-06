@@ -124,8 +124,8 @@ func (h *Handler) HandleGet(ctx context.Context, w http.ResponseWriter, r *http.
 }
 
 type TakeHintRequest struct {
-	TaskID string `json:"task_id"`
-	Index  int    `json:"index"`
+	TaskID storage.ID `json:"task_id"`
+	Index  int        `json:"index"`
 }
 
 // HandleTakeHint handles POST quest/:id/hint request
@@ -190,7 +190,7 @@ func (h *Handler) HandleTakeHint(ctx context.Context, w http.ResponseWriter, r *
 }
 
 type TryAnswerRequest struct {
-	TaskID string
+	TaskID storage.ID
 	Text   string
 }
 
@@ -394,7 +394,7 @@ func (h *Handler) HandleAddPenalty(ctx context.Context, w http.ResponseWriter, r
 	}
 
 	srv := game.NewService(s, s, s, s)
-	if err = srv.AddPenalty(ctx, req); err != nil {
+	if err = srv.AddPenalty(ctx, &req); err != nil {
 		return xerrors.Errorf("add penalty: %w", err)
 	}
 	if err = tx.Commit(); err != nil {

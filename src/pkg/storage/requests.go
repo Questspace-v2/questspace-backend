@@ -11,12 +11,12 @@ type CreateUserRequest struct {
 }
 
 type GetUserRequest struct {
-	ID       string
+	ID       ID
 	Username string
 }
 
 type UpdateUserRequest struct {
-	ID        string
+	ID        ID
 	Username  string
 	Password  string
 	AvatarURL string
@@ -29,7 +29,7 @@ type CreateOrUpdateRequest struct {
 }
 
 type DeleteUserRequest struct {
-	ID string
+	ID ID
 }
 
 type CreateQuestRequest struct {
@@ -47,7 +47,7 @@ type CreateQuestRequest struct {
 }
 
 type GetQuestRequest struct {
-	ID string
+	ID ID
 }
 
 type GetQuestsRequest struct {
@@ -63,7 +63,7 @@ type GetQuestsResponse struct {
 }
 
 type UpdateQuestRequest struct {
-	ID                   string     `json:"-"`
+	ID                   ID         `json:"-"`
 	Name                 string     `json:"name,omitempty"`
 	Description          string     `json:"description,omitempty"`
 	Access               AccessType `json:"access,omitempty"`
@@ -77,26 +77,26 @@ type UpdateQuestRequest struct {
 }
 
 type DeleteQuestRequest struct {
-	ID string
+	ID ID
 }
 
 type FinishQuestRequest struct {
-	ID string
+	ID ID
 }
 
 type CreateTeamRequest struct {
 	Name    string
-	QuestID string
+	QuestID ID
 	Creator *User
 }
 
 type UserRegistration struct {
-	UserID  string
-	QuestID string
+	UserID  ID
+	QuestID ID
 }
 
 type GetTeamRequest struct {
-	ID               string
+	ID               ID
 	InvitePath       string
 	UserRegistration *UserRegistration
 	IncludeMembers   bool
@@ -104,17 +104,17 @@ type GetTeamRequest struct {
 
 type GetTeamsRequest struct {
 	User           *User
-	QuestIDs       []string
+	QuestIDs       []ID
 	IncludeMembers bool
 }
 
 type ChangeTeamNameRequest struct {
-	ID   string
+	ID   ID
 	Name string
 }
 
 type SetInvitePathRequest struct {
-	TeamID     string
+	TeamID     ID
 	InvitePath string
 }
 
@@ -124,21 +124,21 @@ type JoinTeamRequest struct {
 }
 
 type DeleteTeamRequest struct {
-	ID string
+	ID ID
 }
 
 type ChangeLeaderRequest struct {
-	ID        string
-	CaptainID string
+	ID        ID
+	CaptainID ID
 }
 
 type RemoveUserRequest struct {
-	ID     string
-	UserID string
+	ID     ID
+	UserID ID
 }
 
 type CreateTaskGroupRequest struct {
-	QuestID  string              `json:"-"`
+	QuestID  ID                  `json:"-"`
 	OrderIdx int                 `json:"order_idx"`
 	Name     string              `json:"name"`
 	PubTime  *time.Time          `json:"pub_time,omitempty"`
@@ -146,18 +146,18 @@ type CreateTaskGroupRequest struct {
 }
 
 type GetTaskGroupRequest struct {
-	ID           string
+	ID           ID
 	IncludeTasks bool
 }
 
 type GetTaskGroupsRequest struct {
-	QuestID      string
+	QuestID      ID
 	IncludeTasks bool
 }
 
 type UpdateTaskGroupRequest struct {
-	QuestID  string                  `json:"-"`
-	ID       string                  `json:"id"`
+	QuestID  ID `json:"-"`
+	ID       ID
 	OrderIdx int                     `json:"order_idx"`
 	Name     string                  `json:"name"`
 	PubTime  *time.Time              `json:"pub_time"`
@@ -165,11 +165,11 @@ type UpdateTaskGroupRequest struct {
 }
 
 type DeleteTaskGroupRequest struct {
-	ID string `json:"id"`
+	ID ID `json:"id"`
 }
 
 type TaskGroupsBulkUpdateRequest struct {
-	QuestID string                   `json:"-"`
+	QuestID ID                       `json:"-"`
 	Create  []CreateTaskGroupRequest `json:"create"`
 	Update  []UpdateTaskGroupRequest `json:"update"`
 	Delete  []DeleteTaskGroupRequest `json:"delete"`
@@ -177,7 +177,7 @@ type TaskGroupsBulkUpdateRequest struct {
 
 type CreateTaskRequest struct {
 	OrderIdx       int              `json:"order_idx"`
-	GroupID        string           `json:"group_id"`
+	GroupID        ID               `json:"group_id"`
 	Name           string           `json:"name"`
 	Question       string           `json:"question"`
 	Reward         int              `json:"reward"`
@@ -191,21 +191,21 @@ type CreateTaskRequest struct {
 }
 
 type GetTaskRequest struct {
-	ID string
+	ID ID
 }
 
 type GetTasksRequest struct {
-	GroupIDs []string
-	QuestID  string
+	GroupIDs []ID
+	QuestID  ID
 }
 
-type GetTasksResponse map[string][]Task
+type GetTasksResponse map[ID][]Task
 
 type UpdateTaskRequest struct {
-	QuestID        string           `json:"-"`
-	ID             string           `json:"id"`
+	QuestID        ID               `json:"-"`
+	ID             ID               `json:"id"`
 	OrderIdx       int              `json:"order_idx"`
-	GroupID        string           `json:"group_id"`
+	GroupID        ID               `json:"group_id"`
 	Name           string           `json:"name"`
 	Question       string           `json:"question"`
 	Reward         int              `json:"reward"`
@@ -219,53 +219,53 @@ type UpdateTaskRequest struct {
 }
 
 type DeleteTaskRequest struct {
-	ID string `json:"id"`
+	ID ID `json:"id"`
 }
 
 type TasksBulkUpdateRequest struct {
-	QuestID string              `json:"-"`
-	GroupID string              `json:"-"`
+	QuestID ID                  `json:"-"`
+	GroupID ID                  `json:"-"`
 	Create  []CreateTaskRequest `json:"create"`
 	Update  []UpdateTaskRequest `json:"update"`
 	Delete  []DeleteTaskRequest `json:"delete"`
 }
 
 type GetHintTakesRequest struct {
-	TeamID  string
-	QuestID string
-	TaskID  string
+	TeamID  ID
+	QuestID ID
+	TaskID  ID
 }
 
 type TakeHintRequest struct {
-	TeamID string
-	TaskID string
+	TeamID ID
+	TaskID ID
 	Index  int
 }
 
 type GetAcceptedTasksRequest struct {
-	TeamID  string
-	QuestID string
+	TeamID  ID
+	QuestID ID
 }
 
 type CreateAnswerTryRequest struct {
-	TeamID   string
-	TaskID   string
+	TeamID   ID
+	TaskID   ID
 	Text     string
 	Accepted bool
 	Score    int
 }
 
 type GetResultsRequest struct {
-	QuestID string
-	TeamIDs []string
+	QuestID ID
+	TeamIDs []ID
 }
 
 type GetPenaltiesRequest struct {
-	QuestID string
-	TeamIDs []string
+	QuestID ID
+	TeamIDs []ID
 }
 
 type CreatePenaltyRequest struct {
-	TeamID  string
+	TeamID  ID
 	Penalty int
 }

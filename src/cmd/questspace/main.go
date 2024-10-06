@@ -28,6 +28,8 @@ import (
 	"questspace/internal/hasher"
 	"questspace/internal/images"
 	"questspace/internal/pgdb"
+	"questspace/internal/questspace/authservice"
+	"questspace/internal/questspace/authservice/googleservice"
 	"questspace/pkg/auth/jwt"
 	"questspace/pkg/cors"
 	"questspace/pkg/dbnode"
@@ -63,7 +65,7 @@ func InitApp(ctx context.Context, application *app.App) error {
 	httpClient := http.Client{
 		Timeout: 5 * time.Minute,
 	}
-	imageValidator := images.NewValidator(&httpClient, &cfg.Validator)
+	taskMediaValidator := images.NewValidator(&httpClient, &cfg.Validator, images.WithMIMETypePrefixes("image/", "audio/"))
 
 	pwHasher := hasher.NewBCryptHasher(cfg.HashCost)
 	jwtSecret, err := cfg.JWT.Secret.Read()
@@ -78,6 +80,11 @@ func InitApp(ctx context.Context, application *app.App) error {
 	if err != nil {
 		return xerrors.Errorf("create token validator: %w", err)
 	}
+
+	imageTypeValidator := images.NewValidator(&httpClient, &cfg.Validator)
+
+	authService := authservice.NewImpl(clientFactory, &imageTypeValidator, pwHasher, jwtParser)
+	googleOAuthService := googleservice.NewAuth(clientFactory, jwtParser, tokenValidator, &cfg.Google)
 
 	r := application.Router()
 	r.H().GET("/internal/testing/wait", transport.WrapCtxErr(testhandlers.HandleWait))
@@ -94,8 +101,8 @@ func InitApp(ctx context.Context, application *app.App) error {
 
 	r.H().GET("/swagger/*path", httpswagger.Handler())
 
-	authHandler := auth.NewHandler(clientFactory, httpClient, pwHasher, jwtParser)
-	googleOAuthHandler := google.NewOAuthHandler(clientFactory, tokenValidator, jwtParser, cfg.Google)
+	authHandler := auth.NewRefactoredHandler(&authService)
+	googleOAuthHandler := google.NewRefactoredHandler(&googleOAuthService)
 	r.H().POST("/auth/register", transport.WrapCtxErr(authHandler.HandleBasicSignUp))
 	r.H().POST("/auth/sign-in", transport.WrapCtxErr(authHandler.HandleBasicSignIn))
 	r.H().POST("/auth/google", transport.WrapCtxErr(googleOAuthHandler.Handle))
@@ -127,7 +134,7 @@ func InitApp(ctx context.Context, application *app.App) error {
 	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).POST("/teams/all/:id/leave", transport.WrapCtxErr(teamsHandler.HandleLeave))
 	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).DELETE("/teams/all/:id/:user_id", transport.WrapCtxErr(teamsHandler.HandleRemoveUser))
 
-	taskGroupHandler := taskgroups.NewHandler(clientFactory, &imageValidator)
+	taskGroupHandler := taskgroups.NewHandler(clientFactory, &taskMediaValidator)
 	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).PATCH("/quest/:id/task-groups/bulk", transport.WrapCtxErr(taskGroupHandler.HandleBulkUpdate))
 	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).POST("/quest/:id/task-groups", transport.WrapCtxErr(taskGroupHandler.HandleCreate))
 	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).GET("/quest/:id/task-groups", transport.WrapCtxErr(taskGroupHandler.HandleGet))

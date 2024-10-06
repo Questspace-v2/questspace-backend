@@ -36,7 +36,7 @@ func (c *Client) CreateTeam(ctx context.Context, req *storage.CreateTeamRequest)
 	return team, nil
 }
 
-func (c *Client) getTeamMembers(ctx context.Context, teamID string) ([]storage.User, error) {
+func (c *Client) getTeamMembers(ctx context.Context, teamID storage.ID) ([]storage.User, error) {
 	query := sq.Select("u.id", "u.username", "u.avatar_url").
 		From("questspace.user u").
 		LeftJoin("questspace.registration r ON r.user_id = u.id").

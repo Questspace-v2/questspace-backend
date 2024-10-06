@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gofrs/uuid"
 	"github.com/spkg/ptr"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -120,7 +119,7 @@ func TestQuestStorage_GetQuest_NotFound(t *testing.T) {
 	ctx := context.Background()
 	client := NewClient(pgtest.NewEmbeddedQuestspaceDB(t))
 
-	got, err := client.GetQuest(ctx, &storage.GetQuestRequest{ID: uuid.Must(uuid.NewV4()).String()})
+	got, err := client.GetQuest(ctx, &storage.GetQuestRequest{ID: storage.NewID()})
 	require.Error(t, err)
 	assert.ErrorIs(t, err, storage.ErrNotFound)
 	assert.Nil(t, got)

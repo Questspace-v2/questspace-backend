@@ -17,7 +17,7 @@ const AuthCookieName = "qs_user_acc"
 
 type jwtKey struct{}
 
-func middleware(parser Parser, strict bool) transport.Middleware {
+func middleware(parser TokenParser, strict bool) transport.Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			token := getTokenFromRequest(r)
@@ -36,7 +36,7 @@ func middleware(parser Parser, strict bool) transport.Middleware {
 			}
 
 			logCtx := logging.AddFieldsToContextLogger(r.Context(), zap.Dict("user",
-				zap.String("id", user.ID),
+				zap.Stringer("id", user.ID),
 				zap.String("username", user.Username),
 			))
 
@@ -47,11 +47,11 @@ func middleware(parser Parser, strict bool) transport.Middleware {
 	}
 }
 
-func AuthMiddlewareStrict(parser Parser) transport.Middleware {
+func AuthMiddlewareStrict(parser TokenParser) transport.Middleware {
 	return middleware(parser, true)
 }
 
-func AuthMiddleware(parser Parser) transport.Middleware {
+func AuthMiddleware(parser TokenParser) transport.Middleware {
 	return middleware(parser, false)
 }
 

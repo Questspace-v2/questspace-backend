@@ -20,16 +20,41 @@ type Config struct {
 }
 
 type Validator struct {
-	maxSize int64
-	client  *http.Client
-	timeout time.Duration
+	maxSize          int64
+	client           *http.Client
+	timeout          time.Duration
+	mimeTypePrefixes []string
 }
 
-func NewValidator(httpClient *http.Client, config *Config) Validator {
+var (
+	defaultPrefixes = []string{"image/"}
+)
+
+type validatorParams struct {
+	MIMETypePrefixes []string
+}
+
+type Option func(p *validatorParams)
+
+func WithMIMETypePrefixes(prefixes ...string) Option {
+	return func(p *validatorParams) {
+		p.MIMETypePrefixes = prefixes
+	}
+}
+
+func NewValidator(httpClient *http.Client, config *Config, opts ...Option) Validator {
+	params := validatorParams{
+		MIMETypePrefixes: defaultPrefixes,
+	}
+	for _, opt := range opts {
+		opt(&params)
+	}
+
 	return Validator{
-		maxSize: config.MaxBodySize,
-		client:  httpClient,
-		timeout: config.Timeout,
+		maxSize:          config.MaxBodySize,
+		client:           httpClient,
+		timeout:          config.Timeout,
+		mimeTypePrefixes: params.MIMETypePrefixes,
 	}
 }
 
@@ -77,6 +102,9 @@ func (v *Validator) ValidateImageURLs(ctx context.Context, imageURLs ...string) 
 }
 
 func (v *Validator) validateImage(ctx context.Context, imageURL string) error {
+	if imageURL == "" {
+		return nil
+	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, imageURL, http.NoBody)
 	if err != nil {
 		return httperrors.Errorf(http.StatusBadRequest, "bad url %q: %w", imageURL, err)
@@ -96,10 +124,19 @@ func (v *Validator) validateImage(ctx context.Context, imageURL string) error {
 	}
 
 	contentType := resp.Header.Get("Content-Type")
-	if !strings.HasPrefix(contentType, "image/") && !strings.HasPrefix(contentType, "audio/") {
+	if !v.suitsPrefixes(contentType) {
 		return httperrors.Errorf(http.StatusUnsupportedMediaType, "unsupported Content-Type: %q", contentType)
 	}
 	return nil
+}
+
+func (v *Validator) suitsPrefixes(mimeType string) bool {
+	for _, prefix := range v.mimeTypePrefixes {
+		if strings.HasPrefix(mimeType, prefix) {
+			return true
+		}
+	}
+	return false
 }
 
 func formatSize(size int64) string {

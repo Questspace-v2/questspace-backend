@@ -10,11 +10,11 @@ import (
 	"questspace/pkg/httperrors"
 )
 
-func UnmarshalRequestData[T any](req *http.Request) (*T, error) {
+func UnmarshalRequestData[T any](req *http.Request) (T, error) {
 	defer func() { _ = req.Body.Close() }()
-	unmarshalled := new(T)
-	if err := json.NewDecoder(req.Body).Decode(unmarshalled); err != nil {
-		return nil, httperrors.Errorf(http.StatusBadRequest, "unmarshal request: %w", err)
+	var unmarshalled T
+	if err := json.NewDecoder(req.Body).Decode(&unmarshalled); err != nil {
+		return unmarshalled, httperrors.Errorf(http.StatusBadRequest, "unmarshal request: %w", err)
 	}
 	return unmarshalled, nil
 }
