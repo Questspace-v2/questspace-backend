@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"bytes"
 	"strconv"
 	"strings"
 	"time"
@@ -40,16 +41,45 @@ const (
 	VerificationManual VerificationType = "manual"
 )
 
-type QuestStatus string
+type QuestStatus int
 
 const (
-	StatusUnspecified      = ""
-	StatusOnRegistration   = "ON_REGISTRATION"
-	StatusRegistrationDone = "REGISTRATION_DONE"
-	StatusRunning          = "RUNNING"
-	StatusWaitResults      = "WAIT_RESULTS"
-	StatusFinished         = "FINISHED"
+	StatusUnspecified QuestStatus = iota
+	StatusOnRegistration
+	StatusRegistrationDone
+	StatusRunning
+	StatusWaitResults
+	StatusFinished
 )
+
+var questStatusToStr = map[QuestStatus]string{
+	StatusUnspecified:      "",
+	StatusOnRegistration:   "ON_REGISTRATION",
+	StatusRegistrationDone: "REGISTRATION_DONE",
+	StatusRunning:          "RUNNING",
+	StatusWaitResults:      "WAIT_RESULTS",
+	StatusFinished:         "FINISHED",
+}
+
+func (q QuestStatus) String() string {
+	return questStatusToStr[q]
+}
+
+func (q QuestStatus) MarshalJSON() ([]byte, error) {
+	qStr := questStatusToStr[q]
+	var b bytes.Buffer
+	b.Grow(len(qStr) + 2)
+	if err := b.WriteByte('"'); err != nil {
+		return nil, err
+	}
+	if _, err := b.WriteString(qStr); err != nil {
+		return nil, err
+	}
+	if err := b.WriteByte('"'); err != nil {
+		return nil, err
+	}
+	return b.Bytes(), nil
+}
 
 type Quest struct {
 	ID                   ID          `json:"id"`
