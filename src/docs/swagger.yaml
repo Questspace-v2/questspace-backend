@@ -51,6 +51,42 @@ definitions:
       team:
         $ref: '#/definitions/storage.Team'
     type: object
+  game.AnswerLog:
+    properties:
+      accepted:
+        type: boolean
+      answer:
+        type: string
+      answer_time:
+        type: string
+      task:
+        type: string
+      task_group:
+        type: string
+      task_group_id:
+        type: string
+      task_id:
+        type: string
+      team:
+        type: string
+      team_id:
+        type: string
+      user:
+        type: string
+      user_id:
+        type: string
+    type: object
+  game.AnswerLogResponse:
+    properties:
+      answer_logs:
+        items:
+          $ref: '#/definitions/game.AnswerLog'
+        type: array
+      next_page_token:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
   game.AnswerTask:
     properties:
       accepted:
@@ -406,14 +442,24 @@ definitions:
         example: "2024-04-14T14:00:00+05:00"
         type: string
       status:
-        enum:
-        - ON_REGISTRATION
-        - REGISTRATION_DONE
-        - RUNNING
-        - WAIT_RESULTS
-        - FINISHED
-        type: string
+        $ref: '#/definitions/storage.QuestStatus'
     type: object
+  storage.QuestStatus:
+    enum:
+    - 0
+    - 1
+    - 2
+    - 3
+    - 4
+    - 5
+    type: integer
+    x-enum-varnames:
+    - StatusUnspecified
+    - StatusOnRegistration
+    - StatusRegistrationDone
+    - StatusRunning
+    - StatusWaitResults
+    - StatusFinished
   storage.Task:
     properties:
       correct_answers:
@@ -813,6 +859,62 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Answer task in play-mode
+      tags:
+      - PlayMode
+  /quest/{id}/answer_log:
+    get:
+      parameters:
+      - description: Task group ID
+        in: query
+        name: task_group
+        type: string
+      - description: Task ID
+        in: query
+        name: task
+        type: string
+      - description: Team ID
+        in: query
+        name: team
+        type: string
+      - description: User ID
+        in: query
+        name: user
+        type: string
+      - description: Return only accepted answers
+        in: query
+        name: accepted_only
+        type: boolean
+      - description: Return new answers first (descending)
+        in: query
+        name: desc
+        type: boolean
+      - default: 50
+        description: Number of answers to return for each field
+        in: query
+        name: page_size
+        type: integer
+      - description: Page number to return. Mutually exclusive to page_id
+        in: query
+        name: page_no
+        type: integer
+      - description: Page ID to return. Mutually exclusive to page_no
+        in: query
+        name: page_id
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/game.AnswerLogResponse'
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+      security:
+      - ApiKeyAuth: []
+      summary: Get paginated answer logs
       tags:
       - PlayMode
   /quest/{id}/hint:

@@ -329,10 +329,8 @@ func (h *Handler) HandleLeave(ctx context.Context, w http.ResponseWriter, r *htt
 	if err != nil {
 		return xerrors.Errorf("%w", err)
 	}
-	newCaptainID, err := transport.UUIDParam(r, "new_captain")
-	if err != nil && !errors.Is(err, storage.ErrNotFound) {
-		return xerrors.Errorf("%w", err)
-	}
+	newCaptainID := transport.Query(r, "new_captain")
+
 	uauth, err := jwt.GetUserFromContext(ctx)
 	if err != nil {
 		return xerrors.Errorf("%w", err)
@@ -345,7 +343,7 @@ func (h *Handler) HandleLeave(ctx context.Context, w http.ResponseWriter, r *htt
 	defer func() { _ = tx.Rollback() }()
 
 	teamService := teams.NewService(s, h.inviteLinkPrefix)
-	team, err := teamService.LeaveTeam(ctx, uauth, teamID, newCaptainID)
+	team, err := teamService.LeaveTeam(ctx, uauth, teamID, storage.ID(newCaptainID))
 	if err != nil {
 		return xerrors.Errorf("leave team: %w", err)
 	}

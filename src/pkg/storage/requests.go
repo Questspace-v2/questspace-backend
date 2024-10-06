@@ -249,6 +249,7 @@ type GetAcceptedTasksRequest struct {
 
 type CreateAnswerTryRequest struct {
 	TeamID   ID
+	UserID   ID
 	TaskID   ID
 	Text     string
 	Accepted bool
@@ -268,4 +269,83 @@ type GetPenaltiesRequest struct {
 type CreatePenaltyRequest struct {
 	TeamID  ID
 	Penalty int
+}
+
+type TaskRequestLogFilterOptions struct {
+	TaskID       ID
+	GroupID      ID
+	TeamID       ID
+	UserID       ID
+	OnlyAccepted bool
+	DateDesc     bool
+
+	PageSize   int
+	PageNumber *int
+	PageToken  *int64
+}
+
+func NewDefaultLogOpts() TaskRequestLogFilterOptions {
+	return TaskRequestLogFilterOptions{
+		PageSize: 50,
+	}
+}
+
+type FilteringOption func(*TaskRequestLogFilterOptions)
+
+func WithTaskID(taskID ID) FilteringOption {
+	return func(o *TaskRequestLogFilterOptions) {
+		o.TaskID = taskID
+	}
+}
+
+func WithGroupID(groupID ID) FilteringOption {
+	return func(o *TaskRequestLogFilterOptions) {
+		o.GroupID = groupID
+	}
+}
+
+func WithTeamID(teamID ID) FilteringOption {
+	return func(o *TaskRequestLogFilterOptions) {
+		o.TeamID = teamID
+	}
+}
+
+func WithUserID(userID ID) FilteringOption {
+	return func(o *TaskRequestLogFilterOptions) {
+		o.UserID = userID
+	}
+}
+
+func WithOnlyAccepted() FilteringOption {
+	return func(o *TaskRequestLogFilterOptions) {
+		o.OnlyAccepted = true
+	}
+}
+
+func WithDateDesc() FilteringOption {
+	return func(o *TaskRequestLogFilterOptions) {
+		o.DateDesc = true
+	}
+}
+
+func WithPageSize(pageSize int) FilteringOption {
+	return func(o *TaskRequestLogFilterOptions) {
+		o.PageSize = pageSize
+	}
+}
+
+func WithPageNumber(pageNumber int) FilteringOption {
+	return func(o *TaskRequestLogFilterOptions) {
+		o.PageNumber = &pageNumber
+	}
+}
+
+func WithPageToken(pageToken int64) FilteringOption {
+	return func(o *TaskRequestLogFilterOptions) {
+		o.PageToken = &pageToken
+	}
+}
+
+type GetAnswerTriesRequest struct {
+	QuestID ID
 }

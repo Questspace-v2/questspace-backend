@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strconv"
 
 	"golang.org/x/xerrors"
 
@@ -401,5 +402,101 @@ func (h *Handler) HandleAddPenalty(ctx context.Context, w http.ResponseWriter, r
 		return xerrors.Errorf("commit tx: %w", err)
 	}
 	w.WriteHeader(http.StatusOK)
+	return nil
+}
+
+// HandleAnswerLog handles GET /quest/:id/answer_log request
+//
+// @Summary		Get paginated answer logs
+// @Tags		PlayMode
+// @Param      	task_group		query		string		false  "Task group ID"
+// @Param		task			query		string		false  "Task ID"
+// @Param		team			query		string		false  "Team ID"
+// @Param      	user			query		string		false  "User ID"
+// @Param      	accepted_only	query		bool		false  "Return only accepted answers"
+// @Param		desc			query		bool        false  "Return new answers first (descending)"
+// @Param		page_size		query		int			false  "Number of answers to return for each field"				default(50)
+// @Param		page_no			query		int			false  "Page number to return. Mutually exclusive to page_id"
+// @Param		page_id			query		string		false  "Page ID to return. Mutually exclusive to page_no"
+// @Success		200				{object}	game.AnswerLogResponse
+// @Failure		400
+// @Failure		403
+// @Failure		404
+// @Router		/quest/{id}/answer_log [get]
+// @Security	ApiKeyAuth
+func (h *Handler) HandleAnswerLog(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	uauth, err := jwt.GetUserFromContext(ctx)
+	if err != nil {
+		return xerrors.Errorf("%w", err)
+	}
+	s, err := h.clientFactory.NewStorage(ctx, dbnode.Alive)
+	if err != nil {
+		return xerrors.Errorf("get storage: %w", err)
+	}
+	questID, err := transport.UUIDParam(r, "id")
+	if err != nil {
+		return xerrors.Errorf("%w", err)
+	}
+	quest, err := s.GetQuest(ctx, &storage.GetQuestRequest{ID: questID})
+	if err != nil {
+		if errors.Is(err, storage.ErrNotFound) {
+			return httperrors.Errorf(http.StatusNotFound, "quest %q not found", questID.String())
+		}
+		return xerrors.Errorf("get quest: %w", err)
+	}
+	if quest.Creator.ID != uauth.ID {
+		return httperrors.New(http.StatusForbidden, "only creator can view answer log")
+	}
+
+	var opts []storage.FilteringOption
+	if taskGroup := transport.Query(r, "task_group"); len(taskGroup) > 0 {
+		opts = append(opts, storage.WithGroupID(storage.ID(taskGroup)))
+	}
+	if task := transport.Query(r, "task"); len(task) > 0 {
+		opts = append(opts, storage.WithTaskID(storage.ID(task)))
+	}
+	if team := transport.Query(r, "team"); len(team) > 0 {
+		opts = append(opts, storage.WithTeamID(storage.ID(team)))
+	}
+	if user := transport.Query(r, "user"); len(user) > 0 {
+		opts = append(opts, storage.WithUserID(storage.ID(user)))
+	}
+	if accepted := transport.Query(r, "accepted_only"); len(accepted) > 0 {
+		opts = append(opts, storage.WithOnlyAccepted())
+	}
+	if desc := transport.Query(r, "desc"); len(desc) > 0 {
+		opts = append(opts, storage.WithDateDesc())
+	}
+	if pageSize := transport.Query(r, "page_size"); len(pageSize) > 0 {
+		size, err := strconv.Atoi(pageSize)
+		if err != nil {
+			return httperrors.Errorf(http.StatusBadRequest, "bad page size: %w", err)
+		}
+		opts = append(opts, storage.WithPageSize(size))
+	}
+	if pageNo := transport.Query(r, "page_no"); len(pageNo) > 0 {
+		num, err := strconv.Atoi(pageNo)
+		if err != nil {
+			return httperrors.Errorf(http.StatusBadRequest, "bad page_no: %w", err)
+		}
+		opts = append(opts, storage.WithPageNumber(num))
+	}
+	if pageID := transport.Query(r, "page_id"); len(pageID) > 0 {
+		id, err := strconv.ParseInt(pageID, 10, 64)
+		if err != nil {
+			return httperrors.Errorf(http.StatusBadRequest, "bad page_id: %w", err)
+		}
+		opts = append(opts, storage.WithPageToken(id))
+	}
+
+	srv := game.NewService(s, s, s, s)
+	logs, err := srv.GetAnswerLogs(ctx, uauth, questID, opts...)
+	if err != nil {
+		return xerrors.Errorf("get answer logs: %w", err)
+	}
+
+	if err = transport.ServeJSONResponse(w, http.StatusOK, &logs); err != nil {
+		return err
+	}
 	return nil
 }

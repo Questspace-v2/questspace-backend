@@ -10,6 +10,7 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/xerrors"
 
+	"questspace/internal/qtime"
 	"questspace/pkg/logging"
 	"questspace/pkg/storage"
 )
@@ -110,12 +111,21 @@ func (c *Client) GetAcceptedTasks(ctx context.Context, req *storage.GetAcceptedT
 }
 
 func (c *Client) CreateAnswerTry(ctx context.Context, req *storage.CreateAnswerTryRequest) error {
-	query := sq.Insert("questspace.answer_try").
-		Columns("team_id", "task_id", "answer", "accepted", "score").
-		Values(req.TeamID, req.TaskID, req.Text, req.Accepted, req.Score).
-		PlaceholderFormat(sq.Dollar)
+	query := `
+	INSERT INTO questspace.answer_try (team_id, user_id, task_id, answer, accepted, score, try_time)
+	VALUES ($1, $2, $3, $4, $5, $6, $7)
+	`
 
-	if _, err := query.RunWith(c.runner).ExecContext(ctx); err != nil {
+	if _, err := c.runner.ExecContext(
+		ctx, query,
+		req.TeamID,
+		req.UserID,
+		req.TaskID,
+		req.Text,
+		req.Accepted,
+		req.Score,
+		qtime.Now(),
+	); err != nil {
 		return xerrors.Errorf("exec query: %w", err)
 	}
 	return nil
@@ -160,6 +170,141 @@ func (c *Client) GetScoreResults(ctx context.Context, req *storage.GetResultsReq
 	}
 
 	return scoreRes, nil
+}
+
+func buildLogQuery(req *storage.GetAnswerTriesRequest, opts *storage.TaskRequestLogFilterOptions, fields ...string) sq.SelectBuilder {
+	whereEq := sq.Eq{"tg.quest_id": req.QuestID}
+	if len(opts.GroupID) > 0 {
+		whereEq["tg.id"] = opts.GroupID
+	}
+	if len(opts.TaskID) > 0 {
+		whereEq["t.id"] = opts.TaskID
+	}
+	if len(opts.TeamID) > 0 {
+		whereEq["tm.id"] = opts.TeamID
+	}
+	if len(opts.UserID) > 0 {
+		whereEq["u.id"] = opts.TeamID
+	}
+	if opts.OnlyAccepted {
+		whereEq["at.accepted"] = true
+	}
+
+	query := sq.Select(fields...).
+		From("questspace.answer_try at").
+		LeftJoin("questspace.team tm ON at.team_id = tm.id").
+		LeftJoin("questspace.task t ON at.task_id = t.id").
+		LeftJoin("questspace.task_group tg ON t.group_id = tg.id").
+		LeftJoin("questspace.user u ON at.user_id = u.id").
+		Where(whereEq).
+		PlaceholderFormat(sq.Dollar)
+
+	if opts.DateDesc {
+		query = query.OrderBy("at.try_time DESC")
+	} else {
+		query = query.OrderBy("at.try_time ASC")
+	}
+
+	return query
+}
+
+func (c *Client) GetAnswerTries(ctx context.Context, req *storage.GetAnswerTriesRequest, opts ...storage.FilteringOption) (*storage.AnswerLogRecords, error) {
+	options := storage.NewDefaultLogOpts()
+	for _, opt := range opts {
+		opt(&options)
+	}
+
+	countQuery := buildLogQuery(req, &options, "COUNT(*)")
+	countRow := countQuery.RunWith(c.runner).QueryRowContext(ctx)
+
+	var answersCount int
+	if err := countRow.Scan(&answersCount); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, storage.ErrNotFound
+		}
+		return nil, xerrors.Errorf("count all answers: %w", err)
+	}
+
+	query := buildLogQuery(req, &options,
+		"at.try_time",
+		"tg.id",
+		"tg.name",
+		"t.id",
+		"t.name",
+		"tm.id",
+		"tm.name",
+		"u.id",
+		"u.username",
+		"at.accepted",
+		"at.answer",
+	).Limit(uint64(options.PageSize))
+	if options.PageToken != nil && !options.DateDesc {
+		query = query.Where("at.try_time > to_timestamp(?)", *options.PageToken)
+	} else if options.PageToken != nil && options.DateDesc {
+		query = query.Where("at.try_time < to_timestamp(?)", *options.PageToken)
+	} else if options.PageNumber != nil {
+		query = query.Offset(uint64(options.PageSize * *options.PageNumber))
+	}
+
+	rows, err := query.RunWith(c.runner).QueryContext(ctx)
+	if err != nil {
+		return nil, xerrors.Errorf("query answers: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+
+	answerLogs := make([]storage.AnswerLog, 0, options.PageSize)
+	for rows.Next() {
+		var userName, userID sql.NullString
+		al := storage.AnswerLog{
+			TaskGroup: &storage.TaskGroup{},
+			Task:      &storage.Task{},
+			Team:      &storage.Team{},
+		}
+		if err = rows.Scan(
+			&al.AnswerTime,
+			&al.TaskGroup.ID,
+			&al.TaskGroup.Name,
+			&al.Task.ID,
+			&al.Task.Name,
+			&al.Team.ID,
+			&al.Team.Name,
+			&userID,
+			&userName,
+			&al.Accepted,
+			&al.Answer,
+		); err != nil {
+			return nil, xerrors.Errorf("scan row: %w", err)
+		}
+		if userName.Valid && userID.Valid {
+			al.User = &storage.User{
+				ID:       storage.ID(userID.String),
+				Username: userName.String,
+			}
+		}
+
+		answerLogs = append(answerLogs, al)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, xerrors.Errorf("iter rows: %w", err)
+	}
+	pagesNum := answersCount / options.PageSize
+	if answersCount%options.PageSize > 0 {
+		pagesNum++
+	}
+
+	var nexToken int64
+	if len(answerLogs) > 0 {
+		last := answerLogs[len(answerLogs)-1]
+		nexToken = last.AnswerTime.UTC().Unix()
+	}
+
+	res := &storage.AnswerLogRecords{
+		AnswerLogs: answerLogs,
+		TotalPages: pagesNum,
+		NextToken:  nexToken,
+	}
+
+	return res, nil
 }
 
 func (c *Client) GetPenalties(ctx context.Context, req *storage.GetPenaltiesRequest) (storage.TeamPenalties, error) {

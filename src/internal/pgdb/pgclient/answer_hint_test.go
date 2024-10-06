@@ -119,12 +119,13 @@ func TestAnswerHintStorage_CreateAnswerTry(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotEmpty(t, task.ID)
 
-	team, _ := createTestTeam(t, ctx, client, quest, "svayp22", "team1")
+	team, user := createTestTeam(t, ctx, client, quest, "svayp22", "team1")
 	tryReq := storage.CreateAnswerTryRequest{
 		Text:     task.CorrectAnswers[0],
 		Accepted: true,
 		TaskID:   task.ID,
 		TeamID:   team.ID,
+		UserID:   user.ID,
 	}
 
 	require.NoError(t, client.CreateAnswerTry(ctx, &tryReq))
@@ -152,7 +153,7 @@ func TestAnswerHintStorage_GetScoreResults(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotEmpty(t, task.ID)
 
-	team, _ := createTestTeam(t, ctx, client, quest, "svayp22", "team1")
+	team, user := createTestTeam(t, ctx, client, quest, "svayp22", "team1")
 	team2, _ := createTestTeam(t, ctx, client, quest, "svayp222", "team2")
 	tryReq := storage.CreateAnswerTryRequest{
 		Text:     task.CorrectAnswers[0],
@@ -160,6 +161,7 @@ func TestAnswerHintStorage_GetScoreResults(t *testing.T) {
 		Score:    task.Reward / 2,
 		TaskID:   task.ID,
 		TeamID:   team.ID,
+		UserID:   user.ID,
 	}
 
 	require.NoError(t, client.CreateAnswerTry(ctx, &tryReq))

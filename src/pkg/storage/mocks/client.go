@@ -298,6 +298,26 @@ func (mr *MockQuestSpaceStorageMockRecorder) GetAnswerData(arg0, arg1 interface{
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAnswerData", reflect.TypeOf((*MockQuestSpaceStorage)(nil).GetAnswerData), arg0, arg1)
 }
 
+// GetAnswerTries mocks base method.
+func (m *MockQuestSpaceStorage) GetAnswerTries(arg0 context.Context, arg1 *storage.GetAnswerTriesRequest, arg2 ...storage.FilteringOption) (*storage.AnswerLogRecords, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetAnswerTries", varargs...)
+	ret0, _ := ret[0].(*storage.AnswerLogRecords)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAnswerTries indicates an expected call of GetAnswerTries.
+func (mr *MockQuestSpaceStorageMockRecorder) GetAnswerTries(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAnswerTries", reflect.TypeOf((*MockQuestSpaceStorage)(nil).GetAnswerTries), varargs...)
+}
+
 // GetHintTakes mocks base method.
 func (m *MockQuestSpaceStorage) GetHintTakes(arg0 context.Context, arg1 *storage.GetHintTakesRequest) (storage.HintTakes, error) {
 	m.ctrl.T.Helper()
@@ -1264,6 +1284,26 @@ func (mr *MockAnswerHintStorageMockRecorder) GetAcceptedTasks(arg0, arg1 interfa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAcceptedTasks", reflect.TypeOf((*MockAnswerHintStorage)(nil).GetAcceptedTasks), arg0, arg1)
 }
 
+// GetAnswerTries mocks base method.
+func (m *MockAnswerHintStorage) GetAnswerTries(arg0 context.Context, arg1 *storage.GetAnswerTriesRequest, arg2 ...storage.FilteringOption) (*storage.AnswerLogRecords, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetAnswerTries", varargs...)
+	ret0, _ := ret[0].(*storage.AnswerLogRecords)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAnswerTries indicates an expected call of GetAnswerTries.
+func (mr *MockAnswerHintStorageMockRecorder) GetAnswerTries(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAnswerTries", reflect.TypeOf((*MockAnswerHintStorage)(nil).GetAnswerTries), varargs...)
+}
+
 // GetHintTakes mocks base method.
 func (m *MockAnswerHintStorage) GetHintTakes(arg0 context.Context, arg1 *storage.GetHintTakesRequest) (storage.HintTakes, error) {
 	m.ctrl.T.Helper()
@@ -1427,6 +1467,26 @@ func (m *MockAnswerStorage) GetAcceptedTasks(arg0 context.Context, arg1 *storage
 func (mr *MockAnswerStorageMockRecorder) GetAcceptedTasks(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAcceptedTasks", reflect.TypeOf((*MockAnswerStorage)(nil).GetAcceptedTasks), arg0, arg1)
+}
+
+// GetAnswerTries mocks base method.
+func (m *MockAnswerStorage) GetAnswerTries(arg0 context.Context, arg1 *storage.GetAnswerTriesRequest, arg2 ...storage.FilteringOption) (*storage.AnswerLogRecords, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetAnswerTries", varargs...)
+	ret0, _ := ret[0].(*storage.AnswerLogRecords)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAnswerTries indicates an expected call of GetAnswerTries.
+func (mr *MockAnswerStorageMockRecorder) GetAnswerTries(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAnswerTries", reflect.TypeOf((*MockAnswerStorage)(nil).GetAnswerTries), varargs...)
 }
 
 // GetScoreResults mocks base method.

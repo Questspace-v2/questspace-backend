@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"bytes"
 	"strconv"
 	"strings"
 	"time"
@@ -40,16 +41,69 @@ const (
 	VerificationManual VerificationType = "manual"
 )
 
-type QuestStatus string
+type QuestStatus int
 
 const (
-	StatusUnspecified      = ""
-	StatusOnRegistration   = "ON_REGISTRATION"
-	StatusRegistrationDone = "REGISTRATION_DONE"
-	StatusRunning          = "RUNNING"
-	StatusWaitResults      = "WAIT_RESULTS"
-	StatusFinished         = "FINISHED"
+	StatusUnspecified QuestStatus = iota
+	StatusOnRegistration
+	StatusRegistrationDone
+	StatusRunning
+	StatusWaitResults
+	StatusFinished
 )
+
+var (
+	questStatusToStr = map[QuestStatus]string{
+		StatusUnspecified:      "",
+		StatusOnRegistration:   "ON_REGISTRATION",
+		StatusRegistrationDone: "REGISTRATION_DONE",
+		StatusRunning:          "RUNNING",
+		StatusWaitResults:      "WAIT_RESULTS",
+		StatusFinished:         "FINISHED",
+	}
+	strToQuestStatus = map[string]QuestStatus{
+		"":                  StatusUnspecified,
+		"ON_REGISTRATION":   StatusOnRegistration,
+		"REGISTRATION_DONE": StatusRegistrationDone,
+		"RUNNING":           StatusRunning,
+		"WAIT_RESULTS":      StatusWaitResults,
+		"FINISHED":          StatusFinished,
+	}
+)
+
+func (q QuestStatus) String() string {
+	return questStatusToStr[q]
+}
+
+func (q *QuestStatus) UnmarshalJSON(data []byte) error {
+	if len(data) <= 2 {
+		*q = StatusUnspecified
+		return nil
+	}
+	str := string(data[1 : len(data)-1])
+	status, ok := strToQuestStatus[str]
+	if !ok {
+		return xerrors.Errorf("unknown status %q", str)
+	}
+	*q = status
+	return nil
+}
+
+func (q QuestStatus) MarshalJSON() ([]byte, error) {
+	qStr := questStatusToStr[q]
+	var b bytes.Buffer
+	b.Grow(len(qStr) + 2)
+	if err := b.WriteByte('"'); err != nil {
+		return nil, err
+	}
+	if _, err := b.WriteString(qStr); err != nil {
+		return nil, err
+	}
+	if err := b.WriteByte('"'); err != nil {
+		return nil, err
+	}
+	return b.Bytes(), nil
+}
 
 type Quest struct {
 	ID                   ID          `json:"id"`
@@ -62,7 +116,7 @@ type Quest struct {
 	FinishTime           *time.Time  `json:"finish_time,omitempty" example:"2024-04-21T14:00:00+05:00"`
 	MediaLink            string      `json:"media_link"`
 	MaxTeamCap           *int        `json:"max_team_cap,omitempty"`
-	Status               QuestStatus `json:"status" enums:"ON_REGISTRATION,REGISTRATION_DONE,RUNNING,WAIT_RESULTS,FINISHED"`
+	Status               QuestStatus `json:"status"`
 	HasBrief             bool        `json:"has_brief,omitempty"`
 	Brief                string      `json:"brief,omitempty"`
 }
@@ -165,6 +219,7 @@ type Task struct {
 
 type AnswerTry struct {
 	Team       *Team
+	User       *User
 	TaskID     ID
 	Answer     string
 	AnswerTime *time.Time
@@ -210,3 +265,19 @@ type Penalty struct {
 
 // TeamPenalties [team_id] -> []Penalty
 type TeamPenalties map[ID][]Penalty
+
+type AnswerLog struct {
+	Team       *Team
+	User       *User
+	TaskGroup  *TaskGroup
+	Task       *Task
+	Accepted   bool
+	Answer     string
+	AnswerTime time.Time
+}
+
+type AnswerLogRecords struct {
+	AnswerLogs []AnswerLog
+	NextToken  int64
+	TotalPages int
+}
