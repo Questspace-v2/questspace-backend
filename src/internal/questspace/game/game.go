@@ -391,6 +391,7 @@ func (s *Service) TryAnswer(ctx context.Context, user *storage.User, req *TryAns
 	tryReq := storage.CreateAnswerTryRequest{
 		TaskID: req.TaskID,
 		TeamID: team.ID,
+		UserID: user.ID,
 		Text:   req.Text,
 	}
 
@@ -452,4 +453,56 @@ func (s *Service) AddPenalty(ctx context.Context, req *AddPenaltyRequest) error 
 		return xerrors.Errorf("create penalty: %w", err)
 	}
 	return nil
+}
+
+type AnswerLog struct {
+	TeamID      storage.ID `json:"team_id"`
+	Team        string     `json:"team"`
+	UserID      storage.ID `json:"user_id,omitempty"`
+	User        string     `json:"user,omitempty"`
+	TaskGroupID storage.ID `json:"task_group_id"`
+	TaskGroup   string     `json:"task_group"`
+	TaskID      storage.ID `json:"task_id"`
+	Task        string     `json:"task"`
+	Accepted    bool       `json:"accepted"`
+	Answer      string     `json:"answer"`
+	AnswerTime  time.Time  `json:"answer_time"`
+}
+
+type AnswerLogResponse struct {
+	AnswerLogs    []AnswerLog `json:"answer_logs"`
+	TotalPages    int         `json:"total_pages"`
+	NextPageToken int64       `json:"next_page_token,omitempty"`
+}
+
+func (s *Service) GetAnswerLogs(ctx context.Context, user *storage.User, questID storage.ID, opts ...storage.FilteringOption) (AnswerLogResponse, error) {
+	logResp, err := s.ah.GetAnswerTries(ctx, &storage.GetAnswerTriesRequest{QuestID: questID}, opts...)
+	if err != nil {
+		return AnswerLogResponse{}, xerrors.Errorf("get answer tries: %w", err)
+	}
+	logs := make([]AnswerLog, 0, len(logResp.AnswerLogs))
+	for _, log := range logResp.AnswerLogs {
+		al := AnswerLog{
+			TeamID:      log.Team.ID,
+			Team:        log.Team.Name,
+			TaskGroupID: log.TaskGroup.ID,
+			TaskGroup:   log.TaskGroup.Name,
+			TaskID:      log.Task.ID,
+			Task:        log.Task.Name,
+			Accepted:    log.Accepted,
+			Answer:      log.Answer,
+			AnswerTime:  log.AnswerTime,
+		}
+		if log.User != nil {
+			al.UserID = log.User.ID
+			al.User = log.User.Username
+		}
+		logs = append(logs, al)
+	}
+	resp := AnswerLogResponse{
+		AnswerLogs:    logs,
+		TotalPages:    logResp.TotalPages,
+		NextPageToken: logResp.NextToken,
+	}
+	return resp, nil
 }

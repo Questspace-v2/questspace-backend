@@ -146,6 +146,7 @@ func InitApp(ctx context.Context, application *app.App) error {
 	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).GET("/quest/:id/table", transport.WrapCtxErr(playHandler.HandleGetTableResults))
 	r.H().GET("/quest/:id/leaderboard", transport.WrapCtxErr(playHandler.HandleLeaderboard))
 	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).POST("/quest/:id/penalty", transport.WrapCtxErr(playHandler.HandleAddPenalty))
+	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).GET("/quest/:id/answer_log", transport.WrapCtxErr(playHandler.HandleAnswerLog))
 	return nil
 }
 

@@ -195,6 +195,7 @@ type Task struct {
 
 type AnswerTry struct {
 	Team       *Team
+	User       *User
 	TaskID     ID
 	Answer     string
 	AnswerTime *time.Time
@@ -240,3 +241,19 @@ type Penalty struct {
 
 // TeamPenalties [team_id] -> []Penalty
 type TeamPenalties map[ID][]Penalty
+
+type AnswerLog struct {
+	Team       *Team
+	User       *User
+	TaskGroup  *TaskGroup
+	Task       *Task
+	Accepted   bool
+	Answer     string
+	AnswerTime time.Time
+}
+
+type AnswerLogRecords struct {
+	AnswerLogs []AnswerLog
+	NextToken  int64
+	TotalPages int
+}
