@@ -1,4 +1,4 @@
-name: team-leave-last
+name: team-do-not-automatically-accept-on-overflow
 requests:
   - method: POST
     uri: /auth/register
@@ -27,12 +27,13 @@ requests:
       {
         "access": "public",
         "description": "description",
-        "finish_time": "2027-04-21T14:00:00+05:00",
+        "finish_time": "2024-04-14T18:00:00Z",
         "max_team_cap": 4,
         "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
         "name": "name",
-        "registration_deadline": "2026-04-21T12:00:00+05:00",
-        "start_time": "2026-04-21T14:00:00+05:00"
+        "start_time": "2024-04-14T12:00:00Z",
+        "registration_type": "AUTO",
+        "max_teams_amount": 1
       }
 
     expected-status: 200
@@ -45,15 +46,15 @@ requests:
           "username": "svayp11"
         },
         "description": "description",
-        "finish_time": "$ANY$",
+        "finish_time": "2024-04-14T18:00:00Z",
         "id": "$SET$:QUEST_ID",
         "max_team_cap": 4,
         "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
         "name": "name",
-        "registration_deadline": "$ANY$",
-        "start_time": "$ANY$",
+        "start_time": "2024-04-14T12:00:00Z",
         "status": "ON_REGISTRATION",
-        "registration_type": "AUTO"
+        "registration_type": "AUTO",
+        "max_teams_amount": 1
       }
 
   - method: POST
@@ -106,9 +107,8 @@ requests:
         "registration_status": "ACCEPTED"
       }
 
-  - method: POST
-    uri: /teams/all/$TEAM_ID/leave
-    authorization: $PYAVS22_TOKEN
+  - method: GET
+    uri: /teams/all/$TEAM_ID
 
     expected-status: 200
     expected-json: >
@@ -120,11 +120,44 @@ requests:
         },
         "id": "$SET$:TEAM_ID",
         "invite_link": "$SET$:INVITE_LINK",
+        "members": [
+          {
+            "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+            "id": "$USER_ID2",
+            "username": "pyavs22"
+          }
+        ],
         "name": "dream_team",
         "score": 0,
         "registration_status": "ACCEPTED"
       }
 
-  - method: GET
-    uri: /teams/all/$TEAM_ID
-    expected-status: 404
+  - method: POST
+    uri: /quest/$QUEST_ID/teams
+    authorization: $SVAYP11_TOKEN
+    json-input: >
+      {
+        "name": "excess_team"
+      }
+
+    expected-status: 200
+    expected-json: >
+      {
+        "captain": {
+          "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+          "id": "$USER_ID",
+          "username": "svayp11"
+        },
+        "id": "$SET$:TEAM1_ID",
+        "invite_link": "$SET$:INVITE_LINK1",
+        "members": [
+          {
+            "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+            "id": "$USER_ID",
+            "username": "svayp11"
+          }
+        ],
+        "name": "excess_team",
+        "score": 0,
+        "registration_status": "ON_CONSIDERATION"
+      }

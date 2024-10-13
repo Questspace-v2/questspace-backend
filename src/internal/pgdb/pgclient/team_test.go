@@ -37,13 +37,16 @@ var (
 	}
 
 	teamReq1 = storage.CreateTeamRequest{
-		Name: "my_great_team",
+		Name:               "my_great_team",
+		RegistrationStatus: storage.RegistrationStatusAccepted,
 	}
 	teamReq2 = storage.CreateTeamRequest{
-		Name: "my_even_greater_team",
+		Name:               "my_even_greater_team",
+		RegistrationStatus: storage.RegistrationStatusAccepted,
 	}
 	teamReq3 = storage.CreateTeamRequest{
-		Name: "team",
+		Name:               "team",
+		RegistrationStatus: storage.RegistrationStatusAccepted,
 	}
 
 	firstPath  = "first"
@@ -103,9 +106,10 @@ func TestTeamStorage_AlreadyExists(t *testing.T) {
 	assert.NotNil(t, team1)
 
 	team2, err := client.CreateTeam(ctx, &storage.CreateTeamRequest{
-		Name:    teamReq.Name,
-		QuestID: teamReq.QuestID,
-		Creator: user2,
+		Name:               teamReq.Name,
+		QuestID:            teamReq.QuestID,
+		Creator:            user2,
+		RegistrationStatus: storage.RegistrationStatusOnConsideration,
 	})
 	require.Error(t, err)
 	assert.ErrorIs(t, err, storage.ErrExists)

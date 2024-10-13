@@ -27,11 +27,11 @@ requests:
       {
         "access": "public",
         "description": "description",
-        "finish_time": "2027-04-21T14:00:00+05:00",
+        "finish_time": "2024-04-14T12:00:00Z",
         "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
         "name": "name",
-        "registration_deadline": "2024-04-18T12:00:00+05:00",
-        "start_time": "2024-04-18T14:00:00+05:00"
+        "registration_deadline": "2024-04-06T12:00:00Z",
+        "start_time": "2024-04-06T14:00:00Z"
       }
 
     expected-status: 200
@@ -44,13 +44,14 @@ requests:
           "username": "svayp11"
         },
         "description": "description",
-        "finish_time": "$ANY$",
+        "finish_time": "2024-04-14T12:00:00Z",
         "id": "$SET$:QUEST_ID",
         "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
         "name": "name",
-        "registration_deadline": "$ANY$",
-        "start_time": "$ANY$",
-        "status": "RUNNING"
+        "registration_deadline": "2024-04-06T12:00:00Z",
+        "start_time": "2024-04-06T14:00:00Z",
+        "status": "RUNNING",
+        "registration_type": "AUTO"
       }
 
   - method: PATCH
@@ -222,7 +223,8 @@ requests:
           }
         ],
         "name": "dream_team",
-        "score": 0
+        "score": 0,
+        "registration_status": "ACCEPTED"
       }
 
   - method: POST

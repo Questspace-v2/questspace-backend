@@ -57,6 +57,7 @@ type TeamStorage interface {
 	DeleteTeam(context.Context, *DeleteTeamRequest) error
 	ChangeLeader(context.Context, *ChangeLeaderRequest) (*Team, error)
 	RemoveUser(context.Context, *RemoveUserRequest) error
+	AcceptTeam(context.Context, *AcceptTeamRequest) error
 }
 
 type AnswerHintStorage interface {

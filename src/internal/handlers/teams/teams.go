@@ -156,12 +156,16 @@ func (h *Handler) HandleGet(ctx context.Context, w http.ResponseWriter, r *http.
 	return nil
 }
 
+type ManyTeamsResponse struct {
+	Teams []storage.Team `json:"teams"`
+}
+
 // HandleGetMany handles GET /quest/:id/teams request
 //
 // @Summary	Get all teams by quest id
 // @Tags	Teams
 // @Param	quest_id	path		string	true	"Quest id"
-// @Success	200			{object}	[]storage.Team
+// @Success	200			{object}	ManyTeamsResponse
 // @Failure	400
 // @Router	/quest/{quest_id}/teams [get]
 func (h *Handler) HandleGetMany(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
@@ -180,7 +184,7 @@ func (h *Handler) HandleGetMany(ctx context.Context, w http.ResponseWriter, r *h
 		return xerrors.Errorf("get teams of quest %q: %w", questID, err)
 	}
 
-	if err = transport.ServeJSONResponse(w, http.StatusOK, questTeams); err != nil {
+	if err = transport.ServeJSONResponse(w, http.StatusOK, ManyTeamsResponse{Teams: questTeams}); err != nil {
 		return err
 	}
 	return nil
@@ -453,6 +457,48 @@ func (h *Handler) HandleGetQuestByTeamInvite(ctx context.Context, w http.Respons
 	}
 
 	if err = transport.ServeJSONResponse(w, http.StatusOK, &resp); err != nil {
+		return err
+	}
+	return nil
+}
+
+// HandleAcceptTeam handles POST /quest/:id/teams/:team_id/accept request
+//
+// @Summary		Accept team
+// @Tags		Teams
+// @Param		quest_id	path		string	true	"Quest id"
+// @Param		team_id		path		string	true	"Team id"
+// @Success		200			{object}	ManyTeamsResponse
+// @Failure		404
+// @Failure		406
+// @Router		/quest/{quest_id}/teams/{team_id}/accept [post]
+// @Security 	ApiKeyAuth
+func (h *Handler) HandleAcceptTeam(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	questID, err := transport.UUIDParam(r, "id")
+	if err != nil {
+		return err
+	}
+	teamID, err := transport.UUIDParam(r, "team_id")
+	if err != nil {
+		return err
+	}
+	uauth, err := jwt.GetUserFromContext(ctx)
+	if err != nil {
+		return err
+	}
+	s, err := h.factory.NewStorage(ctx, dbnode.Alive)
+	if err != nil {
+		return xerrors.Errorf("get storage: %w", err)
+	}
+	teamService := teams.NewService(s, h.inviteLinkPrefix)
+	teams, err := teamService.AcceptTeam(ctx, uauth, questID, teamID)
+	if err != nil {
+		return err
+	}
+	resp := ManyTeamsResponse{
+		Teams: teams,
+	}
+	if err = transport.ServeJSONResponse(w, http.StatusOK, resp); err != nil {
 		return err
 	}
 	return nil

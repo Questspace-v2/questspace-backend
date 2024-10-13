@@ -36,6 +36,20 @@ func (m *MockQuestSpaceStorage) EXPECT() *MockQuestSpaceStorageMockRecorder {
 	return m.recorder
 }
 
+// AcceptTeam mocks base method.
+func (m *MockQuestSpaceStorage) AcceptTeam(arg0 context.Context, arg1 *storage.AcceptTeamRequest) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AcceptTeam", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AcceptTeam indicates an expected call of AcceptTeam.
+func (mr *MockQuestSpaceStorageMockRecorder) AcceptTeam(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AcceptTeam", reflect.TypeOf((*MockQuestSpaceStorage)(nil).AcceptTeam), arg0, arg1)
+}
+
 // ChangeLeader mocks base method.
 func (m *MockQuestSpaceStorage) ChangeLeader(arg0 context.Context, arg1 *storage.ChangeLeaderRequest) (*storage.Team, error) {
 	m.ctrl.T.Helper()
@@ -1084,6 +1098,20 @@ func NewMockTeamStorage(ctrl *gomock.Controller) *MockTeamStorage {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockTeamStorage) EXPECT() *MockTeamStorageMockRecorder {
 	return m.recorder
+}
+
+// AcceptTeam mocks base method.
+func (m *MockTeamStorage) AcceptTeam(arg0 context.Context, arg1 *storage.AcceptTeamRequest) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AcceptTeam", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AcceptTeam indicates an expected call of AcceptTeam.
+func (mr *MockTeamStorageMockRecorder) AcceptTeam(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AcceptTeam", reflect.TypeOf((*MockTeamStorage)(nil).AcceptTeam), arg0, arg1)
 }
 
 // ChangeLeader mocks base method.

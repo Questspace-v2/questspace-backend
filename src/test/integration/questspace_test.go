@@ -32,12 +32,10 @@ func TestQuestspace(t *testing.T) {
 
 		t.Run(tcFullName, func(t *testing.T) {
 			if tc.Ignore {
-				t.Logf("WARNING: Test case %q is ignored. Skipping...", tcFullName)
-				return
+				t.Skipf("WARNING: Test case %q is ignored. Skipping...", tcFullName)
 			}
 			if len(runTC) != 0 && !strings.HasPrefix(tcFullName, runTC+"/") {
-				t.Logf("WARNING: Test case %q is ignored by %s. Skipping...", tcFullName, RunTCkey)
-				return
+				t.Skipf("WARNING: Test case %q is ignored by %s. Skipping...", tcFullName, RunTCkey)
 			}
 			testutils.StartServer(t)
 			runner := NewTestRunner(testutils.ServerURL)
@@ -49,7 +47,7 @@ func TestQuestspace(t *testing.T) {
 						runner.VerifyData(t, req.ExpectedJSON, body)
 					}
 				} else {
-					t.Fatalf(`expected status %d but got %d. Stopping test case...`, req.ExpectedStatus, code)
+					t.Fatalf("expected status %d but got %d. Stopping test case...\nBody: \n%s", req.ExpectedStatus, code, body)
 				}
 			}
 		})

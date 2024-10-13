@@ -140,7 +140,7 @@ func (h *Handler) HandleGet(ctx context.Context, w http.ResponseWriter, r *http.
 		resp.Team = team
 	}
 
-	resp.AllTeams, err = s.GetTeams(ctx, &storage.GetTeamsRequest{QuestIDs: []storage.ID{questID}})
+	resp.AllTeams, err = s.GetTeams(ctx, &storage.GetTeamsRequest{QuestIDs: []storage.ID{questID}, AcceptedOnly: true})
 	if err != nil {
 		return xerrors.Errorf("get teams: %w", err)
 	}

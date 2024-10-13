@@ -6,11 +6,11 @@ import (
 	"time"
 )
 
-const testEnv = "TIME_TEST"
+const TestTimeEnv = "TIME_TEST"
 
 var (
 	nowFunc       = time.Now
-	testStartTime = time.Date(2024, time.April, 7, 12, 0, 0, 0, time.UTC)
+	testStartTime = time.Date(2024, time.April, 7, 12, 0, 0, 0, time.UTC) // 2024-04-07T12:00:00Z
 )
 
 func init() {
@@ -22,7 +22,7 @@ func init() {
 }
 
 func IsTestTimeMode() bool {
-	return len(os.Getenv(testEnv)) > 0
+	return len(os.Getenv(TestTimeEnv)) > 0
 }
 
 type TimeGetter func() time.Time

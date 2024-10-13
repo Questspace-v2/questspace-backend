@@ -873,10 +873,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/storage.Team"
-                            }
+                            "$ref": "#/definitions/teams.ManyTeamsResponse"
                         }
                     },
                     "400": {
@@ -924,6 +921,49 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "Unauthorized"
+                    },
+                    "406": {
+                        "description": "Not Acceptable"
+                    }
+                }
+            }
+        },
+        "/quest/{quest_id}/teams/{team_id}/accept": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "Teams"
+                ],
+                "summary": "Accept team",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Quest id",
+                        "name": "quest_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Team id",
+                        "name": "team_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/teams.ManyTeamsResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found"
                     },
                     "406": {
                         "description": "Not Acceptable"
@@ -1885,6 +1925,9 @@ const docTemplate = `{
                 "max_team_cap": {
                     "type": "integer"
                 },
+                "max_teams_amount": {
+                    "type": "integer"
+                },
                 "media_link": {
                     "type": "string"
                 },
@@ -1894,6 +1937,17 @@ const docTemplate = `{
                 "registration_deadline": {
                     "type": "string",
                     "example": "2024-04-14T12:00:00+05:00"
+                },
+                "registration_type": {
+                    "enum": [
+                        "AUTO",
+                        "VERIFY"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/storage.RegistrationType"
+                        }
+                    ]
                 },
                 "start_time": {
                     "type": "string",
@@ -2025,6 +2079,9 @@ const docTemplate = `{
                 "max_team_cap": {
                     "type": "integer"
                 },
+                "max_teams_amount": {
+                    "type": "integer"
+                },
                 "media_link": {
                     "type": "string"
                 },
@@ -2034,6 +2091,17 @@ const docTemplate = `{
                 "registration_deadline": {
                     "type": "string",
                     "example": "2024-04-14T12:00:00+05:00"
+                },
+                "registration_type": {
+                    "enum": [
+                        "AUTO",
+                        "VERIFY"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/storage.RegistrationType"
+                        }
+                    ]
                 },
                 "start_time": {
                     "type": "string",
@@ -2061,6 +2129,32 @@ const docTemplate = `{
                 "StatusRunning",
                 "StatusWaitResults",
                 "StatusFinished"
+            ]
+        },
+        "storage.RegistrationStatus": {
+            "type": "string",
+            "enum": [
+                "",
+                "ON_CONSIDERATION",
+                "ACCEPTED"
+            ],
+            "x-enum-varnames": [
+                "RegistrationStatusUnspecified",
+                "RegistrationStatusOnConsideration",
+                "RegistrationStatusAccepted"
+            ]
+        },
+        "storage.RegistrationType": {
+            "type": "string",
+            "enum": [
+                "",
+                "AUTO",
+                "VERIFY"
+            ],
+            "x-enum-varnames": [
+                "RegistrationUnspecified",
+                "RegistrationAuto",
+                "RegistrationVerify"
             ]
         },
         "storage.Task": {
@@ -2219,6 +2313,17 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "registration_status": {
+                    "enum": [
+                        "ON_CONSIDERATION",
+                        "ACCEPTED"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/storage.RegistrationStatus"
+                        }
+                    ]
+                },
                 "score": {
                     "type": "integer"
                 }
@@ -2245,6 +2350,9 @@ const docTemplate = `{
                 "max_team_cap": {
                     "type": "integer"
                 },
+                "max_teams_amount": {
+                    "type": "integer"
+                },
                 "media_link": {
                     "type": "string"
                 },
@@ -2253,6 +2361,17 @@ const docTemplate = `{
                 },
                 "registration_deadline": {
                     "type": "string"
+                },
+                "registration_type": {
+                    "enum": [
+                        "AUTO",
+                        "VERIFY"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/storage.RegistrationType"
+                        }
+                    ]
                 },
                 "start_time": {
                     "type": "string"
@@ -2383,6 +2502,17 @@ const docTemplate = `{
             "properties": {
                 "name": {
                     "type": "string"
+                }
+            }
+        },
+        "teams.ManyTeamsResponse": {
+            "type": "object",
+            "properties": {
+                "teams": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/storage.Team"
+                    }
                 }
             }
         },

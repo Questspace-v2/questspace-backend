@@ -338,6 +338,8 @@ definitions:
         type: boolean
       max_team_cap:
         type: integer
+      max_teams_amount:
+        type: integer
       media_link:
         type: string
       name:
@@ -345,6 +347,12 @@ definitions:
       registration_deadline:
         example: "2024-04-14T12:00:00+05:00"
         type: string
+      registration_type:
+        allOf:
+        - $ref: '#/definitions/storage.RegistrationType'
+        enum:
+        - AUTO
+        - VERIFY
       start_time:
         example: "2024-04-14T14:00:00+05:00"
         type: string
@@ -431,6 +439,8 @@ definitions:
         type: string
       max_team_cap:
         type: integer
+      max_teams_amount:
+        type: integer
       media_link:
         type: string
       name:
@@ -438,6 +448,12 @@ definitions:
       registration_deadline:
         example: "2024-04-14T12:00:00+05:00"
         type: string
+      registration_type:
+        allOf:
+        - $ref: '#/definitions/storage.RegistrationType'
+        enum:
+        - AUTO
+        - VERIFY
       start_time:
         example: "2024-04-14T14:00:00+05:00"
         type: string
@@ -460,6 +476,26 @@ definitions:
     - StatusRunning
     - StatusWaitResults
     - StatusFinished
+  storage.RegistrationStatus:
+    enum:
+    - ""
+    - ON_CONSIDERATION
+    - ACCEPTED
+    type: string
+    x-enum-varnames:
+    - RegistrationStatusUnspecified
+    - RegistrationStatusOnConsideration
+    - RegistrationStatusAccepted
+  storage.RegistrationType:
+    enum:
+    - ""
+    - AUTO
+    - VERIFY
+    type: string
+    x-enum-varnames:
+    - RegistrationUnspecified
+    - RegistrationAuto
+    - RegistrationVerify
   storage.Task:
     properties:
       correct_answers:
@@ -561,6 +597,12 @@ definitions:
         type: array
       name:
         type: string
+      registration_status:
+        allOf:
+        - $ref: '#/definitions/storage.RegistrationStatus'
+        enum:
+        - ON_CONSIDERATION
+        - ACCEPTED
       score:
         type: integer
     type: object
@@ -578,12 +620,20 @@ definitions:
         type: boolean
       max_team_cap:
         type: integer
+      max_teams_amount:
+        type: integer
       media_link:
         type: string
       name:
         type: string
       registration_deadline:
         type: string
+      registration_type:
+        allOf:
+        - $ref: '#/definitions/storage.RegistrationType'
+        enum:
+        - AUTO
+        - VERIFY
       start_time:
         type: string
     type: object
@@ -670,6 +720,13 @@ definitions:
     properties:
       name:
         type: string
+    type: object
+  teams.ManyTeamsResponse:
+    properties:
+      teams:
+        items:
+          $ref: '#/definitions/storage.Team'
+        type: array
     type: object
   teams.UpdateRequest:
     properties:
@@ -1247,9 +1304,7 @@ paths:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/storage.Team'
-            type: array
+            $ref: '#/definitions/teams.ManyTeamsResponse'
         "400":
           description: Bad Request
       summary: Get all teams by quest id
@@ -1282,6 +1337,33 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Create new team
+      tags:
+      - Teams
+  /quest/{quest_id}/teams/{team_id}/accept:
+    post:
+      parameters:
+      - description: Quest id
+        in: path
+        name: quest_id
+        required: true
+        type: string
+      - description: Team id
+        in: path
+        name: team_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/teams.ManyTeamsResponse'
+        "404":
+          description: Not Found
+        "406":
+          description: Not Acceptable
+      security:
+      - ApiKeyAuth: []
+      summary: Accept team
       tags:
       - Teams
   /teams/{team_id}:

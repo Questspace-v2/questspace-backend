@@ -33,17 +33,19 @@ type DeleteUserRequest struct {
 }
 
 type CreateQuestRequest struct {
-	Name                 string     `json:"name"`
-	Description          string     `json:"description,omitempty"`
-	Access               AccessType `json:"access"`
-	Creator              *User      `json:"-"`
-	RegistrationDeadline *time.Time `json:"registration_deadline,omitempty" example:"2024-04-14T12:00:00+05:00"`
-	StartTime            *time.Time `json:"start_time" example:"2024-04-14T14:00:00+05:00"`
-	FinishTime           *time.Time `json:"finish_time,omitempty" example:"2024-04-21T14:00:00+05:00"`
-	MediaLink            string     `json:"media_link"`
-	MaxTeamCap           *int       `json:"max_team_cap,omitempty"`
-	HasBrief             bool       `json:"has_brief,omitempty"`
-	Brief                string     `json:"brief,omitempty"`
+	Name                 string           `json:"name"`
+	Description          string           `json:"description,omitempty"`
+	Access               AccessType       `json:"access"`
+	Creator              *User            `json:"-"`
+	RegistrationDeadline *time.Time       `json:"registration_deadline,omitempty" example:"2024-04-14T12:00:00+05:00"`
+	StartTime            *time.Time       `json:"start_time" example:"2024-04-14T14:00:00+05:00"`
+	FinishTime           *time.Time       `json:"finish_time,omitempty" example:"2024-04-21T14:00:00+05:00"`
+	MediaLink            string           `json:"media_link"`
+	MaxTeamCap           *int             `json:"max_team_cap,omitempty"`
+	HasBrief             bool             `json:"has_brief,omitempty"`
+	Brief                string           `json:"brief,omitempty"`
+	MaxTeamsAmount       *int             `json:"max_teams_amount,omitempty"`
+	RegistrationType     RegistrationType `json:"registration_type,omitempty" enums:"AUTO,VERIFY"`
 }
 
 type GetQuestRequest struct {
@@ -63,17 +65,19 @@ type GetQuestsResponse struct {
 }
 
 type UpdateQuestRequest struct {
-	ID                   ID         `json:"-"`
-	Name                 string     `json:"name,omitempty"`
-	Description          string     `json:"description,omitempty"`
-	Access               AccessType `json:"access,omitempty"`
-	RegistrationDeadline *time.Time `json:"registration_deadline,omitempty"`
-	StartTime            *time.Time `json:"start_time,omitempty"`
-	FinishTime           *time.Time `json:"finish_time,omitempty"`
-	MediaLink            string     `json:"media_link,omitempty"`
-	MaxTeamCap           *int       `json:"max_team_cap,omitempty"`
-	HasBrief             *bool      `json:"has_brief,omitempty"`
-	Brief                *string    `json:"brief,omitempty"`
+	ID                   ID               `json:"-"`
+	Name                 string           `json:"name,omitempty"`
+	Description          string           `json:"description,omitempty"`
+	Access               AccessType       `json:"access,omitempty"`
+	RegistrationDeadline *time.Time       `json:"registration_deadline,omitempty"`
+	StartTime            *time.Time       `json:"start_time,omitempty"`
+	FinishTime           *time.Time       `json:"finish_time,omitempty"`
+	MediaLink            string           `json:"media_link,omitempty"`
+	MaxTeamCap           *int             `json:"max_team_cap,omitempty"`
+	HasBrief             *bool            `json:"has_brief,omitempty"`
+	Brief                *string          `json:"brief,omitempty"`
+	MaxTeamsAmount       *int             `json:"max_teams_amount,omitempty"`
+	RegistrationType     RegistrationType `json:"registration_type,omitempty" enums:"AUTO,VERIFY"`
 }
 
 type DeleteQuestRequest struct {
@@ -85,9 +89,10 @@ type FinishQuestRequest struct {
 }
 
 type CreateTeamRequest struct {
-	Name    string
-	QuestID ID
-	Creator *User
+	Name               string
+	QuestID            ID
+	Creator            *User
+	RegistrationStatus RegistrationStatus
 }
 
 type UserRegistration struct {
@@ -106,6 +111,7 @@ type GetTeamsRequest struct {
 	User           *User
 	QuestIDs       []ID
 	IncludeMembers bool
+	AcceptedOnly   bool
 }
 
 type ChangeTeamNameRequest struct {
@@ -121,6 +127,10 @@ type SetInvitePathRequest struct {
 type JoinTeamRequest struct {
 	InvitePath string
 	User       *User
+}
+
+type AcceptTeamRequest struct {
+	ID ID
 }
 
 type DeleteTeamRequest struct {

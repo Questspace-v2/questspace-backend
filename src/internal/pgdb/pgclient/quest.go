@@ -43,6 +43,14 @@ func (c *Client) CreateQuest(ctx context.Context, req *storage.CreateQuestReques
 		values = append(values, *req.MaxTeamCap)
 		query = query.Columns("max_team_cap")
 	}
+	if req.MaxTeamsAmount != nil {
+		values = append(values, *req.MaxTeamsAmount)
+		query = query.Columns("max_teams_amount")
+	}
+	if req.RegistrationType != storage.RegistrationUnspecified {
+		values = append(values, req.RegistrationType)
+		query = query.Columns("registration_type")
+	}
 
 	row := query.Values(values...).RunWith(c.runner).QueryRowContext(ctx)
 	quest := storage.Quest{
@@ -61,9 +69,14 @@ func (c *Client) CreateQuest(ctx context.Context, req *storage.CreateQuestReques
 		MaxTeamCap:           req.MaxTeamCap,
 		HasBrief:             req.HasBrief,
 		Brief:                req.Brief,
+		MaxTeamsAmount:       req.MaxTeamsAmount,
+		RegistrationType:     req.RegistrationType,
 	}
 	if err := row.Scan(&quest.ID); err != nil {
 		return nil, xerrors.Errorf("scan row: %w", err)
+	}
+	if quest.RegistrationType == storage.RegistrationUnspecified {
+		quest.RegistrationType = storage.RegistrationAuto
 	}
 	return &quest, nil
 }
@@ -82,6 +95,8 @@ SELECT
 	q.finished,
 	q.has_brief,
 	q.brief,
+	q.max_teams_amount,
+	q.registration_type,
 	u.id,
 	u.username,
 	u.avatar_url
@@ -110,6 +125,8 @@ func (c *Client) GetQuest(ctx context.Context, req *storage.GetQuestRequest) (*s
 		&finished,
 		&q.HasBrief,
 		&q.Brief,
+		&q.MaxTeamsAmount,
+		&q.RegistrationType,
 		&userId,
 		&creatorName,
 		&userAvatarURL,
@@ -161,9 +178,19 @@ func (c *Client) addOwnedQuestsCond(query sq.SelectBuilder, userID storage.ID) s
 
 func (c *Client) GetQuests(ctx context.Context, req *storage.GetQuestsRequest) (*storage.GetQuestsResponse, error) {
 	query := sq.Select(
-		"q.id", "q.name", "q.description", "q.access", "q.registration_deadline",
-		"q.start_time", "q.finish_time", "q.media_link", "q.max_team_cap", "q.finished",
-		"q.creator_id", "u.username", "u.avatar_url",
+		"q.id",
+		"q.name",
+		"q.description",
+		"q.access",
+		"q.registration_deadline",
+		"q.start_time",
+		"q.finish_time",
+		"q.media_link",
+		"q.max_team_cap",
+		"q.finished",
+		"q.creator_id",
+		"u.username",
+		"u.avatar_url",
 	).From("questspace.quest q").LeftJoin("questspace.user u ON q.creator_id = u.id").
 		OrderBy("q.finished", "q.start_time").
 		Limit(uint64(req.PageSize)).
@@ -256,7 +283,9 @@ func (c *Client) UpdateQuest(ctx context.Context, req *storage.UpdateQuestReques
 		max_team_cap,
 		finished,
 		has_brief,
-		brief`).
+		brief,
+		max_teams_amount,
+		registration_type`).
 		PlaceholderFormat(sq.Dollar)
 	if len(req.Name) > 0 {
 		query = query.Set("name", req.Name)
@@ -288,6 +317,12 @@ func (c *Client) UpdateQuest(ctx context.Context, req *storage.UpdateQuestReques
 	if req.Brief != nil {
 		query = query.Set("brief", *req.Brief)
 	}
+	if req.MaxTeamsAmount != nil {
+		query = query.Set("max_teams_amount", *req.MaxTeamsAmount)
+	}
+	if req.RegistrationType != storage.RegistrationUnspecified {
+		query = query.Set("registration_type", req.RegistrationType)
+	}
 
 	row := query.RunWith(c.runner).QueryRowContext(ctx)
 	var (
@@ -309,6 +344,8 @@ func (c *Client) UpdateQuest(ctx context.Context, req *storage.UpdateQuestReques
 		&finished,
 		&q.HasBrief,
 		&q.Brief,
+		&q.MaxTeamsAmount,
+		&q.RegistrationType,
 	); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, storage.ErrNotFound
@@ -326,23 +363,24 @@ func (c *Client) UpdateQuest(ctx context.Context, req *storage.UpdateQuestReques
 }
 
 func (c *Client) DeleteQuest(ctx context.Context, req *storage.DeleteQuestRequest) error {
-	query := sq.Delete("questspace.quest").
-		Where(sq.Eq{"id": req.ID}).
-		PlaceholderFormat(sq.Dollar)
+	query := `
+	DELETE FROM questspace.quest
+		WHERE id = $1
+`
 
-	if _, err := query.RunWith(c.runner).ExecContext(ctx); err != nil {
+	if _, err := c.runner.ExecContext(ctx, query, req.ID); err != nil {
 		return xerrors.Errorf("delete quest: %w", err)
 	}
 	return nil
 }
 
 func (c *Client) FinishQuest(ctx context.Context, req *storage.FinishQuestRequest) error {
-	query := sq.Update("questspace.quest").
-		Set("finished", true).
-		Where(sq.Eq{"id": req.ID}).
-		PlaceholderFormat(sq.Dollar)
+	query := `
+	UPDATE questspace.quest SET finished = true
+		WHERE id = $1
+`
 
-	if _, err := query.RunWith(c.runner).ExecContext(ctx); err != nil {
+	if _, err := c.runner.ExecContext(ctx, query, req.ID); err != nil {
 		return xerrors.Errorf("exec query: %w", err)
 	}
 	return nil

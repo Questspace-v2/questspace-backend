@@ -13,16 +13,42 @@ import (
 	"questspace/pkg/storage"
 )
 
+type TeamServiceStorage interface {
+	storage.QuestStorage
+	storage.TeamStorage
+}
+
 type Service struct {
-	s                storage.TeamStorage
+	s                TeamServiceStorage
 	inviteLinkPrefix string
 }
 
-func NewService(s storage.TeamStorage, inviteLinkPrefix string) *Service {
+func NewService(s TeamServiceStorage, inviteLinkPrefix string) *Service {
 	return &Service{
 		s:                s,
 		inviteLinkPrefix: inviteLinkPrefix,
 	}
+}
+
+func (s *Service) getRegistrationStatus(ctx context.Context, questID storage.ID) (storage.RegistrationStatus, error) {
+	quest, err := s.s.GetQuest(ctx, &storage.GetQuestRequest{ID: questID})
+	if err != nil {
+		if errors.Is(err, storage.ErrNotFound) {
+			return storage.RegistrationStatusUnspecified, httperrors.Errorf(http.StatusNotFound, "quest %q not found", questID.String())
+		}
+		return storage.RegistrationStatusUnspecified, xerrors.Errorf("get quest: %w", err)
+	}
+	if quest.RegistrationType == storage.RegistrationAuto && quest.MaxTeamsAmount == nil {
+		return storage.RegistrationStatusAccepted, nil
+	}
+	currentAcceptedTeams, err := s.s.GetTeams(ctx, &storage.GetTeamsRequest{QuestIDs: []storage.ID{questID}, AcceptedOnly: true})
+	if err != nil {
+		return storage.RegistrationStatusUnspecified, xerrors.Errorf("get accepted teams: %w", err)
+	}
+	if quest.RegistrationType == storage.RegistrationAuto && len(currentAcceptedTeams) < *quest.MaxTeamsAmount {
+		return storage.RegistrationStatusAccepted, nil
+	}
+	return storage.RegistrationStatusOnConsideration, nil
 }
 
 func (s *Service) CreateTeam(ctx context.Context, req *storage.CreateTeamRequest) (*storage.Team, error) {
@@ -33,6 +59,11 @@ func (s *Service) CreateTeam(ctx context.Context, req *storage.CreateTeamRequest
 	if len(exisingTeams) > 0 {
 		return nil, httperrors.New(http.StatusNotAcceptable, "cannot create more than one team for quest")
 	}
+	regStatus, err := s.getRegistrationStatus(ctx, req.QuestID)
+	if err != nil {
+		return nil, xerrors.Errorf("get registration status for new team: %w", err)
+	}
+	req.RegistrationStatus = regStatus
 	team, err := s.s.CreateTeam(ctx, req)
 	if err != nil {
 		return nil, xerrors.Errorf("create team: %w", err)
@@ -254,4 +285,45 @@ func (s *Service) RemoveUser(ctx context.Context, user *storage.User, req *stora
 	team.InviteLink = s.inviteLinkPrefix + team.InviteLink
 
 	return team, nil
+}
+
+func (s *Service) AcceptTeam(ctx context.Context, user *storage.User, questID, teamID storage.ID) ([]storage.Team, error) {
+	quest, err := s.s.GetQuest(ctx, &storage.GetQuestRequest{ID: questID})
+	if err != nil {
+		if errors.Is(err, storage.ErrNotFound) {
+			return nil, httperrors.Errorf(http.StatusNotFound, "quest %q not found", questID.String())
+		}
+		return nil, xerrors.Errorf("get quest: %w", err)
+	}
+	if quest.Creator.ID != user.ID {
+		return nil, httperrors.New(http.StatusForbidden, "only quest creator can accept teams")
+	}
+
+	currentAcceptedTeams, err := s.s.GetTeams(ctx, &storage.GetTeamsRequest{QuestIDs: []storage.ID{questID}, AcceptedOnly: true})
+	if err != nil {
+		return nil, xerrors.Errorf("get current accepted teams: %w", err)
+	}
+	var alreadyAccepted bool
+	for _, at := range currentAcceptedTeams {
+		if at.ID == teamID {
+			alreadyAccepted = true
+			break
+		}
+	}
+	if !alreadyAccepted {
+		if quest.MaxTeamsAmount != nil && len(currentAcceptedTeams) == *quest.MaxTeamsAmount {
+			return nil, httperrors.Errorf(http.StatusNotAcceptable, "already have maximum amount of accepted teams: %d")
+		}
+		if err = s.s.AcceptTeam(ctx, &storage.AcceptTeamRequest{ID: teamID}); err != nil {
+			if errors.Is(err, storage.ErrNotFound) {
+				return nil, httperrors.Errorf(http.StatusNotFound, "team %q not found", teamID.String())
+			}
+			return nil, xerrors.Errorf("accept team: %w", err)
+		}
+	}
+	allTeams, err := s.s.GetTeams(ctx, &storage.GetTeamsRequest{QuestIDs: []storage.ID{questID}})
+	if err != nil {
+		return nil, xerrors.Errorf("get all teams: %w", err)
+	}
+	return allTeams, nil
 }

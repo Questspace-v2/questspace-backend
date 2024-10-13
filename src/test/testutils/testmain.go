@@ -1,13 +1,17 @@
 package testutils
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"os/exec"
+	"slices"
 	"sync"
 	"testing"
 	"time"
+
+	"questspace/internal/qtime"
 )
 
 type Database interface {
@@ -47,6 +51,8 @@ func InitApplication(m *testing.M) (code int) {
 
 func StartServer(t *testing.T) {
 	t.Helper()
+	env := slices.Clone(os.Environ())
+	env = append(env, fmt.Sprintf("%s=true", qtime.TestTimeEnv))
 
 	once.Do(func() {
 		binCache = NewBinaryCache()
@@ -56,6 +62,7 @@ func StartServer(t *testing.T) {
 	cmd := exec.Command(binary, "--config", ConfigPath)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+	cmd.Env = env
 	if err := cmd.Start(); err != nil {
 		t.Errorf("Error starting server: %v", err)
 		t.FailNow()
