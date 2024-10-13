@@ -175,7 +175,7 @@ type TeamResults struct {
 }
 
 func (s *Service) GetResults(ctx context.Context, questID storage.ID) (*TeamResults, error) {
-	teams, err := s.tms.GetTeams(ctx, &storage.GetTeamsRequest{QuestIDs: []storage.ID{questID}})
+	teams, err := s.tms.GetTeams(ctx, &storage.GetTeamsRequest{QuestIDs: []storage.ID{questID}, AcceptedOnly: true})
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return nil, httperrors.Errorf(http.StatusNotFound, "quest %q not found", questID)
@@ -255,7 +255,7 @@ type LeaderboardResponse struct {
 }
 
 func (s *Service) GetLeaderboard(ctx context.Context, questID storage.ID) (*LeaderboardResponse, error) {
-	teams, err := s.tms.GetTeams(ctx, &storage.GetTeamsRequest{QuestIDs: []storage.ID{questID}})
+	teams, err := s.tms.GetTeams(ctx, &storage.GetTeamsRequest{QuestIDs: []storage.ID{questID}, AcceptedOnly: true})
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return nil, httperrors.Errorf(http.StatusNotFound, "quest %q not found", questID)
@@ -317,6 +317,9 @@ func (s *Service) TakeHint(ctx context.Context, user *storage.User, req *TakeHin
 		}
 		return nil, xerrors.Errorf("get team: %w", err)
 	}
+	if team.RegistrationStatus != storage.RegistrationStatusAccepted {
+		return nil, httperrors.New(http.StatusForbidden, "only accepted teams can take hints")
+	}
 	accepted, err := s.ah.GetAcceptedTasks(ctx, &storage.GetAcceptedTasksRequest{TeamID: team.ID, QuestID: req.QuestID})
 	if err != nil {
 		return nil, xerrors.Errorf("get results: %w", err)
@@ -363,6 +366,9 @@ func (s *Service) TryAnswer(ctx context.Context, user *storage.User, req *TryAns
 			return nil, httperrors.Errorf(http.StatusNotFound, "team for user %q not found", user.ID)
 		}
 		return nil, xerrors.Errorf("get team: %w", err)
+	}
+	if team.RegistrationStatus != storage.RegistrationStatusAccepted {
+		return nil, httperrors.New(http.StatusForbidden, "only accepted teams can answer tasks")
 	}
 	acceptedTasks, err := s.ah.GetAcceptedTasks(ctx, &storage.GetAcceptedTasksRequest{TeamID: team.ID, QuestID: req.QuestID})
 	if err != nil {

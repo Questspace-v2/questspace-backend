@@ -22,7 +22,7 @@ func TestService_CreateTeam(t *testing.T) {
 	ctx := context.Background()
 	ctrl := gomock.NewController(t)
 
-	s := storagemock.NewMockTeamStorage(ctrl)
+	s := storagemock.NewMockQuestSpaceStorage(ctrl)
 	service := NewService(s, linkPrefix)
 
 	creator := storage.User{
@@ -53,7 +53,16 @@ func TestService_CreateTeam(t *testing.T) {
 			GetTeams(ctx, &storage.GetTeamsRequest{User: &creator, QuestIDs: []storage.ID{questID}}).
 			Return(nil, nil),
 
-		s.EXPECT().CreateTeam(ctx, &req).Return(&createdTeam, nil),
+		s.EXPECT().GetQuest(ctx, &storage.GetQuestRequest{ID: questID}).Return(&storage.Quest{
+			RegistrationType: storage.RegistrationAuto,
+		}, nil),
+
+		s.EXPECT().CreateTeam(ctx, &storage.CreateTeamRequest{
+			Creator:            &creator,
+			QuestID:            questID,
+			Name:               "new team",
+			RegistrationStatus: storage.RegistrationStatusAccepted,
+		}).Return(&createdTeam, nil),
 
 		s.EXPECT().
 			SetInviteLink(ctx, &storage.SetInvitePathRequest{TeamID: createdTeam.ID, InvitePath: inviteSuffix}).
@@ -72,7 +81,7 @@ func TestTeamService_CreateTeam_AlreadyMember(t *testing.T) {
 	ctx := context.Background()
 	ctrl := gomock.NewController(t)
 
-	s := storagemock.NewMockTeamStorage(ctrl)
+	s := storagemock.NewMockQuestSpaceStorage(ctrl)
 	service := NewService(s, linkPrefix)
 
 	creator := storage.User{
@@ -106,7 +115,7 @@ func TestTeamService_JoinTeam(t *testing.T) {
 	ctx := context.Background()
 	ctrl := gomock.NewController(t)
 
-	s := storagemock.NewMockTeamStorage(ctrl)
+	s := storagemock.NewMockQuestSpaceStorage(ctrl)
 	service := NewService(s, linkPrefix)
 
 	newMember := storage.User{
@@ -158,7 +167,7 @@ func TestTeamService_JoinTeam_AlreadyInvited(t *testing.T) {
 	ctx := context.Background()
 	ctrl := gomock.NewController(t)
 
-	s := storagemock.NewMockTeamStorage(ctrl)
+	s := storagemock.NewMockQuestSpaceStorage(ctrl)
 	service := NewService(s, linkPrefix)
 
 	oldMember := storage.User{
@@ -202,7 +211,7 @@ func TestTeamService_LeaveTeam(t *testing.T) {
 	ctx := context.Background()
 	ctrl := gomock.NewController(t)
 
-	s := storagemock.NewMockTeamStorage(ctrl)
+	s := storagemock.NewMockQuestSpaceStorage(ctrl)
 	service := NewService(s, linkPrefix)
 
 	oldMember := storage.User{

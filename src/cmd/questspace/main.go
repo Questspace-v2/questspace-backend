@@ -133,6 +133,7 @@ func InitApp(ctx context.Context, application *app.App) error {
 	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).POST("/teams/all/:id/captain", transport.WrapCtxErr(teamsHandler.HandleChangeLeader))
 	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).POST("/teams/all/:id/leave", transport.WrapCtxErr(teamsHandler.HandleLeave))
 	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).DELETE("/teams/all/:id/:user_id", transport.WrapCtxErr(teamsHandler.HandleRemoveUser))
+	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).POST("/quest/:id/teams/:team_id/accept", transport.WrapCtxErr(teamsHandler.HandleAcceptTeam))
 
 	taskGroupHandler := taskgroups.NewHandler(clientFactory, &taskMediaValidator)
 	r.H().Use(jwt.AuthMiddlewareStrict(jwtParser)).PATCH("/quest/:id/task-groups/bulk", transport.WrapCtxErr(taskGroupHandler.HandleBulkUpdate))

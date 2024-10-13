@@ -47,6 +47,10 @@ func (c *Client) CreateQuest(ctx context.Context, req *storage.CreateQuestReques
 		values = append(values, *req.MaxTeamsAmount)
 		query = query.Columns("max_teams_amount")
 	}
+	if req.RegistrationType != storage.RegistrationUnspecified {
+		values = append(values, req.RegistrationType)
+		query = query.Columns("registration_type")
+	}
 
 	row := query.Values(values...).RunWith(c.runner).QueryRowContext(ctx)
 	quest := storage.Quest{
@@ -66,9 +70,13 @@ func (c *Client) CreateQuest(ctx context.Context, req *storage.CreateQuestReques
 		HasBrief:             req.HasBrief,
 		Brief:                req.Brief,
 		MaxTeamsAmount:       req.MaxTeamsAmount,
+		RegistrationType:     req.RegistrationType,
 	}
 	if err := row.Scan(&quest.ID); err != nil {
 		return nil, xerrors.Errorf("scan row: %w", err)
+	}
+	if quest.RegistrationType == storage.RegistrationUnspecified {
+		quest.RegistrationType = storage.RegistrationAuto
 	}
 	return &quest, nil
 }
@@ -88,6 +96,7 @@ SELECT
 	q.has_brief,
 	q.brief,
 	q.max_teams_amount,
+	q.registration_type,
 	u.id,
 	u.username,
 	u.avatar_url
@@ -117,6 +126,7 @@ func (c *Client) GetQuest(ctx context.Context, req *storage.GetQuestRequest) (*s
 		&q.HasBrief,
 		&q.Brief,
 		&q.MaxTeamsAmount,
+		&q.RegistrationType,
 		&userId,
 		&creatorName,
 		&userAvatarURL,
@@ -274,7 +284,8 @@ func (c *Client) UpdateQuest(ctx context.Context, req *storage.UpdateQuestReques
 		finished,
 		has_brief,
 		brief,
-		max_teams_amount`).
+		max_teams_amount,
+		registration_type`).
 		PlaceholderFormat(sq.Dollar)
 	if len(req.Name) > 0 {
 		query = query.Set("name", req.Name)
@@ -309,6 +320,9 @@ func (c *Client) UpdateQuest(ctx context.Context, req *storage.UpdateQuestReques
 	if req.MaxTeamsAmount != nil {
 		query = query.Set("max_teams_amount", *req.MaxTeamsAmount)
 	}
+	if req.RegistrationType != storage.RegistrationUnspecified {
+		query = query.Set("registration_type", req.RegistrationType)
+	}
 
 	row := query.RunWith(c.runner).QueryRowContext(ctx)
 	var (
@@ -331,6 +345,7 @@ func (c *Client) UpdateQuest(ctx context.Context, req *storage.UpdateQuestReques
 		&q.HasBrief,
 		&q.Brief,
 		&q.MaxTeamsAmount,
+		&q.RegistrationType,
 	); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, storage.ErrNotFound

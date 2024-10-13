@@ -21,9 +21,10 @@ func createTestTeam(t *testing.T, ctx context.Context, client *Client, quest *st
 	require.NoError(t, err)
 
 	teamReq := storage.CreateTeamRequest{
-		QuestID: quest.ID,
-		Name:    teamName,
-		Creator: user,
+		QuestID:            quest.ID,
+		Name:               teamName,
+		Creator:            user,
+		RegistrationStatus: storage.RegistrationStatusAccepted,
 	}
 	team, err := client.CreateTeam(ctx, &teamReq)
 	require.NoError(t, err)

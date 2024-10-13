@@ -83,6 +83,9 @@ func (h *Handler) HandleGet(ctx context.Context, w http.ResponseWriter, r *http.
 			}
 			return xerrors.Errorf("get team: %w", err)
 		}
+		if team.RegistrationStatus != storage.RegistrationStatusAccepted {
+			return httperrors.New(http.StatusForbidden, "only accepted teams can view game mode")
+		}
 		resp := game.AnswerDataResponse{
 			Quest: quest,
 			Team:  team,
