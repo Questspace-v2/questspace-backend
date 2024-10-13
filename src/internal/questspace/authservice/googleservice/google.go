@@ -5,7 +5,10 @@ import (
 	"math/rand"
 	"net/http"
 	"strconv"
+	"time"
 
+	"github.com/cenkalti/backoff/v4"
+	"go.uber.org/zap"
 	"golang.org/x/xerrors"
 	"google.golang.org/api/idtoken"
 
@@ -14,6 +17,7 @@ import (
 	"questspace/internal/questspace/userservice/usertypes"
 	"questspace/pkg/auth/jwt"
 	"questspace/pkg/httperrors"
+	"questspace/pkg/logging"
 	"questspace/pkg/storage"
 )
 
@@ -72,7 +76,7 @@ func (a *Auth) parseToken(ctx context.Context, idToken string) (storage.CreateOr
 	if err != nil {
 		return storage.CreateOrUpdateRequest{}, httperrors.Errorf(http.StatusBadRequest, "bad token: %w", err)
 	}
-	randNum := rand.Int() //nolint:gosec
+	randNum := rand.Int() % (1 << 32) //nolint:gosec
 
 	return storage.CreateOrUpdateRequest{
 		ExternalID: payload.Claims["sub"].(string),
@@ -89,7 +93,15 @@ func (a *Auth) doGoogleOAuth(
 	req *storage.CreateOrUpdateRequest,
 	resp *authtypes.Response,
 ) error {
-	user, err := s.CreateOrUpdateByExternalID(ctx, req)
+	policy := backoff.WithContext(
+		backoff.WithMaxRetries(backoff.NewExponentialBackOff(), 5), ctx,
+	)
+
+	user, err := backoff.RetryNotifyWithData(func() (*storage.User, error) {
+		return s.CreateOrUpdateByExternalID(ctx, req)
+	}, policy, func(err error, d time.Duration) {
+		logging.Warn(ctx, "Google OAuth: new retry", zap.Error(err), zap.Duration("passed", d))
+	})
 	if err != nil {
 		return xerrors.Errorf("create or update google user: %w", err)
 	}
