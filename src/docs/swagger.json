@@ -1874,6 +1874,9 @@
                 "max_team_cap": {
                     "type": "integer"
                 },
+                "max_teams_amount": {
+                    "type": "integer"
+                },
                 "media_link": {
                     "type": "string"
                 },
@@ -2012,6 +2015,9 @@
                     "type": "string"
                 },
                 "max_team_cap": {
+                    "type": "integer"
+                },
+                "max_teams_amount": {
                     "type": "integer"
                 },
                 "media_link": {
@@ -2232,6 +2238,9 @@
                     "type": "boolean"
                 },
                 "max_team_cap": {
+                    "type": "integer"
+                },
+                "max_teams_amount": {
                     "type": "integer"
                 },
                 "media_link": {

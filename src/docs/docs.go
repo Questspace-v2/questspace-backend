@@ -1885,6 +1885,9 @@ const docTemplate = `{
                 "max_team_cap": {
                     "type": "integer"
                 },
+                "max_teams_amount": {
+                    "type": "integer"
+                },
                 "media_link": {
                     "type": "string"
                 },
@@ -2023,6 +2026,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "max_team_cap": {
+                    "type": "integer"
+                },
+                "max_teams_amount": {
                     "type": "integer"
                 },
                 "media_link": {
@@ -2243,6 +2249,9 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "max_team_cap": {
+                    "type": "integer"
+                },
+                "max_teams_amount": {
                     "type": "integer"
                 },
                 "media_link": {

@@ -338,6 +338,8 @@ definitions:
         type: boolean
       max_team_cap:
         type: integer
+      max_teams_amount:
+        type: integer
       media_link:
         type: string
       name:
@@ -430,6 +432,8 @@ definitions:
       id:
         type: string
       max_team_cap:
+        type: integer
+      max_teams_amount:
         type: integer
       media_link:
         type: string
@@ -577,6 +581,8 @@ definitions:
       has_brief:
         type: boolean
       max_team_cap:
+        type: integer
+      max_teams_amount:
         type: integer
       media_link:
         type: string

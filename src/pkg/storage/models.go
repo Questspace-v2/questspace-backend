@@ -119,6 +119,7 @@ type Quest struct {
 	Status               QuestStatus `json:"status"`
 	HasBrief             bool        `json:"has_brief,omitempty"`
 	Brief                string      `json:"brief,omitempty"`
+	MaxTeamsAmount       *int        `json:"max_teams_amount,omitempty"`
 }
 
 type GetQuestType int

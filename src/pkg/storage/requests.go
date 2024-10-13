@@ -44,6 +44,7 @@ type CreateQuestRequest struct {
 	MaxTeamCap           *int       `json:"max_team_cap,omitempty"`
 	HasBrief             bool       `json:"has_brief,omitempty"`
 	Brief                string     `json:"brief,omitempty"`
+	MaxTeamsAmount       *int       `json:"max_teams_amount,omitempty"`
 }
 
 type GetQuestRequest struct {
@@ -74,6 +75,7 @@ type UpdateQuestRequest struct {
 	MaxTeamCap           *int       `json:"max_team_cap,omitempty"`
 	HasBrief             *bool      `json:"has_brief,omitempty"`
 	Brief                *string    `json:"brief,omitempty"`
+	MaxTeamsAmount       *int       `json:"max_teams_amount,omitempty"`
 }
 
 type DeleteQuestRequest struct {
