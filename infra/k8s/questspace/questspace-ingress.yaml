@@ -5,6 +5,7 @@ metadata:
   namespace: questspace
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/limit-rps: "5"
 spec:
   ingressClassName: nginx
   tls:
