@@ -2,7 +2,9 @@ package googleservice
 
 import (
 	"context"
+	"math/rand"
 	"net/http"
+	"strconv"
 
 	"golang.org/x/xerrors"
 	"google.golang.org/api/idtoken"
@@ -70,11 +72,12 @@ func (a *Auth) parseToken(ctx context.Context, idToken string) (storage.CreateOr
 	if err != nil {
 		return storage.CreateOrUpdateRequest{}, httperrors.Errorf(http.StatusBadRequest, "bad token: %w", err)
 	}
+	randNum := rand.Int() //nolint:gosec
 
 	return storage.CreateOrUpdateRequest{
 		ExternalID: payload.Claims["sub"].(string),
 		CreateUserRequest: storage.CreateUserRequest{
-			Username:  payload.Claims["email"].(string),
+			Username:  "user-" + strconv.Itoa(randNum),
 			AvatarURL: payload.Claims["picture"].(string),
 		},
 	}, nil
