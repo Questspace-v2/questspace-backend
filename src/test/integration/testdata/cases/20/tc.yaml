@@ -52,7 +52,8 @@ requests:
         "name": "name",
         "registration_deadline": "$ANY$",
         "start_time": "$ANY$",
-        "status": "ON_REGISTRATION"
+        "status": "ON_REGISTRATION",
+        "registration_type": "AUTO"
       }
 
   - method: POST
@@ -121,7 +122,8 @@ requests:
           }
         ],
         "name": "dream_team",
-        "score": 0
+        "score": 0,
+        "registration_status": "ACCEPTED"
       }
 
   - method: GET
@@ -146,7 +148,8 @@ requests:
           "name": "name",
           "registration_deadline": "$ANY$",
           "start_time": "$ANY$",
-          "status": "ON_REGISTRATION"
+          "status": "ON_REGISTRATION",
+          "registration_type": "AUTO"
         },
         "team": {
           "captain": {
@@ -164,7 +167,8 @@ requests:
             }
           ],
           "name": "dream_team",
-          "score": 0
+          "score": 0,
+          "registration_status": "ACCEPTED"
         },
         "all_teams": [
           {
@@ -175,7 +179,8 @@ requests:
             },
             "id": "$TEAM_ID",
             "name": "dream_team",
-            "score": 0
+            "score": 0,
+            "registration_status": "ACCEPTED"
           }
         ]
       }
@@ -207,7 +212,8 @@ requests:
           }
         ],
         "name": "dream_team",
-        "score": 0
+        "score": 0,
+        "registration_status": "ACCEPTED"
       }
 
   - method: POST
@@ -232,5 +238,6 @@ requests:
           }
         ],
         "name": "dream_team",
-        "score": 0
+        "score": 0,
+        "registration_status": "ACCEPTED"
       }

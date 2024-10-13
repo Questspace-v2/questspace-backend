@@ -51,7 +51,8 @@ requests:
         "name": "name",
         "registration_deadline": "$ANY$",
         "start_time": "$ANY$",
-        "status": "RUNNING"
+        "status": "RUNNING",
+        "registration_type": "AUTO"
       }
 
   - method: PATCH
@@ -223,7 +224,8 @@ requests:
           }
         ],
         "name": "dream_team",
-        "score": 0
+        "score": 0,
+        "registration_status": "ACCEPTED"
       }
 
   - method: POST
@@ -253,7 +255,8 @@ requests:
           }
         ],
         "name": "dust_team",
-        "score": 0
+        "score": 0,
+        "registration_status": "ACCEPTED"
       }
 
   - method: GET
@@ -277,7 +280,8 @@ requests:
           "name": "name",
           "registration_deadline": "$ANY$",
           "start_time": "$ANY$",
-          "status": "RUNNING"
+          "status": "RUNNING",
+          "registration_type": "AUTO"
         },
         "task_groups": [
           {
@@ -336,7 +340,8 @@ requests:
           "id": "$SET$:TEAM_ID",
           "invite_link": "$SET$:INVITE_LINK",
           "name": "dream_team",
-          "score": 0
+          "score": 0,
+          "registration_status": "ACCEPTED"
         }
       }
 

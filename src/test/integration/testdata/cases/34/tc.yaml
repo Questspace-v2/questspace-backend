@@ -50,7 +50,8 @@ requests:
         "name": "name",
         "registration_deadline": "$ANY$",
         "start_time": "$ANY$",
-        "status": "ON_REGISTRATION"
+        "status": "ON_REGISTRATION",
+        "registration_type": "AUTO"
       }
 
   - method: PATCH
@@ -202,7 +203,8 @@ requests:
           }
         ],
         "name": "dream_team",
-        "score": 0
+        "score": 0,
+        "registration_status": "ACCEPTED"
       }
 
   - method: POST
