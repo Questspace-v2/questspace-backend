@@ -7,7 +7,7 @@ require (
 	github.com/fergusstrange/embedded-postgres v1.26.0
 	github.com/gofor-little/env v1.0.17
 	github.com/gofrs/uuid v4.4.0+incompatible
-	github.com/golang-jwt/jwt/v5 v5.2.0
+	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/golang/mock v1.6.0
 	github.com/jackc/pgx/v5 v5.5.5
 	github.com/julienschmidt/httprouter v1.3.0
