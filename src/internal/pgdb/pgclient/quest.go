@@ -43,7 +43,7 @@ func (c *Client) CreateQuest(ctx context.Context, req *storage.CreateQuestReques
 		values = append(values, *req.MaxTeamCap)
 		query = query.Columns("max_team_cap")
 	}
-	if req.MaxTeamsAmount != nil {
+	if req.MaxTeamsAmount != nil && *req.MaxTeamsAmount > 0 {
 		values = append(values, *req.MaxTeamsAmount)
 		query = query.Columns("max_teams_amount")
 	}
