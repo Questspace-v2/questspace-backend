@@ -317,8 +317,10 @@ func (c *Client) UpdateQuest(ctx context.Context, req *storage.UpdateQuestReques
 	if req.Brief != nil {
 		query = query.Set("brief", *req.Brief)
 	}
-	if req.MaxTeamsAmount != nil {
+	if req.MaxTeamsAmount != nil && *req.MaxTeamsAmount > 0 {
 		query = query.Set("max_teams_amount", *req.MaxTeamsAmount)
+	} else if req.MaxTeamsAmount != nil {
+		query = query.Set("max_teams_amount", nil)
 	}
 	if req.RegistrationType != storage.RegistrationUnspecified {
 		query = query.Set("registration_type", req.RegistrationType)
