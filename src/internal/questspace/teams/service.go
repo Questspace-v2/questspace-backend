@@ -321,7 +321,7 @@ func (s *Service) AcceptTeam(ctx context.Context, user *storage.User, questID, t
 			return nil, xerrors.Errorf("accept team: %w", err)
 		}
 	}
-	allTeams, err := s.s.GetTeams(ctx, &storage.GetTeamsRequest{QuestIDs: []storage.ID{questID}})
+	allTeams, err := s.s.GetTeams(ctx, &storage.GetTeamsRequest{QuestIDs: []storage.ID{questID}, IncludeMembers: true})
 	if err != nil {
 		return nil, xerrors.Errorf("get all teams: %w", err)
 	}
