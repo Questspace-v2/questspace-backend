@@ -172,6 +172,8 @@ func (c *Client) GetScoreResults(ctx context.Context, req *storage.GetResultsReq
 	return scoreRes, nil
 }
 
+const countOnly = "COUNT(*)"
+
 func buildLogQuery(req *storage.GetAnswerTriesRequest, opts *storage.TaskRequestLogFilterOptions, fields ...string) sq.SelectBuilder {
 	whereEq := sq.Eq{"tg.quest_id": req.QuestID}
 	if len(opts.GroupID) > 0 {
@@ -199,9 +201,14 @@ func buildLogQuery(req *storage.GetAnswerTriesRequest, opts *storage.TaskRequest
 		Where(whereEq).
 		PlaceholderFormat(sq.Dollar)
 
-	if opts.DateDesc {
+	needsSorting := true
+	if len(fields) == 1 && fields[0] == countOnly {
+		needsSorting = false
+	}
+
+	if needsSorting && opts.DateDesc {
 		query = query.OrderBy("at.try_time DESC")
-	} else {
+	} else if needsSorting {
 		query = query.OrderBy("at.try_time ASC")
 	}
 
@@ -214,7 +221,7 @@ func (c *Client) GetAnswerTries(ctx context.Context, req *storage.GetAnswerTries
 		opt(&options)
 	}
 
-	countQuery := buildLogQuery(req, &options, "COUNT(*)")
+	countQuery := buildLogQuery(req, &options, countOnly)
 	countRow := countQuery.RunWith(c.runner).QueryRowContext(ctx)
 
 	var answersCount int
