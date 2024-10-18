@@ -1610,6 +1610,9 @@ const docTemplate = `{
         "game.AnswerTaskGroup": {
             "type": "object",
             "properties": {
+                "description": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "string"
                 },
@@ -1826,6 +1829,9 @@ const docTemplate = `{
         "requests.CreateRequest": {
             "type": "object",
             "properties": {
+                "description": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -1958,6 +1964,9 @@ const docTemplate = `{
         "storage.CreateTaskGroupRequest": {
             "type": "object",
             "properties": {
+                "description": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -2226,6 +2235,9 @@ const docTemplate = `{
         "storage.TaskGroup": {
             "type": "object",
             "properties": {
+                "description": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "string"
                 },
@@ -2381,6 +2393,9 @@ const docTemplate = `{
         "storage.UpdateTaskGroupRequest": {
             "type": "object",
             "properties": {
+                "description": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "string"
                 },

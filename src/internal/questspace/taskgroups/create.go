@@ -48,10 +48,11 @@ func (s *Service) Create(ctx context.Context, req *requests.CreateFullRequest) (
 	bulkRequest := storage.TaskGroupsBulkUpdateRequest{QuestID: req.QuestID}
 	for i, tg := range req.TaskGroups {
 		createReq := storage.CreateTaskGroupRequest{
-			QuestID:  req.QuestID,
-			Name:     tg.Name,
-			OrderIdx: i,
-			PubTime:  tg.PubTime,
+			QuestID:     req.QuestID,
+			Name:        tg.Name,
+			Description: tg.Description,
+			OrderIdx:    i,
+			PubTime:     tg.PubTime,
 		}
 
 		for j, t := range tg.Tasks {

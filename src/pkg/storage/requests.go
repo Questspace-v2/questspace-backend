@@ -148,11 +148,12 @@ type RemoveUserRequest struct {
 }
 
 type CreateTaskGroupRequest struct {
-	QuestID  ID                  `json:"-"`
-	OrderIdx int                 `json:"order_idx"`
-	Name     string              `json:"name"`
-	PubTime  *time.Time          `json:"pub_time,omitempty"`
-	Tasks    []CreateTaskRequest `json:"tasks"`
+	QuestID     ID                  `json:"-"`
+	OrderIdx    int                 `json:"order_idx"`
+	Name        string              `json:"name"`
+	Description string              `json:"description,omitempty"`
+	PubTime     *time.Time          `json:"pub_time,omitempty"`
+	Tasks       []CreateTaskRequest `json:"tasks"`
 }
 
 type GetTaskGroupRequest struct {
@@ -166,12 +167,13 @@ type GetTaskGroupsRequest struct {
 }
 
 type UpdateTaskGroupRequest struct {
-	QuestID  ID `json:"-"`
-	ID       ID
-	OrderIdx int                     `json:"order_idx"`
-	Name     string                  `json:"name"`
-	PubTime  *time.Time              `json:"pub_time"`
-	Tasks    *TasksBulkUpdateRequest `json:"tasks"`
+	QuestID     ID `json:"-"`
+	ID          ID
+	OrderIdx    int                     `json:"order_idx"`
+	Name        string                  `json:"name"`
+	Description *string                 `json:"description,omitempty"`
+	PubTime     *time.Time              `json:"pub_time"`
+	Tasks       *TasksBulkUpdateRequest `json:"tasks"`
 }
 
 type DeleteTaskGroupRequest struct {

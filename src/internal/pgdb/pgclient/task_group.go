@@ -2,6 +2,7 @@ package pgclient
 
 import (
 	"context"
+	"database/sql"
 
 	sq "github.com/Masterminds/squirrel"
 	"golang.org/x/xerrors"
@@ -21,14 +22,19 @@ func (c *Client) CreateTaskGroup(ctx context.Context, req *storage.CreateTaskGro
 		values = append(values, req.PubTime)
 		query = query.Columns("pub_time")
 	}
+	if len(req.Description) > 0 {
+		values = append(values, req.Description)
+		query = query.Columns("description")
+	}
 	query = query.Values(values...)
 
 	row := query.RunWith(c.runner).QueryRowContext(ctx)
 	taskGroup := storage.TaskGroup{
-		Name:     req.Name,
-		OrderIdx: req.OrderIdx,
-		Quest:    &storage.Quest{ID: req.QuestID},
-		PubTime:  req.PubTime,
+		Name:        req.Name,
+		Description: req.Description,
+		OrderIdx:    req.OrderIdx,
+		Quest:       &storage.Quest{ID: req.QuestID},
+		PubTime:     req.PubTime,
 	}
 	if err := row.Scan(&taskGroup.ID); err != nil {
 		return nil, xerrors.Errorf("scan row: %w", err)
@@ -38,15 +44,20 @@ func (c *Client) CreateTaskGroup(ctx context.Context, req *storage.CreateTaskGro
 }
 
 func (c *Client) GetTaskGroup(ctx context.Context, req *storage.GetTaskGroupRequest) (*storage.TaskGroup, error) {
-	query := sq.Select("id", "name", "order_idx", "pub_time", "quest_id").
-		From("questspace.task_group").
-		Where(sq.Eq{"id": req.ID}).
-		PlaceholderFormat(sq.Dollar)
-	row := query.RunWith(c.runner).QueryRowContext(ctx)
+	query := `
+	SELECT id, name, description, order_idx, pub_time, quest_id
+	FROM questspace.task_group
+	WHERE id = $1
+`
+	row := c.runner.QueryRowContext(ctx, query, req.ID)
 
 	taskGroup := storage.TaskGroup{Quest: &storage.Quest{}}
-	if err := row.Scan(&taskGroup.ID, &taskGroup.Name, &taskGroup.OrderIdx, &taskGroup.PubTime, &taskGroup.Quest.ID); err != nil {
+	var descr sql.NullString
+	if err := row.Scan(&taskGroup.ID, &taskGroup.Name, &descr, &taskGroup.OrderIdx, &taskGroup.PubTime, &taskGroup.Quest.ID); err != nil {
 		return nil, xerrors.Errorf("scan row: %w", err)
+	}
+	if descr.Valid {
+		taskGroup.Description = descr.String
 	}
 	if req.IncludeTasks {
 		tasks, err := c.GetTasks(ctx, &storage.GetTasksRequest{GroupIDs: []storage.ID{req.ID}})
@@ -63,7 +74,7 @@ func (c *Client) GetTaskGroup(ctx context.Context, req *storage.GetTaskGroupRequ
 }
 
 func (c *Client) GetTaskGroups(ctx context.Context, req *storage.GetTaskGroupsRequest) ([]storage.TaskGroup, error) {
-	query := sq.Select("id", "name", "order_idx", "pub_time").
+	query := sq.Select("id", "name", "description", "order_idx", "pub_time").
 		From("questspace.task_group").
 		Where(sq.Eq{"quest_id": req.QuestID}).
 		OrderBy("order_idx").
@@ -77,12 +88,16 @@ func (c *Client) GetTaskGroups(ctx context.Context, req *storage.GetTaskGroupsRe
 	var taskGroups []storage.TaskGroup
 	var groupIDs []storage.ID
 	for rows.Next() {
+		var descr sql.NullString
 		if err := rows.Err(); err != nil {
 			return nil, xerrors.Errorf("iter rows: %w", err)
 		}
 		taskGroup := storage.TaskGroup{Quest: &storage.Quest{ID: req.QuestID}}
-		if err := rows.Scan(&taskGroup.ID, &taskGroup.Name, &taskGroup.OrderIdx, &taskGroup.PubTime); err != nil {
+		if err := rows.Scan(&taskGroup.ID, &taskGroup.Name, &descr, &taskGroup.OrderIdx, &taskGroup.PubTime); err != nil {
 			return nil, xerrors.Errorf("scan row: %w", err)
+		}
+		if descr.Valid {
+			taskGroup.Description = descr.String
 		}
 		taskGroups = append(taskGroups, taskGroup)
 		groupIDs = append(groupIDs, taskGroup.ID)
@@ -115,11 +130,13 @@ func (c *Client) UpdateTaskGroup(ctx context.Context, req *storage.UpdateTaskGro
 		Set("order_idx", req.OrderIdx).
 		Suffix("RETURNING id, name, order_idx, pub_time, quest_id").
 		PlaceholderFormat(sq.Dollar)
-	switch {
-	case req.Name != "":
+	if len(req.Name) > 0 {
 		query = query.Set("name", req.Name)
-		fallthrough
-	case req.PubTime != nil:
+	}
+	if req.Description != nil {
+		query = query.Set("description", *req.Description)
+	}
+	if req.PubTime != nil {
 		query = query.Set("pub_time", req.PubTime)
 	}
 

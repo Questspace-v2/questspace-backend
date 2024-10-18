@@ -210,12 +210,13 @@ type User struct {
 }
 
 type TaskGroup struct {
-	ID       ID         `json:"id"`
-	OrderIdx int        `json:"order_idx"`
-	Quest    *Quest     `json:"-"`
-	Name     string     `json:"name"`
-	PubTime  *time.Time `json:"pub_time,omitempty"`
-	Tasks    []Task     `json:"tasks"`
+	ID          ID         `json:"id"`
+	OrderIdx    int        `json:"order_idx"`
+	Quest       *Quest     `json:"-"`
+	Name        string     `json:"name"`
+	Description string     `json:"description,omitempty"`
+	PubTime     *time.Time `json:"pub_time,omitempty"`
+	Tasks       []Task     `json:"tasks"`
 }
 
 type Task struct {

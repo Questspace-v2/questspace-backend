@@ -65,11 +65,12 @@ type AnswerTask struct {
 }
 
 type AnswerTaskGroup struct {
-	ID       storage.ID   `json:"id"`
-	OrderIdx int          `json:"order_idx"`
-	Name     string       `json:"name"`
-	PubTime  *time.Time   `json:"pub_time,omitempty"`
-	Tasks    []AnswerTask `json:"tasks"`
+	ID          storage.ID   `json:"id"`
+	OrderIdx    int          `json:"order_idx"`
+	Name        string       `json:"name"`
+	Description string       `json:"description,omitempty"`
+	PubTime     *time.Time   `json:"pub_time,omitempty"`
+	Tasks       []AnswerTask `json:"tasks"`
 }
 
 type AnswerDataResponse struct {
@@ -91,11 +92,12 @@ func (s *Service) FillAnswerData(ctx context.Context, req *AnswerDataRequest) (*
 	taskGroups := make([]AnswerTaskGroup, 0, len(req.TaskGroups))
 	for _, tg := range req.TaskGroups {
 		newTg := AnswerTaskGroup{
-			ID:       tg.ID,
-			OrderIdx: tg.OrderIdx,
-			Name:     tg.Name,
-			PubTime:  tg.PubTime,
-			Tasks:    make([]AnswerTask, 0, len(tg.Tasks)),
+			ID:          tg.ID,
+			OrderIdx:    tg.OrderIdx,
+			Name:        tg.Name,
+			Description: tg.Description,
+			PubTime:     tg.PubTime,
+			Tasks:       make([]AnswerTask, 0, len(tg.Tasks)),
 		}
 
 		for _, t := range tg.Tasks {

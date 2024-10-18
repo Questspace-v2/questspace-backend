@@ -31,10 +31,11 @@ type CreateTaskRequest struct {
 }
 
 type CreateRequest struct {
-	QuestID storage.ID          `json:"-"`
-	Name    string              `json:"name"`
-	PubTime *time.Time          `json:"pub_time,omitempty"`
-	Tasks   []CreateTaskRequest `json:"tasks"`
+	QuestID     storage.ID          `json:"-"`
+	Name        string              `json:"name"`
+	Description string              `json:"description"`
+	PubTime     *time.Time          `json:"pub_time,omitempty"`
+	Tasks       []CreateTaskRequest `json:"tasks"`
 }
 
 type CreateFullRequest struct {
