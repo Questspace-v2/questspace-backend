@@ -35,6 +35,7 @@ type CreateRequest struct {
 	Name        string              `json:"name"`
 	Description string              `json:"description"`
 	PubTime     *time.Time          `json:"pub_time,omitempty"`
+	Sticky      bool                `json:"sticky,omitempty"`
 	Tasks       []CreateTaskRequest `json:"tasks"`
 }
 

@@ -70,6 +70,7 @@ type AnswerTaskGroup struct {
 	Name        string       `json:"name"`
 	Description string       `json:"description,omitempty"`
 	PubTime     *time.Time   `json:"pub_time,omitempty"`
+	Sticky      bool         `json:"sticky,omitempty"`
 	Tasks       []AnswerTask `json:"tasks"`
 }
 
@@ -88,7 +89,10 @@ func (s *Service) FillAnswerData(ctx context.Context, req *AnswerDataRequest) (*
 	if err != nil {
 		return nil, xerrors.Errorf("get accepted tasks: %w", err)
 	}
+	return s.fillAnswerData(ctx, req, tookHints, acceptedTasks), nil
+}
 
+func (s *Service) fillAnswerData(_ context.Context, req *AnswerDataRequest, takenHints storage.HintTakes, acceptedTasks storage.AcceptedTasks) *AnswerDataResponse {
 	taskGroups := make([]AnswerTaskGroup, 0, len(req.TaskGroups))
 	for _, tg := range req.TaskGroups {
 		newTg := AnswerTaskGroup{
@@ -97,9 +101,11 @@ func (s *Service) FillAnswerData(ctx context.Context, req *AnswerDataRequest) (*
 			Name:        tg.Name,
 			Description: tg.Description,
 			PubTime:     tg.PubTime,
+			Sticky:      tg.Sticky,
 			Tasks:       make([]AnswerTask, 0, len(tg.Tasks)),
 		}
 
+		var shownFirstUnaccepted bool
 		for _, t := range tg.Tasks {
 			newT := AnswerTask{
 				ID:               t.ID,
@@ -119,9 +125,20 @@ func (s *Service) FillAnswerData(ctx context.Context, req *AnswerDataRequest) (*
 				newT.Answer = ans.Text
 				newT.Score = ans.Score
 			}
-			for _, h := range tookHints[newT.ID] {
+			for _, h := range takenHints[newT.ID] {
 				newT.Hints[h.Hint.Index].Taken = true
 				newT.Hints[h.Hint.Index].Text = h.Hint.Text
+			}
+
+			if req.Quest.QuestType != storage.TypeLinear || tg.Sticky {
+				newTg.Tasks = append(newTg.Tasks, newT)
+				continue
+			}
+			if shownFirstUnaccepted {
+				break
+			}
+			if !newT.Accepted {
+				shownFirstUnaccepted = true
 			}
 			newTg.Tasks = append(newTg.Tasks, newT)
 		}
@@ -133,7 +150,7 @@ func (s *Service) FillAnswerData(ctx context.Context, req *AnswerDataRequest) (*
 		Team:       req.Team,
 		TaskGroups: taskGroups,
 	}
-	return resp, nil
+	return resp
 }
 
 type TaskResult struct {
@@ -356,9 +373,10 @@ type TryAnswerRequest struct {
 }
 
 type TryAnswerResponse struct {
-	Accepted bool   `json:"accepted"`
-	Score    int    `json:"score,omitempty"`
-	Text     string `json:"text"`
+	Accepted   bool              `json:"accepted"`
+	Score      int               `json:"score,omitempty"`
+	Text       string            `json:"text"`
+	TaskGroups []AnswerTaskGroup `json:"task_groups,omitempty"`
 }
 
 func (s *Service) TryAnswer(ctx context.Context, user *storage.User, req *TryAnswerRequest) (*TryAnswerResponse, error) {

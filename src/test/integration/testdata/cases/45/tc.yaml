@@ -1,5 +1,5 @@
-name: linear-groups-show-only-first-task
-ignore: true  # TODO(svayp11): Implement missing logic
+name: linear-quests-return-all-task-groups-on-answer
+ignore: false  # TODO(svayp11): Implement missing logic
 
 requests:
   - method: POST
@@ -143,9 +143,9 @@ requests:
                 "order_idx": 0,
                 "correct_answers": ["1", "2", "3"],
                 "hints": [],
-                "media_links": [],
                 "reward": 100,
-                "verification": "auto"
+                "verification": "auto",
+                "verification_type": "auto"
               },
               {
                 "id": "$SET$:STICKY_TASK_ID2",
@@ -154,9 +154,9 @@ requests:
                 "order_idx": 1,
                 "correct_answers": ["1", "2", "3"],
                 "hints": [],
-                "media_links": [],
                 "reward": 100,
-                "verification": "auto"
+                "verification": "auto",
+                "verification_type": "auto"
               }
             ]
           },
@@ -173,9 +173,9 @@ requests:
                 "order_idx": 0,
                 "correct_answers": ["1", "2", "3"],
                 "hints": [],
-                "media_links": [],
                 "reward": 100,
-                "verification": "auto"
+                "verification": "auto",
+                "verification_type": "auto"
               },
               {
                 "id": "$SET$:LINEAR_TASK_ID2",
@@ -184,9 +184,9 @@ requests:
                 "order_idx": 1,
                 "correct_answers": ["1", "2", "3"],
                 "hints": [],
-                "media_links": [],
                 "reward": 100,
-                "verification": "auto"
+                "verification": "auto",
+                "verification_type": "auto"
               }
             ]
           }
@@ -266,7 +266,7 @@ requests:
       }
 
   - method: GET
-    uri: /teams/join/$INVITE_LINK
+    uri: /teams/join/$INVITE_LINK1
     authorization: $PLAYER2_TOKEN
 
     expected-status: 200
@@ -277,8 +277,8 @@ requests:
           "id": "$PLAYER1_ID",
           "username": "player1"
         },
-        "id": "$SET$:TEAM1_ID",
-        "invite_link": "$SET$:INVITE_LINK1",
+        "id": "$TEAM1_ID",
+        "invite_link": "$INVITE_LINK1",
         "members": [
           {
             "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
@@ -340,22 +340,24 @@ requests:
                 "name": "sticky_task_1",
                 "question": "question",
                 "order_idx": 0,
-                "correct_answers": ["1", "2", "3"],
                 "hints": [],
-                "media_links": [],
                 "reward": 100,
-                "verification": "auto"
+                "verification": "auto",
+                "verification_type": "auto",
+                "accepted": false,
+                "score": 0
               },
               {
                 "id": "$STICKY_TASK_ID2",
                 "name": "sticky_task_2",
                 "question": "question",
                 "order_idx": 1,
-                "correct_answers": ["1", "2", "3"],
                 "hints": [],
-                "media_links": [],
                 "reward": 100,
-                "verification": "auto"
+                "verification": "auto",
+                "verification_type": "auto",
+                "accepted": false,
+                "score": 0
               }
             ]
           },
@@ -370,11 +372,12 @@ requests:
                 "name": "linear_task_1",
                 "question": "question",
                 "order_idx": 0,
-                "correct_answers": ["1", "2", "3"],
                 "hints": [],
-                "media_links": [],
                 "reward": 100,
-                "verification": "auto"
+                "verification": "auto",
+                "verification_type": "auto",
+                "accepted": false,
+                "score": 0
               }
             ]
           }
@@ -385,22 +388,170 @@ requests:
             "id": "$PLAYER1_ID",
             "username": "player1"
           },
-          "id": "$SET$:TEAM1_ID",
-          "invite_link": "$SET$:INVITE_LINK1",
-          "members": [
-            {
-              "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
-              "id": "$PLAYER1_ID",
-              "username": "player1"
-            },
-            {
-              "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
-              "id": "$PLAYER2_ID",
-              "username": "player2"
-            }
-          ],
+          "id": "$TEAM1_ID",
+          "invite_link": "$INVITE_LINK1",
           "name": "team1",
           "score": 0,
           "registration_status": "ACCEPTED"
         }
+      }
+
+# TODO(svayp11): Fix goddamn json case for answer request
+  - method: POST
+    uri: /quest/$QUEST_ID/answer
+    authorization: $PLAYER1_TOKEN
+    json-input: >
+      {
+        "taskID": "$STICKY_TASK_ID1",
+        "text": "1"
+      }
+    
+    expected-status: 200
+    expected-json: >
+      {
+        "accepted": true,
+        "score": 100,
+        "text": "1",
+        "task_groups": [
+          {
+            "id": "$STICKY_GROUP_ID",
+            "name": "sticky_group",
+            "order_idx": 0,
+            "sticky": true,
+            "description": "Here is a task group, that will persistently active without any answers",
+            "tasks": [
+              {
+                "id": "$STICKY_TASK_ID1",
+                "name": "sticky_task_1",
+                "question": "question",
+                "order_idx": 0,
+                "hints": [],
+                "reward": 100,
+                "verification": "auto",
+                "verification_type": "auto",
+                "accepted": true,
+                "answer": "1",
+                "score": 100
+              },
+              {
+                "id": "$STICKY_TASK_ID2",
+                "name": "sticky_task_2",
+                "question": "question",
+                "order_idx": 1,
+                "hints": [],
+                "reward": 100,
+                "verification": "auto",
+                "verification_type": "auto",
+                "accepted": false,
+                "score": 0
+              }
+            ]
+          },
+          {
+            "id": "$LINEAR_GROUP_ID",
+            "name": "linear_group",
+            "order_idx": 1,
+            "description": "Tasks in this group will be available only if all the tasks before them are done",
+            "tasks": [
+              {
+                "id": "$LINEAR_TASK_ID1",
+                "name": "linear_task_1",
+                "question": "question",
+                "order_idx": 0,
+                "hints": [],
+                "reward": 100,
+                "verification": "auto",
+                "verification_type": "auto",
+                "accepted": false,
+                "score": 0
+              }
+            ]
+          }
+        ]
+      }
+  
+  - method: POST
+    uri: /quest/$QUEST_ID/answer
+    authorization: $PLAYER2_TOKEN
+    json-input: >
+      {
+        "taskID": "$LINEAR_TASK_ID1",
+        "text": "2"
+      }
+    
+    expected-status: 200
+    expected-json: >
+      {
+        "accepted": true,
+        "score": 100,
+        "text": "2",
+        "task_groups": [
+          {
+            "id": "$STICKY_GROUP_ID",
+            "name": "sticky_group",
+            "order_idx": 0,
+            "sticky": true,
+            "description": "Here is a task group, that will persistently active without any answers",
+            "tasks": [
+              {
+                "id": "$STICKY_TASK_ID1",
+                "name": "sticky_task_1",
+                "question": "question",
+                "order_idx": 0,
+                "hints": [],
+                "reward": 100,
+                "verification": "auto",
+                "verification_type": "auto",
+                "accepted": true,
+                "answer": "1",
+                "score": 100
+              },
+              {
+                "id": "$STICKY_TASK_ID2",
+                "name": "sticky_task_2",
+                "question": "question",
+                "order_idx": 1,
+                "hints": [],
+                "reward": 100,
+                "verification": "auto",
+                "verification_type": "auto",
+                "accepted": false,
+                "score": 0
+              }
+            ]
+          },
+          {
+            "id": "$LINEAR_GROUP_ID",
+            "name": "linear_group",
+            "order_idx": 1,
+            "description": "Tasks in this group will be available only if all the tasks before them are done",
+            "tasks": [
+              {
+                "id": "$LINEAR_TASK_ID1",
+                "name": "linear_task_1",
+                "question": "question",
+                "order_idx": 0,
+                "hints": [],
+                "reward": 100,
+                "verification": "auto",
+                "verification_type": "auto",
+                "accepted": true,
+                "answer": "2",
+                "score": 100
+              },
+              {
+                "id": "$LINEAR_TASK_ID2",
+                "name": "linear_task_2",
+                "question": "question",
+                "order_idx": 1,
+                "hints": [],
+                "reward": 100,
+                "verification": "auto",
+                "verification_type": "auto",
+                "accepted": false,
+                "score": 0
+              }
+            ]
+          }
+        ]
       }

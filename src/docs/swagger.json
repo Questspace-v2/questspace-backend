@@ -1614,6 +1614,9 @@
                 "pub_time": {
                     "type": "string"
                 },
+                "sticky": {
+                    "type": "boolean"
+                },
                 "tasks": {
                     "type": "array",
                     "items": {
@@ -1717,6 +1720,12 @@
                 },
                 "score": {
                     "type": "integer"
+                },
+                "task_groups": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/game.AnswerTaskGroup"
+                    }
                 },
                 "text": {
                     "type": "string"
@@ -1827,6 +1836,9 @@
                 "pub_time": {
                     "type": "string"
                 },
+                "sticky": {
+                    "type": "boolean"
+                },
                 "tasks": {
                     "type": "array",
                     "items": {
@@ -1929,6 +1941,13 @@
                 "name": {
                     "type": "string"
                 },
+                "quest_type": {
+                    "type": "string",
+                    "enum": [
+                        "ASSAULT",
+                        "LINEAR"
+                    ]
+                },
                 "registration_deadline": {
                     "type": "string",
                     "example": "2024-04-14T12:00:00+05:00"
@@ -1964,6 +1983,9 @@
                 },
                 "pub_time": {
                     "type": "string"
+                },
+                "sticky": {
+                    "type": "boolean"
                 },
                 "tasks": {
                     "type": "array",
@@ -2085,6 +2107,13 @@
                 },
                 "name": {
                     "type": "string"
+                },
+                "quest_type": {
+                    "type": "string",
+                    "enum": [
+                        "ASSAULT",
+                        "LINEAR"
+                    ]
                 },
                 "registration_deadline": {
                     "type": "string",
@@ -2239,6 +2268,9 @@
                 "pub_time": {
                     "type": "string"
                 },
+                "sticky": {
+                    "type": "boolean"
+                },
                 "tasks": {
                     "type": "array",
                     "items": {
@@ -2360,6 +2392,13 @@
                 "name": {
                     "type": "string"
                 },
+                "quest_type": {
+                    "type": "string",
+                    "enum": [
+                        "ASSAULT",
+                        "LINEAR"
+                    ]
+                },
                 "registration_deadline": {
                     "type": "string"
                 },
@@ -2396,6 +2435,9 @@
                 },
                 "pub_time": {
                     "type": "string"
+                },
+                "sticky": {
+                    "type": "boolean"
                 },
                 "tasks": {
                     "$ref": "#/definitions/storage.TasksBulkUpdateRequest"

@@ -23,6 +23,7 @@ func (c *Client) CreateQuest(ctx context.Context, req *storage.CreateQuestReques
 		req.Creator.ID,
 		req.HasBrief,
 		req.Brief,
+		req.QuestType,
 	}
 	query := sq.Insert("questspace.quest").
 		Columns(
@@ -36,6 +37,7 @@ func (c *Client) CreateQuest(ctx context.Context, req *storage.CreateQuestReques
 			"creator_id",
 			"has_brief",
 			"brief",
+			"quest_type",
 		).
 		Suffix("RETURNING id").
 		PlaceholderFormat(sq.Dollar)
@@ -71,6 +73,7 @@ func (c *Client) CreateQuest(ctx context.Context, req *storage.CreateQuestReques
 		Brief:                req.Brief,
 		MaxTeamsAmount:       req.MaxTeamsAmount,
 		RegistrationType:     req.RegistrationType,
+		QuestType:            req.QuestType,
 	}
 	if err := row.Scan(&quest.ID); err != nil {
 		return nil, xerrors.Errorf("scan row: %w", err)
@@ -97,6 +100,7 @@ SELECT
 	q.brief,
 	q.max_teams_amount,
 	q.registration_type,
+	q.quest_type,
 	u.id,
 	u.username,
 	u.avatar_url
@@ -127,6 +131,7 @@ func (c *Client) GetQuest(ctx context.Context, req *storage.GetQuestRequest) (*s
 		&q.Brief,
 		&q.MaxTeamsAmount,
 		&q.RegistrationType,
+		&q.QuestType,
 		&userId,
 		&creatorName,
 		&userAvatarURL,
@@ -188,6 +193,7 @@ func (c *Client) GetQuests(ctx context.Context, req *storage.GetQuestsRequest) (
 		"q.media_link",
 		"q.max_team_cap",
 		"q.finished",
+		"q.quest_type",
 		"q.creator_id",
 		"u.username",
 		"u.avatar_url",
@@ -229,8 +235,17 @@ func (c *Client) GetQuests(ctx context.Context, req *storage.GetQuestsRequest) (
 		var q storage.Quest
 
 		if err := rows.Scan(
-			&q.ID, &q.Name, &q.Description, &q.Access, &q.RegistrationDeadline,
-			&q.StartTime, &q.FinishTime, &q.MediaLink, &q.MaxTeamCap, &finished,
+			&q.ID,
+			&q.Name,
+			&q.Description,
+			&q.Access,
+			&q.RegistrationDeadline,
+			&q.StartTime,
+			&q.FinishTime,
+			&q.MediaLink,
+			&q.MaxTeamCap,
+			&finished,
+			&q.QuestType,
 			&userId, &username, &userAvatarURL,
 		); err != nil {
 			return nil, xerrors.Errorf("scan row: %w", err)
@@ -285,7 +300,8 @@ func (c *Client) UpdateQuest(ctx context.Context, req *storage.UpdateQuestReques
 		has_brief,
 		brief,
 		max_teams_amount,
-		registration_type`).
+		registration_type,
+		quest_type`).
 		PlaceholderFormat(sq.Dollar)
 	if len(req.Name) > 0 {
 		query = query.Set("name", req.Name)
@@ -325,6 +341,9 @@ func (c *Client) UpdateQuest(ctx context.Context, req *storage.UpdateQuestReques
 	if req.RegistrationType != storage.RegistrationUnspecified {
 		query = query.Set("registration_type", req.RegistrationType)
 	}
+	if len(req.QuestType) > 0 {
+		query = query.Set("quest_type", req.QuestType)
+	}
 
 	row := query.RunWith(c.runner).QueryRowContext(ctx)
 	var (
@@ -348,6 +367,7 @@ func (c *Client) UpdateQuest(ctx context.Context, req *storage.UpdateQuestReques
 		&q.Brief,
 		&q.MaxTeamsAmount,
 		&q.RegistrationType,
+		&q.QuestType,
 	); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, storage.ErrNotFound

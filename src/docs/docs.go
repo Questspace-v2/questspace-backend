@@ -1625,6 +1625,9 @@ const docTemplate = `{
                 "pub_time": {
                     "type": "string"
                 },
+                "sticky": {
+                    "type": "boolean"
+                },
                 "tasks": {
                     "type": "array",
                     "items": {
@@ -1728,6 +1731,12 @@ const docTemplate = `{
                 },
                 "score": {
                     "type": "integer"
+                },
+                "task_groups": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/game.AnswerTaskGroup"
+                    }
                 },
                 "text": {
                     "type": "string"
@@ -1838,6 +1847,9 @@ const docTemplate = `{
                 "pub_time": {
                     "type": "string"
                 },
+                "sticky": {
+                    "type": "boolean"
+                },
                 "tasks": {
                     "type": "array",
                     "items": {
@@ -1940,6 +1952,13 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "quest_type": {
+                    "type": "string",
+                    "enum": [
+                        "ASSAULT",
+                        "LINEAR"
+                    ]
+                },
                 "registration_deadline": {
                     "type": "string",
                     "example": "2024-04-14T12:00:00+05:00"
@@ -1975,6 +1994,9 @@ const docTemplate = `{
                 },
                 "pub_time": {
                     "type": "string"
+                },
+                "sticky": {
+                    "type": "boolean"
                 },
                 "tasks": {
                     "type": "array",
@@ -2096,6 +2118,13 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                },
+                "quest_type": {
+                    "type": "string",
+                    "enum": [
+                        "ASSAULT",
+                        "LINEAR"
+                    ]
                 },
                 "registration_deadline": {
                     "type": "string",
@@ -2250,6 +2279,9 @@ const docTemplate = `{
                 "pub_time": {
                     "type": "string"
                 },
+                "sticky": {
+                    "type": "boolean"
+                },
                 "tasks": {
                     "type": "array",
                     "items": {
@@ -2371,6 +2403,13 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "quest_type": {
+                    "type": "string",
+                    "enum": [
+                        "ASSAULT",
+                        "LINEAR"
+                    ]
+                },
                 "registration_deadline": {
                     "type": "string"
                 },
@@ -2407,6 +2446,9 @@ const docTemplate = `{
                 },
                 "pub_time": {
                     "type": "string"
+                },
+                "sticky": {
+                    "type": "boolean"
                 },
                 "tasks": {
                     "$ref": "#/definitions/storage.TasksBulkUpdateRequest"

@@ -13,9 +13,9 @@ import (
 var _ storage.TaskGroupStorage = &Client{}
 
 func (c *Client) CreateTaskGroup(ctx context.Context, req *storage.CreateTaskGroupRequest) (*storage.TaskGroup, error) {
-	values := []interface{}{req.Name, req.OrderIdx, req.QuestID}
+	values := []interface{}{req.Name, req.OrderIdx, req.Sticky, req.QuestID}
 	query := sq.Insert("questspace.task_group").
-		Columns("name", "order_idx", "quest_id").
+		Columns("name", "order_idx", "sticky", "quest_id").
 		Suffix("RETURNING id").
 		PlaceholderFormat(sq.Dollar)
 	if req.PubTime != nil {
@@ -33,6 +33,7 @@ func (c *Client) CreateTaskGroup(ctx context.Context, req *storage.CreateTaskGro
 		Name:        req.Name,
 		Description: req.Description,
 		OrderIdx:    req.OrderIdx,
+		Sticky:      req.Sticky,
 		Quest:       &storage.Quest{ID: req.QuestID},
 		PubTime:     req.PubTime,
 	}
@@ -45,7 +46,7 @@ func (c *Client) CreateTaskGroup(ctx context.Context, req *storage.CreateTaskGro
 
 func (c *Client) GetTaskGroup(ctx context.Context, req *storage.GetTaskGroupRequest) (*storage.TaskGroup, error) {
 	query := `
-	SELECT id, name, description, order_idx, pub_time, quest_id
+	SELECT id, name, description, order_idx, sticky, pub_time, quest_id
 	FROM questspace.task_group
 	WHERE id = $1
 `
@@ -53,7 +54,15 @@ func (c *Client) GetTaskGroup(ctx context.Context, req *storage.GetTaskGroupRequ
 
 	taskGroup := storage.TaskGroup{Quest: &storage.Quest{}}
 	var descr sql.NullString
-	if err := row.Scan(&taskGroup.ID, &taskGroup.Name, &descr, &taskGroup.OrderIdx, &taskGroup.PubTime, &taskGroup.Quest.ID); err != nil {
+	if err := row.Scan(
+		&taskGroup.ID,
+		&taskGroup.Name,
+		&descr,
+		&taskGroup.OrderIdx,
+		&taskGroup.Sticky,
+		&taskGroup.PubTime,
+		&taskGroup.Quest.ID,
+	); err != nil {
 		return nil, xerrors.Errorf("scan row: %w", err)
 	}
 	if descr.Valid {
@@ -74,7 +83,7 @@ func (c *Client) GetTaskGroup(ctx context.Context, req *storage.GetTaskGroupRequ
 }
 
 func (c *Client) GetTaskGroups(ctx context.Context, req *storage.GetTaskGroupsRequest) ([]storage.TaskGroup, error) {
-	query := sq.Select("id", "name", "description", "order_idx", "pub_time").
+	query := sq.Select("id", "name", "description", "order_idx", "sticky", "pub_time").
 		From("questspace.task_group").
 		Where(sq.Eq{"quest_id": req.QuestID}).
 		OrderBy("order_idx").
@@ -93,7 +102,14 @@ func (c *Client) GetTaskGroups(ctx context.Context, req *storage.GetTaskGroupsRe
 			return nil, xerrors.Errorf("iter rows: %w", err)
 		}
 		taskGroup := storage.TaskGroup{Quest: &storage.Quest{ID: req.QuestID}}
-		if err := rows.Scan(&taskGroup.ID, &taskGroup.Name, &descr, &taskGroup.OrderIdx, &taskGroup.PubTime); err != nil {
+		if err := rows.Scan(
+			&taskGroup.ID,
+			&taskGroup.Name,
+			&descr,
+			&taskGroup.OrderIdx,
+			&taskGroup.Sticky,
+			&taskGroup.PubTime,
+		); err != nil {
 			return nil, xerrors.Errorf("scan row: %w", err)
 		}
 		if descr.Valid {
@@ -138,6 +154,9 @@ func (c *Client) UpdateTaskGroup(ctx context.Context, req *storage.UpdateTaskGro
 	}
 	if req.PubTime != nil {
 		query = query.Set("pub_time", req.PubTime)
+	}
+	if req.Sticky != nil {
+		query = query.Set("sticky", *req.Sticky)
 	}
 
 	row := query.RunWith(c.runner).QueryRowContext(ctx)

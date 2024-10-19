@@ -113,6 +113,14 @@ const (
 	RegistrationVerify      RegistrationType = "VERIFY"
 )
 
+type QuestType string
+
+const (
+	TypeDefault = ""
+	TypeAssault = "ASSAULT"
+	TypeLinear  = "LINEAR"
+)
+
 type Quest struct {
 	ID                   ID               `json:"id"`
 	Name                 string           `json:"name"`
@@ -129,6 +137,7 @@ type Quest struct {
 	Brief                string           `json:"brief,omitempty"`
 	MaxTeamsAmount       *int             `json:"max_teams_amount,omitempty"`
 	RegistrationType     RegistrationType `json:"registration_type,omitempty" enums:"AUTO,VERIFY"`
+	QuestType            QuestType        `json:"quest_type,omitempty" enums:"ASSAULT,LINEAR"`
 }
 
 type GetQuestType int
@@ -216,6 +225,7 @@ type TaskGroup struct {
 	Name        string     `json:"name"`
 	Description string     `json:"description,omitempty"`
 	PubTime     *time.Time `json:"pub_time,omitempty"`
+	Sticky      bool       `json:"sticky,omitempty"`
 	Tasks       []Task     `json:"tasks"`
 }
 

@@ -46,6 +46,7 @@ type CreateQuestRequest struct {
 	Brief                string           `json:"brief,omitempty"`
 	MaxTeamsAmount       *int             `json:"max_teams_amount,omitempty"`
 	RegistrationType     RegistrationType `json:"registration_type,omitempty" enums:"AUTO,VERIFY"`
+	QuestType            QuestType        `json:"quest_type,omitempty" enums:"ASSAULT,LINEAR"`
 }
 
 type GetQuestRequest struct {
@@ -78,6 +79,7 @@ type UpdateQuestRequest struct {
 	Brief                *string          `json:"brief,omitempty"`
 	MaxTeamsAmount       *int             `json:"max_teams_amount,omitempty"`
 	RegistrationType     RegistrationType `json:"registration_type,omitempty" enums:"AUTO,VERIFY"`
+	QuestType            QuestType        `json:"quest_type,omitempty" enums:"ASSAULT,LINEAR"`
 }
 
 type DeleteQuestRequest struct {
@@ -154,6 +156,7 @@ type CreateTaskGroupRequest struct {
 	Description string              `json:"description,omitempty"`
 	PubTime     *time.Time          `json:"pub_time,omitempty"`
 	Tasks       []CreateTaskRequest `json:"tasks"`
+	Sticky      bool                `json:"sticky,omitempty"`
 }
 
 type GetTaskGroupRequest struct {
@@ -174,6 +177,7 @@ type UpdateTaskGroupRequest struct {
 	Description *string                 `json:"description,omitempty"`
 	PubTime     *time.Time              `json:"pub_time"`
 	Tasks       *TasksBulkUpdateRequest `json:"tasks"`
+	Sticky      *bool                   `json:"sticky,omitempty"`
 }
 
 type DeleteTaskGroupRequest struct {
