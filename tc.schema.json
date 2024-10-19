@@ -1,0 +1,76 @@
+{
+    "$id": "tc_schema_id",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Test Case",
+    "description": "Test case definition schema for integration tests",
+    "type": "object",
+    "properties": {
+        "name": {
+            "type": "string"
+        },
+        "ignore": {
+            "type": "boolean",
+            "default": "true"
+        },
+        "uri": {
+            "type": "string"
+        },
+        "method": {
+            "enum": [
+                "GET",
+                "POST",
+                "PUT",
+                "PATCH",
+                "DELETE"
+            ]
+        },
+        "json-input": {
+            "type": "string"
+        },
+        "expected-status": {
+            "type": "integer"
+        },
+        "expected-json": {
+            "type": "string"
+        },
+        "requests": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "method": {
+                        "enum": [
+                            "GET",
+                            "POST",
+                            "PUT",
+                            "PATCH",
+                            "DELETE"
+                        ]
+                    },
+                    "uri": {
+                        "type": "string"
+                    },
+                    "authorization": {
+                        "type": "string"
+                    },
+                    "json-input": {
+                        "type": "string"
+                    },
+                    "expected-status": {
+                        "type": "integer"
+                    },
+                    "expected-json": {
+                        "type": "string"
+                    }
+                },
+                "required": ["method", "uri", "expected-status"]
+            }
+        }
+
+    },
+    "required": ["name"],
+    "dependencies": {
+        "expected-status": ["uri", "method"],
+        "expected-json": ["uri", "method"]
+    }
+}
