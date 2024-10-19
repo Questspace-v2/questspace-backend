@@ -1,5 +1,5 @@
 name: linear-quests-return-all-task-groups-on-answer
-ignore: true  # TODO(svayp11): Implement missing logic
+ignore: false  # TODO(svayp11): Implement missing logic
 
 requests:
   - method: POST
@@ -143,9 +143,9 @@ requests:
                 "order_idx": 0,
                 "correct_answers": ["1", "2", "3"],
                 "hints": [],
-                "media_links": [],
                 "reward": 100,
-                "verification": "auto"
+                "verification": "auto",
+                "verification_type": "auto"
               },
               {
                 "id": "$SET$:STICKY_TASK_ID2",
@@ -154,9 +154,9 @@ requests:
                 "order_idx": 1,
                 "correct_answers": ["1", "2", "3"],
                 "hints": [],
-                "media_links": [],
                 "reward": 100,
-                "verification": "auto"
+                "verification": "auto",
+                "verification_type": "auto"
               }
             ]
           },
@@ -173,9 +173,9 @@ requests:
                 "order_idx": 0,
                 "correct_answers": ["1", "2", "3"],
                 "hints": [],
-                "media_links": [],
                 "reward": 100,
-                "verification": "auto"
+                "verification": "auto",
+                "verification_type": "auto"
               },
               {
                 "id": "$SET$:LINEAR_TASK_ID2",
@@ -184,9 +184,9 @@ requests:
                 "order_idx": 1,
                 "correct_answers": ["1", "2", "3"],
                 "hints": [],
-                "media_links": [],
                 "reward": 100,
-                "verification": "auto"
+                "verification": "auto",
+                "verification_type": "auto"
               }
             ]
           }
@@ -266,7 +266,7 @@ requests:
       }
 
   - method: GET
-    uri: /teams/join/$INVITE_LINK
+    uri: /teams/join/$INVITE_LINK1
     authorization: $PLAYER2_TOKEN
 
     expected-status: 200
@@ -277,8 +277,8 @@ requests:
           "id": "$PLAYER1_ID",
           "username": "player1"
         },
-        "id": "$SET$:TEAM1_ID",
-        "invite_link": "$SET$:INVITE_LINK1",
+        "id": "$TEAM1_ID",
+        "invite_link": "$INVITE_LINK1",
         "members": [
           {
             "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
@@ -341,9 +341,11 @@ requests:
                 "question": "question",
                 "order_idx": 0,
                 "hints": [],
-                "media_links": [],
                 "reward": 100,
-                "verification": "auto"
+                "verification": "auto",
+                "verification_type": "auto",
+                "accepted": false,
+                "score": 0
               },
               {
                 "id": "$STICKY_TASK_ID2",
@@ -351,9 +353,11 @@ requests:
                 "question": "question",
                 "order_idx": 1,
                 "hints": [],
-                "media_links": [],
                 "reward": 100,
-                "verification": "auto"
+                "verification": "auto",
+                "verification_type": "auto",
+                "accepted": false,
+                "score": 0
               }
             ]
           },
@@ -369,9 +373,11 @@ requests:
                 "question": "question",
                 "order_idx": 0,
                 "hints": [],
-                "media_links": [],
                 "reward": 100,
-                "verification": "auto"
+                "verification": "auto",
+                "verification_type": "auto",
+                "accepted": false,
+                "score": 0
               }
             ]
           }
@@ -382,20 +388,8 @@ requests:
             "id": "$PLAYER1_ID",
             "username": "player1"
           },
-          "id": "$SET$:TEAM1_ID",
-          "invite_link": "$SET$:INVITE_LINK1",
-          "members": [
-            {
-              "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
-              "id": "$PLAYER1_ID",
-              "username": "player1"
-            },
-            {
-              "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
-              "id": "$PLAYER2_ID",
-              "username": "player2"
-            }
-          ],
+          "id": "$TEAM1_ID",
+          "invite_link": "$INVITE_LINK1",
           "name": "team1",
           "score": 0,
           "registration_status": "ACCEPTED"
@@ -432,9 +426,9 @@ requests:
                 "question": "question",
                 "order_idx": 0,
                 "hints": [],
-                "media_links": [],
                 "reward": 100,
                 "verification": "auto",
+                "verification_type": "auto",
                 "accepted": true,
                 "answer": "1",
                 "score": 100
@@ -445,9 +439,11 @@ requests:
                 "question": "question",
                 "order_idx": 1,
                 "hints": [],
-                "media_links": [],
                 "reward": 100,
-                "verification": "auto"
+                "verification": "auto",
+                "verification_type": "auto",
+                "accepted": false,
+                "score": 0
               }
             ]
           },
@@ -463,9 +459,11 @@ requests:
                 "question": "question",
                 "order_idx": 0,
                 "hints": [],
-                "media_links": [],
                 "reward": 100,
-                "verification": "auto"
+                "verification": "auto",
+                "verification_type": "auto",
+                "accepted": false,
+                "score": 0
               }
             ]
           }
@@ -501,9 +499,9 @@ requests:
                 "question": "question",
                 "order_idx": 0,
                 "hints": [],
-                "media_links": [],
                 "reward": 100,
                 "verification": "auto",
+                "verification_type": "auto",
                 "accepted": true,
                 "answer": "1",
                 "score": 100
@@ -514,9 +512,11 @@ requests:
                 "question": "question",
                 "order_idx": 1,
                 "hints": [],
-                "media_links": [],
                 "reward": 100,
-                "verification": "auto"
+                "verification": "auto",
+                "verification_type": "auto",
+                "accepted": false,
+                "score": 0
               }
             ]
           },
@@ -532,12 +532,12 @@ requests:
                 "question": "question",
                 "order_idx": 0,
                 "hints": [],
-                "media_links": [],
                 "reward": 100,
                 "verification": "auto",
+                "verification_type": "auto",
                 "accepted": true,
                 "answer": "2",
-                "score": 100,
+                "score": 100
               },
               {
                 "id": "$LINEAR_TASK_ID2",
@@ -545,9 +545,11 @@ requests:
                 "question": "question",
                 "order_idx": 1,
                 "hints": [],
-                "media_links": [],
                 "reward": 100,
-                "verification": "auto"
+                "verification": "auto",
+                "verification_type": "auto",
+                "accepted": false,
+                "score": 0
               }
             ]
           }

@@ -1732,6 +1732,12 @@ const docTemplate = `{
                 "score": {
                     "type": "integer"
                 },
+                "task_groups": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/game.AnswerTaskGroup"
+                    }
+                },
                 "text": {
                     "type": "string"
                 }

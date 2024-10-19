@@ -212,6 +212,10 @@ definitions:
         type: boolean
       score:
         type: integer
+      task_groups:
+        items:
+          $ref: '#/definitions/game.AnswerTaskGroup'
+        type: array
       text:
         type: string
     type: object

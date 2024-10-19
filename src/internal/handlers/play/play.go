@@ -249,6 +249,28 @@ func (h *Handler) HandleTryAnswer(ctx context.Context, w http.ResponseWriter, r 
 	if err != nil {
 		return xerrors.Errorf("try answer: %w", err)
 	}
+
+	if quest.QuestType == storage.TypeLinear {
+		taskGroups, err := s.GetTaskGroups(ctx, &storage.GetTaskGroupsRequest{QuestID: questID, IncludeTasks: true})
+		if err != nil {
+			return xerrors.Errorf("get task groups: %w", err)
+		}
+		userTeam, err := s.GetTeam(ctx, &storage.GetTeamRequest{UserRegistration: &storage.UserRegistration{UserID: uauth.ID, QuestID: questID}})
+		if err != nil {
+			if errors.Is(err, storage.ErrNotFound) {
+				return httperrors.Errorf(http.StatusNotAcceptable, "user %q has no team", uauth.ID)
+			}
+			return xerrors.Errorf("get team: %w", err)
+		}
+
+		req := game.AnswerDataRequest{Quest: quest, Team: userTeam, TaskGroups: taskGroups}
+		resp, err := srv.FillAnswerData(ctx, &req)
+		if err != nil {
+			return err
+		}
+		try.TaskGroups = resp.TaskGroups
+	}
+
 	if err = tx.Commit(); err != nil {
 		return xerrors.Errorf("commit tx: %w", err)
 	}

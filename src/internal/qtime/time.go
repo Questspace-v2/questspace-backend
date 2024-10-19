@@ -40,7 +40,7 @@ func SetNowFunc(t *testing.T, f TimeGetter) {
 }
 
 func Wait(d time.Duration) {
-	if IsTestTimeMode() {
+	if !IsTestTimeMode() {
 		panic("waiting in production environment")
 	}
 	newTime := testStartTime.Add(d)

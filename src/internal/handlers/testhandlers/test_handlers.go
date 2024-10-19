@@ -17,7 +17,7 @@ func HandleWait(ctx context.Context, w http.ResponseWriter, r *http.Request) err
 		return httperrors.New(http.StatusForbidden, "cannot wait in production environment")
 	}
 	waitTime := defaultDuration
-	if dString, ok := transport.StringParam(r, "d"); ok {
+	if dString := transport.Query(r, "d"); len(dString) > 0 {
 		var err error
 		waitTime, err = time.ParseDuration(dString)
 		if err != nil {
