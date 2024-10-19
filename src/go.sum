@@ -65,8 +65,8 @@ github.com/go-openapi/swag v0.23.0 h1:vsEVJDUo2hPJ2tu0/Xc+4noaxyEffXNIs3cOULZ+Gr
 github.com/go-openapi/swag v0.23.0/go.mod h1:esZ8ITTYEsH1V2trKHjAN8Ai7xHb8RV+YSZ577vPjgQ=
 github.com/go-sql-driver/mysql v1.8.1 h1:LedoTUt/eveggdHS9qUFC1EFSa8bU2+1pZjSRpvNJ1Y=
 github.com/go-sql-driver/mysql v1.8.1/go.mod h1:wEBSXgmK//2ZFJyE+qWnIsVGmvmEKlqwuVSjsCm7DZg=
-github.com/gofor-little/env v1.0.17 h1:TAB4jwL11nH59mg+4+6uycWY8Wc7MVe7Ip2uSmT0v0Q=
-github.com/gofor-little/env v1.0.17/go.mod h1:2BE2i6c9e/C6EaGnfhpqzfNERUqkzJ+s/ApnRyl+588=
+github.com/gofor-little/env v1.0.18 h1:k87nb3OjhiZyq2mmNbuW9Hvm/vqUszNPe1C8HPb9etM=
+github.com/gofor-little/env v1.0.18/go.mod h1:2BE2i6c9e/C6EaGnfhpqzfNERUqkzJ+s/ApnRyl+588=
 github.com/gofrs/uuid v4.4.0+incompatible h1:3qXRTX8/NbyulANqlc0lchS1gqAVxRgsuW1YrTJupqA=
 github.com/gofrs/uuid v4.4.0+incompatible/go.mod h1:b2aQJv3Z4Fp6yNu3cdSllBxTCLRxnplIgP/c0N/04lM=
 github.com/gogo/protobuf v1.3.2 h1:Ov1cvc58UF3b5XjBnZv7+opcTcQFZebYjWzi34vdm4Q=
