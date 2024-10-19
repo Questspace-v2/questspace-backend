@@ -11,7 +11,6 @@ spec:
   tls:
     - hosts:
         - api.questspace.fun
-        - questspace.fun
       secretName: questspace-tls-secret
   rules:
     - host: api.questspace.fun
@@ -24,6 +23,21 @@ spec:
                 name: backend-service
                 port:
                   number: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: frontend-ingress
+  namespace: questspace
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - questspace.fun
+      secretName: questspace-tls-secret
+  rules:
     - host: questspace.fun
       http:
         paths:
