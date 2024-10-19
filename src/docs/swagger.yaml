@@ -143,6 +143,8 @@ definitions:
         type: integer
       pub_time:
         type: string
+      sticky:
+        type: boolean
       tasks:
         items:
           $ref: '#/definitions/game.AnswerTask'
@@ -280,6 +282,8 @@ definitions:
         type: string
       pub_time:
         type: string
+      sticky:
+        type: boolean
       tasks:
         items:
           $ref: '#/definitions/requests.CreateTaskRequest'
@@ -348,6 +352,11 @@ definitions:
         type: string
       name:
         type: string
+      quest_type:
+        enum:
+        - ASSAULT
+        - LINEAR
+        type: string
       registration_deadline:
         example: "2024-04-14T12:00:00+05:00"
         type: string
@@ -371,6 +380,8 @@ definitions:
         type: integer
       pub_time:
         type: string
+      sticky:
+        type: boolean
       tasks:
         items:
           $ref: '#/definitions/storage.CreateTaskRequest'
@@ -450,6 +461,11 @@ definitions:
       media_link:
         type: string
       name:
+        type: string
+      quest_type:
+        enum:
+        - ASSAULT
+        - LINEAR
         type: string
       registration_deadline:
         example: "2024-04-14T12:00:00+05:00"
@@ -556,6 +572,8 @@ definitions:
         type: integer
       pub_time:
         type: string
+      sticky:
+        type: boolean
       tasks:
         items:
           $ref: '#/definitions/storage.Task'
@@ -634,6 +652,11 @@ definitions:
         type: string
       name:
         type: string
+      quest_type:
+        enum:
+        - ASSAULT
+        - LINEAR
+        type: string
       registration_deadline:
         type: string
       registration_type:
@@ -657,6 +680,8 @@ definitions:
         type: integer
       pub_time:
         type: string
+      sticky:
+        type: boolean
       tasks:
         $ref: '#/definitions/storage.TasksBulkUpdateRequest'
     type: object

@@ -70,6 +70,7 @@ type AnswerTaskGroup struct {
 	Name        string       `json:"name"`
 	Description string       `json:"description,omitempty"`
 	PubTime     *time.Time   `json:"pub_time,omitempty"`
+	Sticky      bool         `json:"sticky,omitempty"`
 	Tasks       []AnswerTask `json:"tasks"`
 }
 
@@ -97,6 +98,7 @@ func (s *Service) FillAnswerData(ctx context.Context, req *AnswerDataRequest) (*
 			Name:        tg.Name,
 			Description: tg.Description,
 			PubTime:     tg.PubTime,
+			Sticky:      tg.Sticky,
 			Tasks:       make([]AnswerTask, 0, len(tg.Tasks)),
 		}
 

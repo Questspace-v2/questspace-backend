@@ -1,5 +1,4 @@
 name: create-linear-type-quest
-ignore: true  # TODO(svayp11): Implement missing logic
 
 requests:
   - method: POST
@@ -131,9 +130,9 @@ requests:
                 "order_idx": 0,
                 "correct_answers": ["1", "2", "3"],
                 "hints": [],
-                "media_links": [],
                 "reward": 100,
-                "verification": "auto"
+                "verification": "auto",
+                "verification_type": "auto"
               }
             ]
           },
@@ -150,9 +149,9 @@ requests:
                 "order_idx": 0,
                 "correct_answers": ["1", "2", "3"],
                 "hints": [],
-                "media_links": [],
                 "reward": 100,
-                "verification": "auto"
+                "verification": "auto",
+                "verification_type": "auto"
               },
               {
                 "id": "$ANY$",
@@ -161,9 +160,9 @@ requests:
                 "order_idx": 1,
                 "correct_answers": ["1", "2", "3"],
                 "hints": [],
-                "media_links": [],
                 "reward": 100,
-                "verification": "auto"
+                "verification": "auto",
+                "verification_type": "auto"
               }
             ]
           }

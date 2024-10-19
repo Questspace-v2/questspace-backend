@@ -52,6 +52,7 @@ func (s *Service) Create(ctx context.Context, req *requests.CreateFullRequest) (
 			Name:        tg.Name,
 			Description: tg.Description,
 			OrderIdx:    i,
+			Sticky:      tg.Sticky,
 			PubTime:     tg.PubTime,
 		}
 

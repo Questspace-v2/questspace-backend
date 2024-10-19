@@ -1,4 +1,4 @@
-name: linear-quest-with-misplaced-sticky-task-groups
+name: linear-groups-show-only-first-task
 ignore: true  # TODO(svayp11): Implement missing logic
 
 requests:
@@ -22,6 +22,8 @@ requests:
         }
       }
 
+
+# Create quest with tasks
   - method: POST
     uri: /quest
     authorization: $SVAYP11_TOKEN
@@ -66,8 +68,36 @@ requests:
       {
         "create": [
           {
-            "name": "linear_group",
+            "name": "sticky_group",
             "order_idx": 0,
+            "sticky": true,
+            "description": "Here is a task group, that will persistently active without any answers",
+            "tasks": [
+              {
+                "name": "sticky_task_1",
+                "question": "question",
+                "order_idx": 0,
+                "correct_answers": ["1", "2", "3"],
+                "hints": [],
+                "media_links": [],
+                "reward": 100,
+                "verification": "auto"
+              },
+              {
+                "name": "sticky_task_2",
+                "question": "question",
+                "order_idx": 1,
+                "correct_answers": ["1", "2", "3"],
+                "hints": [],
+                "media_links": [],
+                "reward": 100,
+                "verification": "auto"
+              }
+            ]
+          },
+          {
+            "name": "linear_group",
+            "order_idx": 1,
             "description": "Tasks in this group will be available only if all the tasks before them are done",
             "tasks": [
               {
@@ -91,17 +121,67 @@ requests:
                 "verification": "auto"
               }
             ]
-          },
+          }
+        ]
+      }
+    
+    expected-status: 200
+    expected-json: >
+      {
+        "task_groups": [
           {
+            "id": "$SET$:STICKY_GROUP_ID",
             "name": "sticky_group",
-            "order_idx": 1,
+            "order_idx": 0,
             "sticky": true,
             "description": "Here is a task group, that will persistently active without any answers",
             "tasks": [
               {
+                "id": "$SET$:STICKY_TASK_ID1",
                 "name": "sticky_task_1",
                 "question": "question",
                 "order_idx": 0,
+                "correct_answers": ["1", "2", "3"],
+                "hints": [],
+                "media_links": [],
+                "reward": 100,
+                "verification": "auto"
+              },
+              {
+                "id": "$SET$:STICKY_TASK_ID2",
+                "name": "sticky_task_2",
+                "question": "question",
+                "order_idx": 1,
+                "correct_answers": ["1", "2", "3"],
+                "hints": [],
+                "media_links": [],
+                "reward": 100,
+                "verification": "auto"
+              }
+            ]
+          },
+          {
+            "id": "$SET$:LINEAR_GROUP_ID",
+            "name": "linear_group",
+            "order_idx": 1,
+            "description": "Tasks in this group will be available only if all the tasks before them are done",
+            "tasks": [
+              {
+                "id": "$SET$:LINEAR_TASK_ID1",
+                "name": "linear_task_1",
+                "question": "question",
+                "order_idx": 0,
+                "correct_answers": ["1", "2", "3"],
+                "hints": [],
+                "media_links": [],
+                "reward": 100,
+                "verification": "auto"
+              },
+              {
+                "id": "$SET$:LINEAR_TASK_ID2",
+                "name": "linear_task_2",
+                "question": "question",
+                "order_idx": 1,
                 "correct_answers": ["1", "2", "3"],
                 "hints": [],
                 "media_links": [],
@@ -112,5 +192,215 @@ requests:
           }
         ]
       }
+
+
+# Create a team to participate
+  - method: POST
+    uri: /auth/register
+    json-input: >
+      {
+        "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+        "username": "player1",
+        "password": "password"
+      }
+
+    expected-status: 200
+    expected-json: >
+      {
+        "access_token": "$SET$:PLAYER1_TOKEN",
+        "user": {
+          "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+          "username": "player1",
+          "id": "$SET$:PLAYER1_ID"
+        }
+      }
+
+  - method: POST
+    uri: /auth/register
+    json-input: >
+      {
+        "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+        "username": "player2",
+        "password": "password"
+      }
+
+    expected-status: 200
+    expected-json: >
+      {
+        "access_token": "$SET$:PLAYER2_TOKEN",
+        "user": {
+          "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+          "username": "player2",
+          "id": "$SET$:PLAYER2_ID"
+        }
+      }
     
-    expected-status: 400  # Sticky groups should be placed only at the top or after another sticky group
+  - method: POST
+    uri: /quest/$QUEST_ID/teams
+    authorization: $PLAYER1_TOKEN
+    json-input: >
+      {
+        "name": "team1"
+      }
+    
+    expected-status: 200
+    expected-json: >
+      {
+        "captain": {
+          "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+          "id": "$PLAYER1_ID",
+          "username": "player1"
+        },
+        "id": "$SET$:TEAM1_ID",
+        "invite_link": "$SET$:INVITE_LINK1",
+        "members": [
+          {
+            "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+            "id": "$PLAYER1_ID",
+            "username": "player1"
+          }
+        ],
+        "name": "team1",
+        "score": 0,
+        "registration_status": "ACCEPTED"
+      }
+
+  - method: GET
+    uri: /teams/join/$INVITE_LINK
+    authorization: $PLAYER2_TOKEN
+
+    expected-status: 200
+    expected-json: >
+      {
+        "captain": {
+          "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+          "id": "$PLAYER1_ID",
+          "username": "player1"
+        },
+        "id": "$SET$:TEAM1_ID",
+        "invite_link": "$SET$:INVITE_LINK1",
+        "members": [
+          {
+            "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+            "id": "$PLAYER1_ID",
+            "username": "player1"
+          },
+          {
+            "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+            "id": "$PLAYER2_ID",
+            "username": "player2"
+          }
+        ],
+        "name": "team1",
+        "score": 0,
+        "registration_status": "ACCEPTED"
+      }
+    
+  - method: GET
+    uri: /internal/testing/wait?d=169h  # 7d + 1h
+    expected-status: 200
+
+
+# Play mode
+  - method: GET
+    uri: /quest/$QUEST_ID/play
+    authorization: $PLAYER1_TOKEN
+
+    expected-status: 200
+    expected-json: >
+      {
+        "quest": {
+          "id": "$QUEST_ID",
+          "access": "public",
+          "name": "name",
+          "description": "description",
+          "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
+          "creator": {
+            "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+            "id": "$USER_ID",
+            "username": "svayp11"
+          },
+          "start_time": "2024-04-14T12:00:00Z",
+          "finish_time": "2024-04-14T18:00:00Z",
+          "max_team_cap": 4,
+          "status": "RUNNING",
+          "registration_type": "AUTO",
+          "quest_type": "LINEAR"
+        },
+        "task_groups": [
+          {
+            "id": "$STICKY_GROUP_ID",
+            "name": "sticky_group",
+            "order_idx": 0,
+            "sticky": true,
+            "description": "Here is a task group, that will persistently active without any answers",
+            "tasks": [
+              {
+                "id": "$STICKY_TASK_ID1",
+                "name": "sticky_task_1",
+                "question": "question",
+                "order_idx": 0,
+                "correct_answers": ["1", "2", "3"],
+                "hints": [],
+                "media_links": [],
+                "reward": 100,
+                "verification": "auto"
+              },
+              {
+                "id": "$STICKY_TASK_ID2",
+                "name": "sticky_task_2",
+                "question": "question",
+                "order_idx": 1,
+                "correct_answers": ["1", "2", "3"],
+                "hints": [],
+                "media_links": [],
+                "reward": 100,
+                "verification": "auto"
+              }
+            ]
+          },
+          {
+            "id": "$LINEAR_GROUP_ID",
+            "name": "linear_group",
+            "order_idx": 1,
+            "description": "Tasks in this group will be available only if all the tasks before them are done",
+            "tasks": [
+              {
+                "id": "$LINEAR_TASK_ID1",
+                "name": "linear_task_1",
+                "question": "question",
+                "order_idx": 0,
+                "correct_answers": ["1", "2", "3"],
+                "hints": [],
+                "media_links": [],
+                "reward": 100,
+                "verification": "auto"
+              }
+            ]
+          }
+        ],
+        "team": {
+          "captain": {
+            "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+            "id": "$PLAYER1_ID",
+            "username": "player1"
+          },
+          "id": "$SET$:TEAM1_ID",
+          "invite_link": "$SET$:INVITE_LINK1",
+          "members": [
+            {
+              "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+              "id": "$PLAYER1_ID",
+              "username": "player1"
+            },
+            {
+              "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+              "id": "$PLAYER2_ID",
+              "username": "player2"
+            }
+          ],
+          "name": "team1",
+          "score": 0,
+          "registration_status": "ACCEPTED"
+        }
+      }
