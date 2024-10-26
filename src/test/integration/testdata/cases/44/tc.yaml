@@ -78,7 +78,7 @@ requests:
                 "question": "question",
                 "order_idx": 0,
                 "correct_answers": ["1", "2", "3"],
-                "hints": [],
+                "hints_full": [],
                 "media_links": [],
                 "reward": 100,
                 "verification": "auto"
@@ -88,7 +88,7 @@ requests:
                 "question": "question",
                 "order_idx": 1,
                 "correct_answers": ["1", "2", "3"],
-                "hints": [],
+                "hints_full": [],
                 "media_links": [],
                 "reward": 100,
                 "verification": "auto"
@@ -105,7 +105,7 @@ requests:
                 "question": "question",
                 "order_idx": 0,
                 "correct_answers": ["1", "2", "3"],
-                "hints": [],
+                "hints_full": [],
                 "media_links": [],
                 "reward": 100,
                 "verification": "auto"
@@ -115,7 +115,7 @@ requests:
                 "question": "question",
                 "order_idx": 1,
                 "correct_answers": ["1", "2", "3"],
-                "hints": [],
+                "hints_full": [],
                 "media_links": [],
                 "reward": 100,
                 "verification": "auto"
@@ -142,7 +142,7 @@ requests:
                 "question": "question",
                 "order_idx": 0,
                 "correct_answers": ["1", "2", "3"],
-                "hints": [],
+                "hints_full": [],
                 "reward": 100,
                 "verification": "auto",
                 "verification_type": "auto"
@@ -153,7 +153,7 @@ requests:
                 "question": "question",
                 "order_idx": 1,
                 "correct_answers": ["1", "2", "3"],
-                "hints": [],
+                "hints_full": [],
                 "reward": 100,
                 "verification": "auto",
                 "verification_type": "auto"
@@ -172,7 +172,7 @@ requests:
                 "question": "question",
                 "order_idx": 0,
                 "correct_answers": ["1", "2", "3"],
-                "hints": [],
+                "hints_full": [],
                 "reward": 100,
                 "verification": "auto",
                 "verification_type": "auto"
@@ -183,7 +183,7 @@ requests:
                 "question": "question",
                 "order_idx": 1,
                 "correct_answers": ["1", "2", "3"],
-                "hints": [],
+                "hints_full": [],
                 "reward": 100,
                 "verification": "auto",
                 "verification_type": "auto"

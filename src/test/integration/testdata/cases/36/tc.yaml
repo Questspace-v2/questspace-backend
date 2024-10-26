@@ -1,5 +1,5 @@
 name: finish-leaderboard
-ignore: true  # NOTE(svayp11): Old table interface
+
 requests:
   - method: POST
     uri: /auth/register
@@ -28,11 +28,10 @@ requests:
       {
         "access": "public",
         "description": "description",
-        "finish_time": "2027-04-21T14:00:00+05:00",
+        "finish_time": "2024-04-14T20:00:00Z",
         "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
         "name": "name",
-        "registration_deadline": "2024-04-18T12:00:00+05:00",
-        "start_time": "2024-04-18T14:00:00+05:00"
+        "start_time": "2024-04-14T12:00:00Z"
       }
 
     expected-status: 200
@@ -45,13 +44,12 @@ requests:
           "username": "svayp11"
         },
         "description": "description",
-        "finish_time": "$ANY$",
+        "finish_time": "2024-04-14T20:00:00Z",
         "id": "$SET$:QUEST_ID",
         "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
         "name": "name",
-        "registration_deadline": "$ANY$",
-        "start_time": "$ANY$",
-        "status": "RUNNING",
+        "start_time": "2024-04-14T12:00:00Z",
+        "status": "ON_REGISTRATION",
         "registration_type": "AUTO"
       }
 
@@ -70,8 +68,13 @@ requests:
                 "correct_answers": [
                   "string"
                 ],
-                "hints": [
-                  "str"
+                "hints_full": [
+                  {
+                    "text": "str",
+                    "penalty": {
+                      "score": 30
+                    }
+                  }
                 ],
                 "media_links": [
                   "https://api.dicebear.com/8.x/thumbs/svg"
@@ -87,8 +90,13 @@ requests:
                 "correct_answers": [
                   "not_string"
                 ],
-                "hints": [
-                  "not_str"
+                "hints_full": [
+                  {
+                    "text": "not_str",
+                    "penalty": {
+                      "percent": 20
+                    }
+                  }
                 ],
                 "media_links": [
                   "https://api.dicebear.com/8.x/thumbs/svg"
@@ -120,8 +128,14 @@ requests:
                 "correct_answers": [
                   "string"
                 ],
-                "hints": [
-                  "str"
+                "hints_full": [
+                  {
+                    "index": 0,
+                    "text": "str",
+                    "penalty": {
+                      "score": 30
+                    }
+                  }
                 ],
                 "media_links": [
                   "https://api.dicebear.com/8.x/thumbs/svg"
@@ -139,8 +153,14 @@ requests:
                 "correct_answers": [
                   "not_string"
                 ],
-                "hints": [
-                  "not_str"
+                "hints_full": [
+                  { 
+                    "index": 0,
+                    "text": "not_str",
+                    "penalty": {
+                      "percent": 20
+                    }
+                  }
                 ],
                 "media_links": [
                   "https://api.dicebear.com/8.x/thumbs/svg"
@@ -260,6 +280,10 @@ requests:
       }
 
   - method: GET
+    uri: /internal/testing/wait?d=169h  # 7d + 1h
+    expected-status: 200
+
+  - method: GET
     uri: /quest/$QUEST_ID/play
     authorization: $PYAVS22_TOKEN
 
@@ -274,12 +298,11 @@ requests:
             "username": "svayp11"
           },
           "description": "description",
-          "finish_time": "$ANY$",
+          "finish_time": "2024-04-14T20:00:00Z",
           "id": "$QUEST_ID",
           "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
           "name": "name",
-          "registration_deadline": "$ANY$",
-          "start_time": "$ANY$",
+          "start_time": "2024-04-14T12:00:00Z",
           "status": "RUNNING",
           "registration_type": "AUTO"
         },
@@ -296,6 +319,9 @@ requests:
                 "hints": [
                   {
                     "taken": false,
+                    "penalty": {
+                      "score": 30
+                    }
                   }
                 ],
                 "media_links": [
@@ -306,6 +332,7 @@ requests:
                 "pub_time": "2024-04-18T14:00:00Z",
                 "question": "question",
                 "reward": 50,
+                "score": 0,
                 "verification": "auto",
                 "verification_type": "auto"
               },
@@ -315,6 +342,9 @@ requests:
                 "hints": [
                   {
                     "taken": false,
+                    "penalty": {
+                      "percent": 20
+                    }
                   }
                 ],
                 "media_links": [
@@ -325,6 +355,7 @@ requests:
                 "pub_time": "2024-04-18T14:00:00Z",
                 "question": "notquestion",
                 "reward": 500,
+                "score": 0,
                 "verification": "auto",
                 "verification_type": "auto"
               }
@@ -397,64 +428,6 @@ requests:
     uri: /quest/$QUEST_ID/finish
     authorization: $SVAYP11_TOKEN
     expected-status: 200
-
-  - method: GET
-    uri: /quest/$QUEST_ID/leaderboard
-    authorization: $SVAYP11_TOKEN
-    expected-status: 200
-    expected-json: >
-      {
-        "rows": [
-          {
-            "score": 50,
-            "team_name": "dream_team",
-            "team_id": "$TEAM_ID"
-          },
-          {
-            "score": 500,
-            "team_name": "dust_team",
-            "team_id": "$TEAM_ID2"
-          }
-        ]
-      }
-
-  - method: GET
-    uri: /quest/$QUEST_ID
-
-    expected-status: 200
-    expected-json: >
-      {
-        "leaderboard": {
-          "rows": [
-            {
-              "score": 50,
-              "team_name": "dream_team",
-              "team_id": "$TEAM_ID"
-            },
-            {
-              "score": 500,
-              "team_name": "dust_team",
-              "team_id": "$TEAM_ID2"
-            }
-          ]
-        },
-        "quest": {
-          "access": "public",
-          "creator": {
-            "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
-            "id": "$USER_ID",
-            "username": "svayp11"
-          },
-          "description": "description",
-          "finish_time": "$ANY$",
-          "id": "$SET$:QUEST_ID",
-          "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
-          "name": "name",
-          "registration_deadline": "$ANY$",
-          "start_time": "$ANY$",
-          "status": "FINISHED"
-        }
-      }
 
   - method: DELETE
     uri: /quest/$QUEST_ID

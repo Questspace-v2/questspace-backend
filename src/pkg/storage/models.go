@@ -2,6 +2,7 @@ package storage
 
 import (
 	"bytes"
+	"encoding/json"
 	"strconv"
 	"strings"
 	"time"
@@ -240,7 +241,8 @@ type Task struct {
 	// Deprecated
 	Verification    VerificationType `json:"verification_type" example:"deprecated"`
 	VerificationNew VerificationType `json:"verification" enums:"auto,manual"`
-	Hints           []string         `json:"hints"`
+	Hints           []string         `json:"hints,omitempty"`
+	FullHints       []Hint           `json:"hints_full"`
 	PubTime         *time.Time       `json:"pub_time,omitempty"`
 	MediaLinks      []string         `json:"media_links,omitempty"`
 	// Deprecated
@@ -255,9 +257,126 @@ type AnswerTry struct {
 	AnswerTime *time.Time
 }
 
+func init() {
+	DefaultPenalty, _ = NewPercentagePenalty(20)
+}
+
+var DefaultPenalty PenaltyOneOf
+
+type PenaltyOneOf struct {
+	percent *int
+	score   *int
+
+	Percent_DO_NOT_USE int `json:"percent"`
+	Score_DO_NOT_USE   int `json:"score"`
+}
+
+func NewPercentagePenalty(percent int) (PenaltyOneOf, error) {
+	if percent < 0 || percent > 100 {
+		return PenaltyOneOf{}, xerrors.Errorf("percentage should be in bounds [0; 100], but got %d", percent)
+	}
+	return PenaltyOneOf{percent: &percent}, nil
+}
+
+func NewScorePenalty(score int) PenaltyOneOf {
+	return PenaltyOneOf{score: &score}
+}
+
+func (p *PenaltyOneOf) GetPenaltyPoints(score int) int {
+	if p.percent != nil {
+		return score * *p.percent / 100
+	}
+	return *p.score
+}
+
+func (p *PenaltyOneOf) IsPercent() bool {
+	return p.percent != nil
+}
+
+func (p *PenaltyOneOf) IsScore() bool {
+	return p.score != nil
+}
+
+func (p *PenaltyOneOf) Empty() bool {
+	return p.score == nil && p.percent == nil
+}
+
+func (p *PenaltyOneOf) Percent() int {
+	if !p.IsPercent() {
+		panic("penalty has no percent")
+	}
+	return *p.percent
+}
+
+func (p *PenaltyOneOf) Score() int {
+	if !p.IsScore() {
+		panic("penalty has no score")
+	}
+	return *p.score
+}
+
+func (p *PenaltyOneOf) PercentOpt() *int {
+	if !p.IsPercent() {
+		return nil
+	}
+
+	cp := *p.percent
+	return &cp
+}
+
+func (p *PenaltyOneOf) ScoreOpt() *int {
+	if !p.IsScore() {
+		return nil
+	}
+	cp := *p.score
+	return &cp
+}
+
+func (p *PenaltyOneOf) UnmarshalJSON(data []byte) error {
+	var percent struct {
+		Percent *int `json:"percent"`
+	}
+	var score struct {
+		Score *int `json:"score"`
+	}
+	if err := json.Unmarshal(data, &percent); err != nil {
+		return err
+	}
+	if err := json.Unmarshal(data, &score); err != nil {
+		return err
+	}
+
+	if percent.Percent != nil && score.Score != nil {
+		return xerrors.New("penalty should have only one of types [score,percent]")
+	}
+	if percent.Percent == nil && score.Score == nil {
+		return xerrors.New("penalty should have one of types [score,percent]")
+	}
+
+	if percent.Percent != nil {
+		p.percent = percent.Percent
+		return nil
+	}
+
+	p.score = score.Score
+	return nil
+}
+
+func (p *PenaltyOneOf) MarshalJSON() ([]byte, error) {
+	penalty := struct {
+		Percent *int `json:"percent,omitempty"`
+		Score   *int `json:"score,omitempty"`
+	}{Percent: p.percent, Score: p.score}
+
+	return json.Marshal(penalty)
+}
+
 type Hint struct {
-	Index int    `json:"index"`
-	Text  string `json:"text,omitempty"`
+	TaskID  ID           `json:"-"`
+	Index   int          `json:"index"`
+	Name    *string      `json:"name,omitempty"`
+	Text    string       `json:"text,omitempty"`
+	Penalty PenaltyOneOf `json:"penalty"`
 }
 
 type HintTake struct {
@@ -265,6 +384,7 @@ type HintTake struct {
 	Hint   Hint
 }
 
+// HintTakes [task_id] -> []HintTake
 type HintTakes map[ID][]HintTake
 
 type AcceptedTask struct {

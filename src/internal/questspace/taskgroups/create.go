@@ -72,6 +72,7 @@ func (s *Service) Create(ctx context.Context, req *requests.CreateFullRequest) (
 				Reward:         t.Reward,
 				CorrectAnswers: t.CorrectAnswers,
 				Hints:          t.Hints,
+				FullHints:      t.FullHints,
 				Verification:   t.Verification,
 			})
 		}

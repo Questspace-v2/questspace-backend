@@ -41,8 +41,10 @@ type AnswerDataRequest struct {
 }
 
 type AnswerTaskHint struct {
-	Taken bool   `json:"taken"`
-	Text  string `json:"text,omitempty"`
+	Taken   bool                 `json:"taken"`
+	Name    string               `json:"name,omitempty"`
+	Text    string               `json:"text,omitempty"`
+	Penalty storage.PenaltyOneOf `json:"penalty"`
 }
 
 type AnswerTask struct {
@@ -81,7 +83,7 @@ type AnswerDataResponse struct {
 }
 
 func (s *Service) FillAnswerData(ctx context.Context, req *AnswerDataRequest) (*AnswerDataResponse, error) {
-	tookHints, err := s.ah.GetHintTakes(ctx, &storage.GetHintTakesRequest{TeamID: req.Team.ID, QuestID: req.Quest.ID})
+	takenHints, err := s.ah.GetHintTakes(ctx, &storage.GetHintTakesRequest{TeamID: req.Team.ID, QuestID: req.Quest.ID})
 	if err != nil {
 		return nil, xerrors.Errorf("get hints: %w", err)
 	}
@@ -89,7 +91,7 @@ func (s *Service) FillAnswerData(ctx context.Context, req *AnswerDataRequest) (*
 	if err != nil {
 		return nil, xerrors.Errorf("get accepted tasks: %w", err)
 	}
-	return s.fillAnswerData(ctx, req, tookHints, acceptedTasks), nil
+	return s.fillAnswerData(ctx, req, takenHints, acceptedTasks), nil
 }
 
 func (s *Service) fillAnswerData(_ context.Context, req *AnswerDataRequest, takenHints storage.HintTakes, acceptedTasks storage.AcceptedTasks) *AnswerDataResponse {
@@ -115,7 +117,7 @@ func (s *Service) fillAnswerData(_ context.Context, req *AnswerDataRequest, take
 				Reward:           t.Reward,
 				Verification:     t.Verification,
 				VerificationType: t.Verification,
-				Hints:            make([]AnswerTaskHint, len(t.Hints)),
+				Hints:            make([]AnswerTaskHint, len(t.FullHints)),
 				PubTime:          t.PubTime,
 				MediaLink:        t.MediaLink,
 				MediaLinks:       t.MediaLinks,
@@ -128,6 +130,12 @@ func (s *Service) fillAnswerData(_ context.Context, req *AnswerDataRequest, take
 			for _, h := range takenHints[newT.ID] {
 				newT.Hints[h.Hint.Index].Taken = true
 				newT.Hints[h.Hint.Index].Text = h.Hint.Text
+			}
+			for i, hint := range t.FullHints {
+				newT.Hints[i].Penalty = hint.Penalty
+				if hint.Name != nil {
+					newT.Hints[i].Name = *hint.Name
+				}
 			}
 
 			if req.Quest.QuestType != storage.TypeLinear || tg.Sticky {
@@ -353,7 +361,7 @@ func (s *Service) TakeHint(ctx context.Context, user *storage.User, req *TakeHin
 		}
 		return nil, xerrors.Errorf("get answer data: %w", err)
 	}
-	if len(answerData.Hints) <= req.Index {
+	if len(answerData.FullHints) <= req.Index {
 		return nil, httperrors.Errorf(http.StatusBadRequest, "index %d out of hints range", req.Index)
 	}
 	hint, err := s.ah.TakeHint(ctx, &storage.TakeHintRequest{TeamID: team.ID, TaskID: req.TaskID, Index: req.Index})
@@ -374,7 +382,7 @@ type TryAnswerRequest struct {
 
 type TryAnswerResponse struct {
 	Accepted   bool              `json:"accepted"`
-	Score      int               `json:"score,omitempty"`
+	Score      int               `json:"score"`
 	Text       string            `json:"text"`
 	TaskGroups []AnswerTaskGroup `json:"task_groups,omitempty"`
 }
@@ -434,12 +442,16 @@ func (s *Service) TryAnswer(ctx context.Context, user *storage.User, req *TryAns
 		return &TryAnswerResponse{Accepted: false, Text: req.Text}, nil
 	}
 
-	tookHints, err := s.ah.GetHintTakes(ctx, &storage.GetHintTakesRequest{TeamID: team.ID, TaskID: req.TaskID, QuestID: req.QuestID})
+	takenHints, err := s.ah.GetHintTakes(ctx, &storage.GetHintTakesRequest{TeamID: team.ID, TaskID: req.TaskID, QuestID: req.QuestID})
 	if err != nil {
 		return nil, xerrors.Errorf("get hints: %w", err)
 	}
-	taskHints := tookHints[req.TaskID]
-	score := answerData.Reward * (5 - len(taskHints)) / 5
+	taskHints := takenHints[req.TaskID]
+	penalty := 0
+	for _, h := range taskHints {
+		penalty += h.Hint.Penalty.GetPenaltyPoints(answerData.Reward)
+	}
+	score := answerData.Reward - penalty
 	tryReq.Accepted = true
 	tryReq.Score = score
 	logging.Info(ctx, "answer try",
