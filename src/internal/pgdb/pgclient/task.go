@@ -405,7 +405,7 @@ func (c *Client) UpdateTask(ctx context.Context, req *storage.UpdateTaskRequest)
 	if len(req.Hints) > 0 {
 		query = query.Set("hints", pgtype.FlatArray[string](req.Hints))
 
-		if *req.FullHints == nil {
+		if req.FullHints == nil {
 			fullHints := make([]storage.CreateHintRequest, 0, len(req.Hints))
 			for _, hintText := range req.Hints {
 				fullHints = append(fullHints, storage.CreateHintRequest{Text: hintText, Penalty: storage.DefaultPenalty})

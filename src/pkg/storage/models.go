@@ -241,7 +241,7 @@ type Task struct {
 	// Deprecated
 	Verification    VerificationType `json:"verification_type" example:"deprecated"`
 	VerificationNew VerificationType `json:"verification" enums:"auto,manual"`
-	Hints           []string         `json:"hints,omitempty"`
+	Hints           []string         `json:"hints"`
 	FullHints       []Hint           `json:"hints_full"`
 	PubTime         *time.Time       `json:"pub_time,omitempty"`
 	MediaLinks      []string         `json:"media_links,omitempty"`
