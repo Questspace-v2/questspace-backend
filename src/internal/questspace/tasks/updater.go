@@ -129,17 +129,31 @@ func (u *Updater) reorderUpdatedTasks(tasks *tasksPacked, updateReqs []storage.U
 	return nil
 }
 
+func (u *Updater) validatePenalties(score int, hints []storage.Hint) error {
+	totalPenalty := 0
+	for _, h := range hints {
+		totalPenalty += h.Penalty.GetPenaltyPoints(score)
+	}
+	if totalPenalty > score {
+		return httperrors.Errorf(http.StatusBadRequest, "total hints penalty should not exceed maximum score: score %d vs penalty %d", score, totalPenalty)
+	}
+	return nil
+}
+
 func (u *Updater) updateTasks(ctx context.Context, tasks *tasksPacked, updateReqs []storage.UpdateTaskRequest) error {
 	var errs []error
 	for _, updateReq := range updateReqs {
 		updateReq := updateReq
-		taskGroup, err := u.s.UpdateTask(ctx, &updateReq)
+		task, err := u.s.UpdateTask(ctx, &updateReq)
 		if err != nil {
 			errs = append(errs, xerrors.Errorf("update task %q: %w", updateReq.ID, err))
 			continue
 		}
-		tasks.byID[taskGroup.ID] = taskGroup
-		tasks.order[taskGroup.OrderIdx] = taskGroup
+		if err = u.validatePenalties(task.Reward, task.FullHints); err != nil {
+			errs = append(errs, xerrors.Errorf("task %q: %w", task.ID, err))
+		}
+		tasks.byID[task.ID] = task
+		tasks.order[task.OrderIdx] = task
 	}
 	if len(errs) > 0 {
 		return xerrors.Errorf("%d error(s) occured during tasks update: %w", len(errs), errors.Join(errs...))
@@ -162,13 +176,16 @@ func (u *Updater) createTasks(ctx context.Context, tasks *tasksPacked, createReq
 	for _, createReq := range createReqs {
 		createReq := createReq
 		createReq.GroupID = groupID
-		taskGroup, err := u.s.CreateTask(ctx, &createReq)
+		task, err := u.s.CreateTask(ctx, &createReq)
 		if err != nil {
 			errs = append(errs, xerrors.Errorf("create task group: %w", err))
 			continue
 		}
-		tasks.byID[taskGroup.ID] = taskGroup
-		tasks.order[taskGroup.OrderIdx] = taskGroup
+		if err = u.validatePenalties(task.Reward, task.FullHints); err != nil {
+			errs = append(errs, xerrors.Errorf("task %q: %w", task.ID, err))
+		}
+		tasks.byID[task.ID] = task
+		tasks.order[task.OrderIdx] = task
 	}
 	if len(errs) > 0 {
 		return xerrors.Errorf("%d error(s) occured during task groups create: %w", len(errs), errors.Join(errs...))

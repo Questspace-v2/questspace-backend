@@ -191,17 +191,24 @@ type TaskGroupsBulkUpdateRequest struct {
 	Delete  []DeleteTaskGroupRequest `json:"delete"`
 }
 
+type CreateHintRequest struct {
+	Name    *string      `json:"name,omitempty"`
+	Text    string       `json:"text,omitempty"`
+	Penalty PenaltyOneOf `json:"penalty"`
+}
+
 type CreateTaskRequest struct {
-	OrderIdx       int              `json:"order_idx"`
-	GroupID        ID               `json:"group_id"`
-	Name           string           `json:"name"`
-	Question       string           `json:"question"`
-	Reward         int              `json:"reward"`
-	CorrectAnswers []string         `json:"correct_answers"`
-	Verification   VerificationType `json:"verification"`
-	Hints          []string         `json:"hints"`
-	PubTime        *time.Time       `json:"pub_time"`
-	MediaLinks     []string         `json:"media_links,omitempty"`
+	OrderIdx       int                 `json:"order_idx"`
+	GroupID        ID                  `json:"group_id"`
+	Name           string              `json:"name"`
+	Question       string              `json:"question"`
+	Reward         int                 `json:"reward"`
+	CorrectAnswers []string            `json:"correct_answers"`
+	Verification   VerificationType    `json:"verification"`
+	Hints          []string            `json:"hints"`
+	FullHints      []CreateHintRequest `json:"hints_full"`
+	PubTime        *time.Time          `json:"pub_time"`
+	MediaLinks     []string            `json:"media_links,omitempty"`
 	// Deprecated
 	MediaLink string `json:"media_link" example:"deprecated"`
 }
@@ -218,18 +225,19 @@ type GetTasksRequest struct {
 type GetTasksResponse map[ID][]Task
 
 type UpdateTaskRequest struct {
-	QuestID        ID               `json:"-"`
-	ID             ID               `json:"id"`
-	OrderIdx       int              `json:"order_idx"`
-	GroupID        ID               `json:"group_id"`
-	Name           string           `json:"name"`
-	Question       string           `json:"question"`
-	Reward         int              `json:"reward"`
-	CorrectAnswers []string         `json:"correct_answers"`
-	Verification   VerificationType `json:"verification"`
-	Hints          []string         `json:"hints"`
-	PubTime        *time.Time       `json:"pub_time"`
-	MediaLinks     []string         `json:"media_links,omitempty"`
+	QuestID        ID                   `json:"-"`
+	ID             ID                   `json:"id"`
+	OrderIdx       int                  `json:"order_idx"`
+	GroupID        ID                   `json:"group_id"`
+	Name           string               `json:"name"`
+	Question       string               `json:"question"`
+	Reward         int                  `json:"reward"`
+	CorrectAnswers []string             `json:"correct_answers"`
+	Verification   VerificationType     `json:"verification"`
+	Hints          []string             `json:"hints"`
+	FullHints      *[]CreateHintRequest `json:"hints_full"`
+	PubTime        *time.Time           `json:"pub_time"`
+	MediaLinks     []string             `json:"media_links,omitempty"`
 	// Deprecated
 	MediaLink *string `json:"media_link" example:"deprecated"`
 }

@@ -69,8 +69,13 @@ requests:
                 "correct_answers": [
                   "string"
                 ],
-                "hints": [
-                  "str"
+                "hints_full": [
+                  {
+                    "text": "str",
+                    "penalty": {
+                      "score": 30
+                    }
+                  }
                 ],
                 "media_links": [
                   "https://api.dicebear.com/8.x/thumbs/svg"
@@ -86,8 +91,13 @@ requests:
                 "correct_answers": [
                   "not_string"
                 ],
-                "hints": [
-                  "not_str"
+                "hints_full": [
+                  {
+                    "text": "not_str",
+                    "penalty": {
+                      "percent": 20
+                    }
+                  }
                 ],
                 "media_links": [
                   "https://api.dicebear.com/8.x/thumbs/svg"
@@ -119,8 +129,14 @@ requests:
                 "correct_answers": [
                   "string"
                 ],
-                "hints": [
-                  "str"
+                "hints_full": [
+                  {
+                    "index": 0,
+                    "text": "str",
+                    "penalty": {
+                      "score": 30
+                    }
+                  }
                 ],
                 "media_links": [
                   "https://api.dicebear.com/8.x/thumbs/svg"
@@ -138,8 +154,14 @@ requests:
                 "correct_answers": [
                   "not_string"
                 ],
-                "hints": [
-                  "not_str"
+                "hints_full": [
+                  { 
+                    "index": 0,
+                    "text": "not_str",
+                    "penalty": {
+                      "percent": 20
+                    }
+                  }
                 ],
                 "media_links": [
                   "https://api.dicebear.com/8.x/thumbs/svg"
@@ -271,7 +293,10 @@ requests:
     expected-json: >
       {
         "index": 0,
-        "text": "not_str"
+        "text": "not_str",
+        "penalty": {
+          "percent": 20
+        }
       }
 
   - method: POST
@@ -304,7 +329,10 @@ requests:
     expected-json: >
       {
         "index": 0,
-        "text": "str"
+        "text": "str",
+        "penalty": {
+          "score": 30
+        }
       }
 
   - method: POST
@@ -320,6 +348,6 @@ requests:
     expected-json: >
       {
         "accepted": true,
-        "score": 40,
+        "score": 20,
         "text": "string"
       }

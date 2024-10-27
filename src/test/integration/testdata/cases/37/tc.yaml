@@ -69,8 +69,13 @@ requests:
                 "correct_answers": [
                   "string"
                 ],
-                "hints": [
-                  "str"
+                "hints_full": [
+                  {
+                    "text": "str",
+                    "penalty": {
+                      "score": 30
+                    }
+                  }
                 ],
                 "media_links": [
                   "https://api.dicebear.com/8.x/thumbs/svg"
@@ -86,8 +91,13 @@ requests:
                 "correct_answers": [
                   "not_string"
                 ],
-                "hints": [
-                  "not_str"
+                "hints_full": [
+                  {
+                    "text": "not_str",
+                    "penalty": {
+                      "percent": 20
+                    }
+                  }
                 ],
                 "media_links": [
                   "https://api.dicebear.com/8.x/thumbs/svg"
@@ -119,8 +129,14 @@ requests:
                 "correct_answers": [
                   "string"
                 ],
-                "hints": [
-                  "str"
+                "hints_full": [
+                  {
+                    "index": 0,
+                    "text": "str",
+                    "penalty": {
+                      "score": 30
+                    }
+                  }
                 ],
                 "media_links": [
                   "https://api.dicebear.com/8.x/thumbs/svg"
@@ -138,8 +154,14 @@ requests:
                 "correct_answers": [
                   "not_string"
                 ],
-                "hints": [
-                  "not_str"
+                "hints_full": [
+                  { 
+                    "index": 0,
+                    "text": "not_str",
+                    "penalty": {
+                      "percent": 20
+                    }
+                  }
                 ],
                 "media_links": [
                   "https://api.dicebear.com/8.x/thumbs/svg"
@@ -172,8 +194,13 @@ requests:
                 "correct_answers": [
                   "string"
                 ],
-                "hints": [
-                  "str"
+                "hints_full": [
+                  {
+                    "text": "str",
+                    "penalty": {
+                      "score": 30
+                    }
+                  }
                 ],
                 "media_links": [
                   "https://api.dicebear.com/8.x/thumbs/svg"
@@ -188,8 +215,13 @@ requests:
                 "correct_answers": [
                   "not_string"
                 ],
-                "hints": [
-                  "not_str"
+                "hints_full": [
+                  {
+                    "text": "not_str",
+                    "penalty": {
+                      "percent": 20
+                    }
+                  }
                 ],
                 "media_links": [
                   "https://api.dicebear.com/8.x/thumbs/svg"
@@ -225,8 +257,14 @@ requests:
                 "correct_answers": [
                   "string"
                 ],
-                "hints": [
-                  "str"
+                "hints_full": [
+                  {
+                    "index": 0,
+                    "text": "str",
+                    "penalty": {
+                      "score": 30
+                    }
+                  }
                 ],
                 "id": "$SET$:TASK01_ID",
                 "media_links": [
@@ -243,8 +281,14 @@ requests:
                 "correct_answers": [
                   "not_string"
                 ],
-                "hints": [
-                  "not_str"
+                "hints_full": [
+                  { 
+                    "index": 0,
+                    "text": "not_str",
+                    "penalty": {
+                      "percent": 20
+                    }
+                  }
                 ],
                 "id": "$SET$:TASK02_ID",
                 "media_links": [
@@ -269,8 +313,14 @@ requests:
                 "correct_answers": [
                   "string"
                 ],
-                "hints": [
-                  "str"
+                "hints_full": [
+                  {
+                    "index": 0,
+                    "text": "str",
+                    "penalty": {
+                      "score": 30
+                    }
+                  }
                 ],
                 "id": "$TASK1_ID",
                 "media_links": [
@@ -288,8 +338,14 @@ requests:
                 "correct_answers": [
                   "not_string"
                 ],
-                "hints": [
-                  "not_str"
+                "hints_full": [
+                  { 
+                    "index": 0,
+                    "text": "not_str",
+                    "penalty": {
+                      "percent": 20
+                    }
+                  }
                 ],
                 "id": "$TASK2_ID",
                 "media_links": [

@@ -1639,6 +1639,12 @@ const docTemplate = `{
         "game.AnswerTaskHint": {
             "type": "object",
             "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "penalty": {
+                    "$ref": "#/definitions/storage.PenaltyOneOf"
+                },
                 "taken": {
                     "type": "boolean"
                 },
@@ -1874,6 +1880,12 @@ const docTemplate = `{
                         "maxLength": 3
                     }
                 },
+                "hints_full": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/storage.CreateHintRequest"
+                    }
+                },
                 "media_link": {
                     "description": "Deprecated",
                     "type": "string",
@@ -1920,6 +1932,20 @@ const docTemplate = `{
                 "AccessPublic",
                 "AccessLinkOnly"
             ]
+        },
+        "storage.CreateHintRequest": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "penalty": {
+                    "$ref": "#/definitions/storage.PenaltyOneOf"
+                },
+                "text": {
+                    "type": "string"
+                }
+            }
         },
         "storage.CreateQuestRequest": {
             "type": "object",
@@ -2024,6 +2050,12 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "hints_full": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/storage.CreateHintRequest"
+                    }
+                },
                 "media_link": {
                     "description": "Deprecated",
                     "type": "string",
@@ -2077,8 +2109,25 @@ const docTemplate = `{
                 "index": {
                     "type": "integer"
                 },
+                "name": {
+                    "type": "string"
+                },
+                "penalty": {
+                    "$ref": "#/definitions/storage.PenaltyOneOf"
+                },
                 "text": {
                     "type": "string"
+                }
+            }
+        },
+        "storage.PenaltyOneOf": {
+            "type": "object",
+            "properties": {
+                "percent": {
+                    "type": "integer"
+                },
+                "score": {
+                    "type": "integer"
                 }
             }
         },
@@ -2208,6 +2257,12 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "type": "string"
+                    }
+                },
+                "hints_full": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/storage.Hint"
                     }
                 },
                 "id": {
@@ -2471,6 +2526,12 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "type": "string"
+                    }
+                },
+                "hints_full": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/storage.CreateHintRequest"
                     }
                 },
                 "id": {

@@ -13,6 +13,121 @@ import (
 	"questspace/pkg/storage"
 )
 
+func (c *Client) createHints(ctx context.Context, taskID storage.ID, hints []storage.CreateHintRequest) ([]storage.Hint, error) {
+	if len(hints) == 0 {
+		return []storage.Hint{}, nil
+	}
+	hintsRes := make([]storage.Hint, 0, len(hints))
+	query := sq.Insert("questspace.hint").
+		Columns(
+			"task_id",
+			"index",
+			"name",
+			"text",
+			"penalty_percent",
+			"penalty_score",
+		).
+		PlaceholderFormat(sq.Dollar)
+
+	for i, hintReq := range hints {
+		hintArgs := []any{
+			taskID,
+			i,
+			hintReq.Name,
+			hintReq.Text,
+			hintReq.Penalty.PercentOpt(),
+			hintReq.Penalty.ScoreOpt(),
+		}
+		query = query.Values(hintArgs...)
+
+		if hintReq.Penalty.PercentOpt() == nil && hintReq.Penalty.ScoreOpt() == nil {
+			return nil, xerrors.Errorf("both opts of #%d hint penalty are empty", i)
+		}
+		if hintReq.Penalty.PercentOpt() != nil && hintReq.Penalty.ScoreOpt() != nil {
+			return nil, xerrors.Errorf("both opts of #%d hint penalty are not empty", i)
+		}
+
+		hintsRes = append(hintsRes, storage.Hint{
+			TaskID:  taskID,
+			Index:   i,
+			Name:    hintReq.Name,
+			Text:    hintReq.Text,
+			Penalty: hintReq.Penalty,
+		})
+	}
+
+	_, err := query.RunWith(c.runner).ExecContext(ctx)
+	if err != nil {
+		return nil, xerrors.Errorf("exec query: %w", err)
+	}
+
+	return hintsRes, nil
+}
+
+func (c *Client) getHints(ctx context.Context, taskIDs []storage.ID) (hintsByTaskID map[storage.ID][]storage.Hint, err error) {
+	query := sq.Select(
+		"task_id",
+		"index",
+		"name",
+		"text",
+		"penalty_percent",
+		"penalty_score",
+	).From("questspace.hint").
+		Where(sq.Eq{"task_id": taskIDs}).
+		OrderBy("index").
+		PlaceholderFormat(sq.Dollar)
+
+	rows, err := query.RunWith(c.runner).QueryContext(ctx)
+	if err != nil {
+		return nil, xerrors.Errorf("query rows: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+
+	hintsByTaskID = make(map[storage.ID][]storage.Hint, len(taskIDs))
+	for rows.Next() {
+		var hint storage.Hint
+		var percent, score *int
+		if err = rows.Scan(
+			&hint.TaskID,
+			&hint.Index,
+			&hint.Name,
+			&hint.Text,
+			&percent,
+			&score,
+		); err != nil {
+			return nil, xerrors.Errorf("scan row: %w", err)
+		}
+		if percent != nil {
+			hint.Penalty, err = storage.NewPercentagePenalty(*percent)
+			if err != nil {
+				return nil, xerrors.Errorf("bad penalty: %w", err)
+			}
+		}
+		if score != nil {
+			hint.Penalty = storage.NewScorePenalty(*score)
+		}
+
+		taskHints := hintsByTaskID[hint.TaskID]
+		taskHints = append(taskHints, hint)
+		hintsByTaskID[hint.TaskID] = taskHints
+	}
+	if err = rows.Err(); err != nil {
+		return nil, xerrors.Errorf("iter rows: %w", err)
+	}
+
+	return hintsByTaskID, nil
+}
+
+func (c *Client) updateHints(ctx context.Context, taskID storage.ID, hints []storage.CreateHintRequest) ([]storage.Hint, error) {
+	const query = `DELETE FROM questspace.hint WHERE task_id = $1`
+	_, err := c.runner.ExecContext(ctx, query, taskID)
+	if err != nil {
+		return nil, xerrors.Errorf("delete previous hints: %w", err)
+	}
+
+	return c.createHints(ctx, taskID, hints)
+}
+
 func (c *Client) CreateTask(ctx context.Context, req *storage.CreateTaskRequest) (*storage.Task, error) {
 	values := []any{
 		req.OrderIdx,
@@ -65,12 +180,24 @@ func (c *Client) CreateTask(ctx context.Context, req *storage.CreateTaskRequest)
 		Verification:    req.Verification,
 		VerificationNew: req.Verification,
 		Hints:           slices.Clone(req.Hints),
+		FullHints:       []storage.Hint{},
 		MediaLinks:      req.MediaLinks,
 		MediaLink:       req.MediaLink,
 		PubTime:         req.PubTime,
 	}
 	if err := row.Scan(&task.ID); err != nil {
 		return nil, xerrors.Errorf("scan row: %w", err)
+	}
+
+	if len(req.FullHints) == 0 {
+		for _, hintText := range task.Hints {
+			req.FullHints = append(req.FullHints, storage.CreateHintRequest{Text: hintText, Penalty: storage.DefaultPenalty})
+		}
+	}
+	var err error
+	task.FullHints, err = c.createHints(ctx, task.ID, req.FullHints)
+	if err != nil {
+		return nil, xerrors.Errorf("create hints: %w", err)
 	}
 
 	return &task, nil
@@ -117,6 +244,15 @@ func (c *Client) GetTask(ctx context.Context, req *storage.GetTaskRequest) (*sto
 		task.MediaLinks = []string{task.MediaLink}
 	}
 	task.VerificationNew = task.Verification
+	task.FullHints = []storage.Hint{}
+
+	hintsByID, err := c.getHints(ctx, []storage.ID{req.ID})
+	if err != nil {
+		return nil, xerrors.Errorf("get task hints: %w", err)
+	}
+	if hintsByID[req.ID] != nil {
+		task.FullHints = hintsByID[req.ID]
+	}
 
 	return &task, nil
 }
@@ -137,6 +273,15 @@ func (c *Client) GetAnswerData(ctx context.Context, req *storage.GetTaskRequest)
 		return nil, xerrors.Errorf("scan row: %w", err)
 	}
 	task.VerificationNew = task.Verification
+	task.FullHints = []storage.Hint{}
+
+	hintsByID, err := c.getHints(ctx, []storage.ID{req.ID})
+	if err != nil {
+		return nil, xerrors.Errorf("get task hints: %w", err)
+	}
+	if hintsByID[req.ID] != nil {
+		task.FullHints = hintsByID[req.ID]
+	}
 
 	return &task, nil
 }
@@ -176,6 +321,7 @@ func (c *Client) GetTasks(ctx context.Context, req *storage.GetTasksRequest) (st
 
 	pgMap := pgtype.NewMap()
 	tasks := make(storage.GetTasksResponse)
+	var ids []storage.ID
 	for rows.Next() {
 		task := storage.Task{Group: &storage.TaskGroup{}}
 		if err := rows.Scan(
@@ -198,13 +344,29 @@ func (c *Client) GetTasks(ctx context.Context, req *storage.GetTasksRequest) (st
 			task.MediaLinks = []string{task.MediaLink}
 		}
 		task.VerificationNew = task.Verification
+		task.FullHints = []storage.Hint{}
 
 		group := tasks[task.Group.ID]
 		group = append(group, task)
 		tasks[task.Group.ID] = group
+		ids = append(ids, task.ID)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, xerrors.Errorf("iter rows: %w", err)
+	}
+
+	hintsByID, err := c.getHints(ctx, ids)
+	if err != nil {
+		return nil, xerrors.Errorf("get task hints: %w", err)
+	}
+	for _, tgTasks := range tasks {
+		for i, tgTask := range tgTasks {
+			if hintsByID[tgTask.ID] == nil {
+				continue
+			}
+			tgTask.FullHints = hintsByID[tgTask.ID]
+			tgTasks[i] = tgTask
+		}
 	}
 
 	return tasks, nil
@@ -242,6 +404,14 @@ func (c *Client) UpdateTask(ctx context.Context, req *storage.UpdateTaskRequest)
 	}
 	if len(req.Hints) > 0 {
 		query = query.Set("hints", pgtype.FlatArray[string](req.Hints))
+
+		if *req.FullHints == nil {
+			fullHints := make([]storage.CreateHintRequest, 0, len(req.Hints))
+			for _, hintText := range req.Hints {
+				fullHints = append(fullHints, storage.CreateHintRequest{Text: hintText, Penalty: storage.DefaultPenalty})
+			}
+			req.FullHints = &fullHints
+		}
 	}
 	if req.MediaLink != nil {
 		query = query.Set("media_url", *req.MediaLink)
@@ -277,6 +447,15 @@ func (c *Client) UpdateTask(ctx context.Context, req *storage.UpdateTaskRequest)
 		task.MediaLinks = []string{task.MediaLink}
 	}
 	task.VerificationNew = task.Verification
+	task.FullHints = []storage.Hint{}
+
+	if req.FullHints != nil {
+		var err error
+		task.FullHints, err = c.updateHints(ctx, task.ID, *req.FullHints)
+		if err != nil {
+			return nil, xerrors.Errorf("update hints: %w", err)
+		}
+	}
 
 	return &task, nil
 }

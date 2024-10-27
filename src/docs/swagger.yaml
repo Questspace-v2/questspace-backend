@@ -152,6 +152,10 @@ definitions:
     type: object
   game.AnswerTaskHint:
     properties:
+      name:
+        type: string
+      penalty:
+        $ref: '#/definitions/storage.PenaltyOneOf'
       taken:
         type: boolean
       text:
@@ -304,6 +308,10 @@ definitions:
           maxLength: 3
           type: string
         type: array
+      hints_full:
+        items:
+          $ref: '#/definitions/storage.CreateHintRequest'
+        type: array
       media_link:
         description: Deprecated
         example: deprecated
@@ -335,6 +343,15 @@ definitions:
     x-enum-varnames:
     - AccessPublic
     - AccessLinkOnly
+  storage.CreateHintRequest:
+    properties:
+      name:
+        type: string
+      penalty:
+        $ref: '#/definitions/storage.PenaltyOneOf'
+      text:
+        type: string
+    type: object
   storage.CreateQuestRequest:
     properties:
       access:
@@ -403,6 +420,10 @@ definitions:
         items:
           type: string
         type: array
+      hints_full:
+        items:
+          $ref: '#/definitions/storage.CreateHintRequest'
+        type: array
       media_link:
         description: Deprecated
         example: deprecated
@@ -438,8 +459,19 @@ definitions:
     properties:
       index:
         type: integer
+      name:
+        type: string
+      penalty:
+        $ref: '#/definitions/storage.PenaltyOneOf'
       text:
         type: string
+    type: object
+  storage.PenaltyOneOf:
+    properties:
+      percent:
+        type: integer
+      score:
+        type: integer
     type: object
   storage.Quest:
     properties:
@@ -531,6 +563,10 @@ definitions:
       hints:
         items:
           type: string
+        type: array
+      hints_full:
+        items:
+          $ref: '#/definitions/storage.Hint'
         type: array
       id:
         type: string
@@ -700,6 +736,10 @@ definitions:
       hints:
         items:
           type: string
+        type: array
+      hints_full:
+        items:
+          $ref: '#/definitions/storage.CreateHintRequest'
         type: array
       id:
         type: string
