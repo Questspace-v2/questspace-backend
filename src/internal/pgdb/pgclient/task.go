@@ -179,7 +179,7 @@ func (c *Client) CreateTask(ctx context.Context, req *storage.CreateTaskRequest)
 		CorrectAnswers:  slices.Clone(req.CorrectAnswers),
 		Verification:    req.Verification,
 		VerificationNew: req.Verification,
-		Hints:           slices.Clone(req.Hints),
+		Hints:           append([]string{}, req.Hints...),
 		FullHints:       []storage.Hint{},
 		MediaLinks:      req.MediaLinks,
 		MediaLink:       req.MediaLink,
@@ -243,6 +243,7 @@ func (c *Client) GetTask(ctx context.Context, req *storage.GetTaskRequest) (*sto
 	if len(task.MediaLinks) == 0 && len(task.MediaLink) > 0 {
 		task.MediaLinks = []string{task.MediaLink}
 	}
+	task.Hints = append([]string{}, task.Hints...)
 	task.VerificationNew = task.Verification
 	task.FullHints = []storage.Hint{}
 
@@ -344,6 +345,7 @@ func (c *Client) GetTasks(ctx context.Context, req *storage.GetTasksRequest) (st
 			task.MediaLinks = []string{task.MediaLink}
 		}
 		task.VerificationNew = task.Verification
+		task.Hints = append([]string{}, task.Hints...)
 		task.FullHints = []storage.Hint{}
 
 		group := tasks[task.Group.ID]
@@ -446,6 +448,7 @@ func (c *Client) UpdateTask(ctx context.Context, req *storage.UpdateTaskRequest)
 	if len(task.MediaLinks) == 0 && len(task.MediaLink) > 0 {
 		task.MediaLinks = []string{task.MediaLink}
 	}
+	task.Hints = append([]string{}, task.Hints...)
 	task.VerificationNew = task.Verification
 	task.FullHints = []storage.Hint{}
 
