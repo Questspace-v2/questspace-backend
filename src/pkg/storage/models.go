@@ -134,7 +134,7 @@ type Quest struct {
 	FinishTime           *time.Time       `json:"finish_time,omitempty" example:"2024-04-21T14:00:00+05:00"`
 	MediaLink            string           `json:"media_link"`
 	MaxTeamCap           *int             `json:"max_team_cap,omitempty"`
-	Status               QuestStatus      `json:"status"`
+	Status               QuestStatus      `json:"status" swaggertype:"string" enums:"ON_REGISTRATION,REGISTRATION_DONE,RUNNING,WAIT_RESULTS,FINISHED"`
 	HasBrief             bool             `json:"has_brief,omitempty"`
 	Brief                string           `json:"brief,omitempty"`
 	MaxTeamsAmount       *int             `json:"max_teams_amount,omitempty"`
@@ -258,7 +258,7 @@ type TaskGroup struct {
 	Sticky       bool       `json:"sticky,omitempty"`
 	Tasks        []Task     `json:"tasks"`
 	HasTimeLimit bool       `json:"has_time_limit,omitempty"`
-	TimeLimit    *Duration  `json:"time_limit,omitempty"`
+	TimeLimit    *Duration  `json:"time_limit,omitempty" swaggertype:"string" example:"45m"`
 }
 
 type Task struct {

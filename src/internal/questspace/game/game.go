@@ -75,7 +75,7 @@ type AnswerTaskGroup struct {
 	Sticky       bool              `json:"sticky,omitempty"`
 	Tasks        []AnswerTask      `json:"tasks"`
 	HasTimeLimit bool              `json:"has_time_limit,omitempty"`
-	TimeLimit    *storage.Duration `json:"time_limit,omitempty"`
+	TimeLimit    *storage.Duration `json:"time_limit,omitempty" swaggertype:"string" example:"45m"`
 }
 
 type AnswerDataResponse struct {
