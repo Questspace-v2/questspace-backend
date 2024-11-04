@@ -3,6 +3,7 @@ package storage
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"strconv"
 	"strings"
 	"time"
@@ -219,15 +220,45 @@ type User struct {
 	AvatarURL string `json:"avatar_url,omitempty"`
 }
 
+type Duration time.Duration
+
+func (d *Duration) MarshalJSON() ([]byte, error) {
+	return json.Marshal(time.Duration(*d).String())
+}
+
+func (d *Duration) UnmarshalJSON(data []byte) error {
+	var v interface{}
+	if err := json.Unmarshal(data, &v); err != nil {
+		return err
+	}
+	switch value := v.(type) {
+	case float64:
+		*d = Duration(value)
+		return nil
+	case string:
+		var err error
+		dur, err := time.ParseDuration(value)
+		if err != nil {
+			return err
+		}
+		*d = Duration(dur)
+		return nil
+	default:
+		return errors.New("invalid duration")
+	}
+}
+
 type TaskGroup struct {
-	ID          ID         `json:"id"`
-	OrderIdx    int        `json:"order_idx"`
-	Quest       *Quest     `json:"-"`
-	Name        string     `json:"name"`
-	Description string     `json:"description,omitempty"`
-	PubTime     *time.Time `json:"pub_time,omitempty"`
-	Sticky      bool       `json:"sticky,omitempty"`
-	Tasks       []Task     `json:"tasks"`
+	ID           ID         `json:"id"`
+	OrderIdx     int        `json:"order_idx"`
+	Quest        *Quest     `json:"-"`
+	Name         string     `json:"name"`
+	Description  string     `json:"description,omitempty"`
+	PubTime      *time.Time `json:"pub_time,omitempty"`
+	Sticky       bool       `json:"sticky,omitempty"`
+	Tasks        []Task     `json:"tasks"`
+	HasTimeLimit bool       `json:"has_time_limit,omitempty"`
+	TimeLimit    *Duration  `json:"time_limit,omitempty"`
 }
 
 type Task struct {

@@ -67,13 +67,15 @@ type AnswerTask struct {
 }
 
 type AnswerTaskGroup struct {
-	ID          storage.ID   `json:"id"`
-	OrderIdx    int          `json:"order_idx"`
-	Name        string       `json:"name"`
-	Description string       `json:"description,omitempty"`
-	PubTime     *time.Time   `json:"pub_time,omitempty"`
-	Sticky      bool         `json:"sticky,omitempty"`
-	Tasks       []AnswerTask `json:"tasks"`
+	ID           storage.ID        `json:"id"`
+	OrderIdx     int               `json:"order_idx"`
+	Name         string            `json:"name"`
+	Description  string            `json:"description,omitempty"`
+	PubTime      *time.Time        `json:"pub_time,omitempty"`
+	Sticky       bool              `json:"sticky,omitempty"`
+	Tasks        []AnswerTask      `json:"tasks"`
+	HasTimeLimit bool              `json:"has_time_limit,omitempty"`
+	TimeLimit    *storage.Duration `json:"time_limit,omitempty"`
 }
 
 type AnswerDataResponse struct {
@@ -96,18 +98,21 @@ func (s *Service) FillAnswerData(ctx context.Context, req *AnswerDataRequest) (*
 
 func (s *Service) fillAnswerData(_ context.Context, req *AnswerDataRequest, takenHints storage.HintTakes, acceptedTasks storage.AcceptedTasks) *AnswerDataResponse {
 	taskGroups := make([]AnswerTaskGroup, 0, len(req.TaskGroups))
+	var shownFirstUnaccepted bool
 	for _, tg := range req.TaskGroups {
 		newTg := AnswerTaskGroup{
-			ID:          tg.ID,
-			OrderIdx:    tg.OrderIdx,
-			Name:        tg.Name,
-			Description: tg.Description,
-			PubTime:     tg.PubTime,
-			Sticky:      tg.Sticky,
-			Tasks:       make([]AnswerTask, 0, len(tg.Tasks)),
+			ID:           tg.ID,
+			OrderIdx:     tg.OrderIdx,
+			Name:         tg.Name,
+			Description:  tg.Description,
+			PubTime:      tg.PubTime,
+			Sticky:       tg.Sticky,
+			Tasks:        make([]AnswerTask, 0, len(tg.Tasks)),
+			HasTimeLimit: tg.HasTimeLimit,
+			TimeLimit:    tg.TimeLimit,
 		}
 
-		var shownFirstUnaccepted bool
+		allDone := true
 		for _, t := range tg.Tasks {
 			newT := AnswerTask{
 				ID:               t.ID,
@@ -138,19 +143,23 @@ func (s *Service) fillAnswerData(_ context.Context, req *AnswerDataRequest, take
 				}
 			}
 
-			if req.Quest.QuestType != storage.TypeLinear || tg.Sticky {
-				newTg.Tasks = append(newTg.Tasks, newT)
-				continue
-			}
-			if shownFirstUnaccepted {
-				break
-			}
-			if !newT.Accepted {
-				shownFirstUnaccepted = true
-			}
 			newTg.Tasks = append(newTg.Tasks, newT)
+			allDone = allDone && newT.Accepted
 		}
-		taskGroups = append(taskGroups, newTg)
+		if req.Quest.QuestType != storage.TypeLinear || newTg.Sticky {
+			taskGroups = append(taskGroups, newTg)
+			continue
+		}
+		if allDone {
+			taskGroups = append(taskGroups, newTg)
+			continue
+		}
+		if !shownFirstUnaccepted {
+			taskGroups = append(taskGroups, newTg)
+			shownFirstUnaccepted = true
+			continue
+		}
+		break
 	}
 
 	resp := &AnswerDataResponse{
@@ -387,7 +396,7 @@ type TryAnswerResponse struct {
 	TaskGroups []AnswerTaskGroup `json:"task_groups,omitempty"`
 }
 
-func (s *Service) TryAnswer(ctx context.Context, user *storage.User, req *TryAnswerRequest) (*TryAnswerResponse, error) {
+func (s *Service) TryAnswer(ctx context.Context, user *storage.User, req *TryAnswerRequest) (resp *TryAnswerResponse, err error) {
 	team, err := s.tms.GetTeam(ctx, &storage.GetTeamRequest{UserRegistration: &storage.UserRegistration{UserID: user.ID, QuestID: req.QuestID}})
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
