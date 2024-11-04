@@ -150,13 +150,15 @@ type RemoveUserRequest struct {
 }
 
 type CreateTaskGroupRequest struct {
-	QuestID     ID                  `json:"-"`
-	OrderIdx    int                 `json:"order_idx"`
-	Name        string              `json:"name"`
-	Description string              `json:"description,omitempty"`
-	PubTime     *time.Time          `json:"pub_time,omitempty"`
-	Tasks       []CreateTaskRequest `json:"tasks"`
-	Sticky      bool                `json:"sticky,omitempty"`
+	QuestID      ID                  `json:"-"`
+	OrderIdx     int                 `json:"order_idx"`
+	Name         string              `json:"name"`
+	Description  string              `json:"description,omitempty"`
+	PubTime      *time.Time          `json:"pub_time,omitempty"`
+	Tasks        []CreateTaskRequest `json:"tasks"`
+	Sticky       bool                `json:"sticky,omitempty"`
+	HasTimeLimit bool                `json:"has_time_limit,omitempty"`
+	TimeLimit    *Duration           `json:"time_limit,omitempty"`
 }
 
 type GetTaskGroupRequest struct {
@@ -170,14 +172,16 @@ type GetTaskGroupsRequest struct {
 }
 
 type UpdateTaskGroupRequest struct {
-	QuestID     ID `json:"-"`
-	ID          ID
-	OrderIdx    int                     `json:"order_idx"`
-	Name        string                  `json:"name"`
-	Description *string                 `json:"description,omitempty"`
-	PubTime     *time.Time              `json:"pub_time"`
-	Tasks       *TasksBulkUpdateRequest `json:"tasks"`
-	Sticky      *bool                   `json:"sticky,omitempty"`
+	QuestID      ID                      `json:"-"`
+	ID           ID                      `json:"id"`
+	OrderIdx     int                     `json:"order_idx"`
+	Name         string                  `json:"name"`
+	Description  *string                 `json:"description,omitempty"`
+	PubTime      *time.Time              `json:"pub_time"`
+	Tasks        *TasksBulkUpdateRequest `json:"tasks"`
+	Sticky       *bool                   `json:"sticky,omitempty"`
+	HasTimeLimit *bool                   `json:"has_time_limit,omitempty"`
+	TimeLimit    *Duration               `json:"time_limit,omitempty"`
 }
 
 type DeleteTaskGroupRequest struct {

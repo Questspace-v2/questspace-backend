@@ -32,12 +32,14 @@ type CreateTaskRequest struct {
 }
 
 type CreateRequest struct {
-	QuestID     storage.ID          `json:"-"`
-	Name        string              `json:"name"`
-	Description string              `json:"description"`
-	PubTime     *time.Time          `json:"pub_time,omitempty"`
-	Sticky      bool                `json:"sticky,omitempty"`
-	Tasks       []CreateTaskRequest `json:"tasks"`
+	QuestID      storage.ID          `json:"-"`
+	Name         string              `json:"name"`
+	Description  string              `json:"description"`
+	PubTime      *time.Time          `json:"pub_time,omitempty"`
+	Sticky       bool                `json:"sticky,omitempty"`
+	Tasks        []CreateTaskRequest `json:"tasks"`
+	HasTimeLimit bool                `json:"has_time_limit,omitempty"`
+	TimeLimit    *storage.Duration   `json:"time_limit,omitempty"`
 }
 
 type CreateFullRequest struct {
