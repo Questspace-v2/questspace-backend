@@ -1637,6 +1637,9 @@ const docTemplate = `{
                         "$ref": "#/definitions/game.AnswerTask"
                     }
                 },
+                "team_info": {
+                    "$ref": "#/definitions/storage.TaskGroupTeamInfo"
+                },
                 "time_limit": {
                     "type": "string",
                     "example": "45m"
@@ -2308,9 +2311,23 @@ const docTemplate = `{
                         "$ref": "#/definitions/storage.Task"
                     }
                 },
+                "team_info": {
+                    "$ref": "#/definitions/storage.TaskGroupTeamInfo"
+                },
                 "time_limit": {
                     "type": "string",
                     "example": "45m"
+                }
+            }
+        },
+        "storage.TaskGroupTeamInfo": {
+            "type": "object",
+            "properties": {
+                "closing_time": {
+                    "type": "string"
+                },
+                "opening_time": {
+                    "type": "string"
                 }
             }
         },
