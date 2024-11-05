@@ -100,11 +100,14 @@ func (h *Handler) HandleGet(ctx context.Context, w http.ResponseWriter, r *http.
 	if quest.Status != storage.StatusRunning {
 		return httperrors.New(http.StatusNotAcceptable, "cannot get tasks before quest start")
 	}
-	taskGroups, err := s.GetTaskGroups(ctx, &storage.GetTaskGroupsRequest{
+	tgReq := storage.GetTaskGroupsRequest{
 		QuestID:      questID,
 		IncludeTasks: true,
-		TeamData:     &storage.TeamData{UserID: &uauth.ID},
-	})
+	}
+	if quest.QuestType == storage.TypeLinear {
+		tgReq.TeamData = &storage.TeamData{UserID: &uauth.ID}
+	}
+	taskGroups, err := s.GetTaskGroups(ctx, &tgReq)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return httperrors.Errorf(http.StatusNotFound, "not found quest %q", questID)

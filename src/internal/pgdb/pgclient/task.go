@@ -205,17 +205,17 @@ func (c *Client) CreateTask(ctx context.Context, req *storage.CreateTaskRequest)
 
 const getTaskQuery = `
 SELECT
-	t.order_idx,
-	t.name,
-	t.question,
-	t.reward,
-	t.correct_answers,
-	t.verification,
-	t.hints,
-	t.media_url,
-	t.media_urls,
-	t.pub_time,
-	t.group_id,
+	order_idx,
+	name,
+	question,
+	reward,
+	correct_answers,
+	verification,
+	hints,
+	media_url,
+	media_urls,
+	pub_time,
+	group_id
 FROM questspace.task
 	WHERE id = $1
 `

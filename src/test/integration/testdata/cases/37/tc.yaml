@@ -138,6 +138,7 @@ requests:
                     }
                   }
                 ],
+                "hints": [],
                 "media_links": [
                   "https://api.dicebear.com/8.x/thumbs/svg"
                 ],
@@ -163,6 +164,7 @@ requests:
                     }
                   }
                 ],
+                "hints": [],
                 "media_links": [
                   "https://api.dicebear.com/8.x/thumbs/svg"
                 ],
@@ -266,6 +268,7 @@ requests:
                     }
                   }
                 ],
+                "hints": [],
                 "id": "$SET$:TASK01_ID",
                 "media_links": [
                   "https://api.dicebear.com/8.x/thumbs/svg"
@@ -290,6 +293,7 @@ requests:
                     }
                   }
                 ],
+                "hints": [],
                 "id": "$SET$:TASK02_ID",
                 "media_links": [
                   "https://api.dicebear.com/8.x/thumbs/svg"
@@ -322,6 +326,7 @@ requests:
                     }
                   }
                 ],
+                "hints": [],
                 "id": "$TASK1_ID",
                 "media_links": [
                   "https://api.dicebear.com/8.x/thumbs/svg"
@@ -347,6 +352,7 @@ requests:
                     }
                   }
                 ],
+                "hints": [],
                 "id": "$TASK2_ID",
                 "media_links": [
                   "https://api.dicebear.com/8.x/thumbs/svg"
