@@ -90,6 +90,13 @@ func (c *Client) GetTaskGroup(ctx context.Context, req *storage.GetTaskGroupRequ
 			taskGroup.Tasks[i].Group = &taskGroup
 		}
 	}
+	if req.TeamData != nil {
+		teamInfos, err := c.fillTeamInfos(ctx, []storage.TaskGroup{taskGroup}, *req.TeamData)
+		if err != nil {
+			return nil, xerrors.Errorf("get team info: %w", err)
+		}
+		taskGroup.TeamInfo = teamInfos[taskGroup.ID]
+	}
 
 	return &taskGroup, nil
 }
@@ -97,9 +104,15 @@ func (c *Client) GetTaskGroup(ctx context.Context, req *storage.GetTaskGroupRequ
 func (c *Client) GetTaskGroups(ctx context.Context, req *storage.GetTaskGroupsRequest) ([]storage.TaskGroup, error) {
 	query := sq.Select("id", "name", "description", "order_idx", "sticky", "pub_time", "has_time_limit", "time_limit").
 		From("questspace.task_group").
-		Where(sq.Eq{"quest_id": req.QuestID}).
 		OrderBy("order_idx").
 		PlaceholderFormat(sq.Dollar)
+	if len(req.QuestID) > 0 {
+		query = query.Where(sq.Eq{"quest_id": req.QuestID})
+	}
+	if len(req.GroupIDs) > 0 {
+		query = query.Where(sq.Eq{"id": req.GroupIDs})
+	}
+
 	rows, err := query.RunWith(c.runner).QueryContext(ctx)
 	if err != nil {
 		return nil, xerrors.Errorf("query rows: %w", err)
@@ -148,6 +161,16 @@ func (c *Client) GetTaskGroups(ctx context.Context, req *storage.GetTaskGroupsRe
 			for j := range len(tg.Tasks) {
 				tg.Tasks[j].Group = &tg
 			}
+		}
+	}
+	if req.TeamData != nil {
+		teamInfos, err := c.fillTeamInfos(ctx, taskGroups, *req.TeamData)
+		if err != nil {
+			return nil, xerrors.Errorf("get team infos: %w", err)
+		}
+		for i := range len(taskGroups) {
+			tg := taskGroups[i]
+			taskGroups[i].TeamInfo = teamInfos[tg.ID]
 		}
 	}
 

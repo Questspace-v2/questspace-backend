@@ -205,23 +205,24 @@ func (c *Client) CreateTask(ctx context.Context, req *storage.CreateTaskRequest)
 
 const getTaskQuery = `
 SELECT
-	order_idx,
-	name,
-	question,
-	reward,
-	correct_answers,
-	verification,
-	hints,
-	media_url,
-	media_urls,
-	pub_time
+	t.order_idx,
+	t.name,
+	t.question,
+	t.reward,
+	t.correct_answers,
+	t.verification,
+	t.hints,
+	t.media_url,
+	t.media_urls,
+	t.pub_time,
+	t.group_id,
 FROM questspace.task
 	WHERE id = $1
 `
 
 func (c *Client) GetTask(ctx context.Context, req *storage.GetTaskRequest) (*storage.Task, error) {
 	row := c.runner.QueryRowContext(ctx, getTaskQuery, req.ID)
-	task := storage.Task{ID: req.ID}
+	task := storage.Task{ID: req.ID, Group: &storage.TaskGroup{}}
 	pgMap := pgtype.NewMap()
 	if err := row.Scan(
 		&task.OrderIdx,
@@ -234,6 +235,7 @@ func (c *Client) GetTask(ctx context.Context, req *storage.GetTaskRequest) (*sto
 		&task.MediaLink,
 		pgMap.SQLScanner(&task.MediaLinks),
 		&task.PubTime,
+		&task.Group.ID,
 	); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, storage.ErrNotFound

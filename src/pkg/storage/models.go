@@ -249,16 +249,17 @@ func (d *Duration) UnmarshalJSON(data []byte) error {
 }
 
 type TaskGroup struct {
-	ID           ID         `json:"id"`
-	OrderIdx     int        `json:"order_idx"`
-	Quest        *Quest     `json:"-"`
-	Name         string     `json:"name"`
-	Description  string     `json:"description,omitempty"`
-	PubTime      *time.Time `json:"pub_time,omitempty"`
-	Sticky       bool       `json:"sticky,omitempty"`
-	Tasks        []Task     `json:"tasks"`
-	HasTimeLimit bool       `json:"has_time_limit,omitempty"`
-	TimeLimit    *Duration  `json:"time_limit,omitempty" swaggertype:"string" example:"45m"`
+	ID           ID                 `json:"id"`
+	OrderIdx     int                `json:"order_idx"`
+	Quest        *Quest             `json:"-"`
+	Name         string             `json:"name"`
+	Description  string             `json:"description,omitempty"`
+	PubTime      *time.Time         `json:"pub_time,omitempty"`
+	Sticky       bool               `json:"sticky,omitempty"`
+	Tasks        []Task             `json:"tasks"`
+	HasTimeLimit bool               `json:"has_time_limit,omitempty"`
+	TimeLimit    *Duration          `json:"time_limit,omitempty" swaggertype:"string" example:"45m"`
+	TeamInfo     *TaskGroupTeamInfo `json:"team_info,omitempty"`
 }
 
 type Task struct {
@@ -461,4 +462,9 @@ type AnswerLogRecords struct {
 	AnswerLogs []AnswerLog
 	NextToken  int64
 	TotalPages int
+}
+
+type TaskGroupTeamInfo struct {
+	OpeningTime time.Time  `json:"opening_time"`
+	ClosingTime *time.Time `json:"closing_time,omitempty"`
 }
