@@ -214,14 +214,15 @@ SELECT
 	hints,
 	media_url,
 	media_urls,
-	pub_time
+	pub_time,
+	group_id
 FROM questspace.task
 	WHERE id = $1
 `
 
 func (c *Client) GetTask(ctx context.Context, req *storage.GetTaskRequest) (*storage.Task, error) {
 	row := c.runner.QueryRowContext(ctx, getTaskQuery, req.ID)
-	task := storage.Task{ID: req.ID}
+	task := storage.Task{ID: req.ID, Group: &storage.TaskGroup{}}
 	pgMap := pgtype.NewMap()
 	if err := row.Scan(
 		&task.OrderIdx,
@@ -234,6 +235,7 @@ func (c *Client) GetTask(ctx context.Context, req *storage.GetTaskRequest) (*sto
 		&task.MediaLink,
 		pgMap.SQLScanner(&task.MediaLinks),
 		&task.PubTime,
+		&task.Group.ID,
 	); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, storage.ErrNotFound

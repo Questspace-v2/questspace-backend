@@ -137,6 +137,7 @@ requests:
                     }
                   }
                 ],
+                "hints": [],
                 "media_links": [
                   "https://api.dicebear.com/8.x/thumbs/svg"
                 ],
@@ -162,6 +163,7 @@ requests:
                     }
                   }
                 ],
+                "hints": [],
                 "media_links": [
                   "https://api.dicebear.com/8.x/thumbs/svg"
                 ],

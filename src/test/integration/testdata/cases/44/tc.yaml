@@ -369,6 +369,9 @@ requests:
             "id": "$LINEAR_GROUP_ID",
             "name": "linear_group",
             "order_idx": 1,
+            "team_info": {
+              "opening_time": "2024-04-14T12:00:00Z"
+            },
             "description": "Tasks in this group will be available only if all the tasks before them are done",
             "tasks": [
               {
@@ -376,6 +379,18 @@ requests:
                 "name": "linear_task_1",
                 "question": "question",
                 "order_idx": 0,
+                "hints": [],
+                "reward": 100,
+                "accepted": false,
+                "score": 0,
+                "verification": "auto",
+                "verification_type": "auto"
+              },
+              {
+                "id": "$LINEAR_TASK_ID2",
+                "name": "linear_task_2",
+                "question": "question",
+                "order_idx": 1,
                 "hints": [],
                 "reward": 100,
                 "accepted": false,

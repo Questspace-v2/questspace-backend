@@ -161,14 +161,22 @@ type CreateTaskGroupRequest struct {
 	TimeLimit    *Duration           `json:"time_limit,omitempty"`
 }
 
+type TeamData struct {
+	UserID *ID
+	TeamID *ID
+}
+
 type GetTaskGroupRequest struct {
 	ID           ID
 	IncludeTasks bool
+	TeamData     *TeamData
 }
 
 type GetTaskGroupsRequest struct {
 	QuestID      ID
+	GroupIDs     []ID
 	IncludeTasks bool
+	TeamData     *TeamData
 }
 
 type UpdateTaskGroupRequest struct {
@@ -377,3 +385,24 @@ func WithPageToken(pageToken int64) FilteringOption {
 type GetAnswerTriesRequest struct {
 	QuestID ID
 }
+
+type UpsertTeamInfoRequest struct {
+	TeamID      ID
+	TaskGroupID ID
+	OpeningTime time.Time
+	ClosingTime *time.Time
+}
+
+type GetTeamInfoRequest struct {
+	TaskGroupID ID
+	TeamData    TeamData
+}
+
+type GetTeamInfosRequest struct {
+	QuestID      ID
+	TaskGroupIDs []ID
+	TeamData     TeamData
+}
+
+// GetTeamInfosResponse TaskGroup.ID -> *TaskGroupTeamInfo
+type GetTeamInfosResponse map[ID]*TaskGroupTeamInfo

@@ -20,7 +20,7 @@ func createTestQuest(t *testing.T, ctx context.Context, client *Client, username
 		AvatarURL: "https://ya.ru",
 	})
 	require.NoError(t, err)
-	now := time.Now().UTC()
+	now := time.Date(2024, 4, 14, 12, 0, 0, 0, time.UTC)
 	quest, err := client.CreateQuest(ctx, &storage.CreateQuestRequest{
 		Name:                 questname,
 		Description:          "desc",

@@ -151,6 +151,8 @@ definitions:
         items:
           $ref: '#/definitions/game.AnswerTask'
         type: array
+      team_info:
+        $ref: '#/definitions/storage.TaskGroupTeamInfo'
       time_limit:
         example: 45m
         type: string
@@ -594,8 +596,17 @@ definitions:
         items:
           $ref: '#/definitions/storage.Task'
         type: array
+      team_info:
+        $ref: '#/definitions/storage.TaskGroupTeamInfo'
       time_limit:
         example: 45m
+        type: string
+    type: object
+  storage.TaskGroupTeamInfo:
+    properties:
+      closing_time:
+        type: string
+      opening_time:
         type: string
     type: object
   storage.TaskGroupsBulkUpdateRequest:

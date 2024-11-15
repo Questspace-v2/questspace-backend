@@ -175,6 +175,7 @@ requests:
                     }
                   }
                 ],
+                "hints": [],
                 "id": "$SET$:TASK1_ID",
                 "media_links": [
                   "https://api.dicebear.com/8.x/thumbs/svg"
@@ -214,6 +215,7 @@ requests:
                     }
                   }
                 ],
+                "hints": [],
                 "id": "$SET$:TASK2_ID",
                 "media_links": [
                   "https://api.dicebear.com/8.x/thumbs/svg"

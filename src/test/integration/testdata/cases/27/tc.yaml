@@ -130,6 +130,7 @@ requests:
                     }
                   }
                 ],
+                "hints": [],
                 "id": "$SET$:TASK1_ID",
                 "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
                 "media_links": [
@@ -155,6 +156,7 @@ requests:
                     }
                   }
                 ],
+                "hints": [],
                 "id": "$SET$:TASK2_ID",
                 "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
                 "media_links": [
@@ -220,6 +222,7 @@ requests:
                     }
                   }
                 ],
+                "hints": [],
                 "id": "$TASK1_ID",
                 "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
                 "media_links": [
@@ -245,6 +248,7 @@ requests:
                     }
                   }
                 ],
+                "hints": [],
                 "id": "$TASK2_ID",
                 "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
                 "media_links": [

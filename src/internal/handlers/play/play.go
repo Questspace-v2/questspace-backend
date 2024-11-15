@@ -56,10 +56,11 @@ func (h *Handler) HandleGet(ctx context.Context, w http.ResponseWriter, r *http.
 		return xerrors.Errorf("%w", err)
 	}
 
-	s, err := h.clientFactory.NewStorage(ctx, dbnode.Alive)
+	s, tx, err := h.clientFactory.NewStorageTx(ctx, nil)
 	if err != nil {
 		return xerrors.Errorf("get storage: %w", err)
 	}
+	defer func() { _ = tx.Rollback() }()
 
 	quest, err := s.GetQuest(ctx, &storage.GetQuestRequest{ID: questID})
 	if err != nil {
@@ -99,7 +100,14 @@ func (h *Handler) HandleGet(ctx context.Context, w http.ResponseWriter, r *http.
 	if quest.Status != storage.StatusRunning {
 		return httperrors.New(http.StatusNotAcceptable, "cannot get tasks before quest start")
 	}
-	taskGroups, err := s.GetTaskGroups(ctx, &storage.GetTaskGroupsRequest{QuestID: questID, IncludeTasks: true})
+	tgReq := storage.GetTaskGroupsRequest{
+		QuestID:      questID,
+		IncludeTasks: true,
+	}
+	if quest.QuestType == storage.TypeLinear {
+		tgReq.TeamData = &storage.TeamData{UserID: &uauth.ID}
+	}
+	taskGroups, err := s.GetTaskGroups(ctx, &tgReq)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
 			return httperrors.Errorf(http.StatusNotFound, "not found quest %q", questID)
@@ -119,6 +127,9 @@ func (h *Handler) HandleGet(ctx context.Context, w http.ResponseWriter, r *http.
 	resp, err := service.FillAnswerData(ctx, &req)
 	if err != nil {
 		return xerrors.Errorf("fill answer data: %w", err)
+	}
+	if err = tx.Commit(); err != nil {
+		return xerrors.Errorf("commit tx: %w", err)
 	}
 
 	if err = transport.ServeJSONResponse(w, http.StatusOK, resp); err != nil {
@@ -251,7 +262,11 @@ func (h *Handler) HandleTryAnswer(ctx context.Context, w http.ResponseWriter, r 
 	}
 
 	if quest.QuestType == storage.TypeLinear {
-		taskGroups, err := s.GetTaskGroups(ctx, &storage.GetTaskGroupsRequest{QuestID: questID, IncludeTasks: true})
+		taskGroups, err := s.GetTaskGroups(ctx, &storage.GetTaskGroupsRequest{
+			QuestID:      questID,
+			IncludeTasks: true,
+			TeamData:     &storage.TeamData{UserID: &uauth.ID},
+		})
 		if err != nil {
 			return xerrors.Errorf("get task groups: %w", err)
 		}
