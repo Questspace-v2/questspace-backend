@@ -225,7 +225,7 @@ func buildLogQuery(req *storage.GetAnswerTriesRequest, opts *storage.TaskRequest
 		whereEq["tm.id"] = opts.TeamID
 	}
 	if len(opts.UserID) > 0 {
-		whereEq["u.id"] = opts.TeamID
+		whereEq["u.id"] = opts.UserID
 	}
 	if opts.OnlyAccepted {
 		whereEq["at.accepted"] = true
