@@ -6,9 +6,11 @@ import (
 	"errors"
 
 	sq "github.com/Masterminds/squirrel"
+	"go.uber.org/zap"
 	"golang.org/x/xerrors"
 
 	"questspace/internal/qtime"
+	"questspace/pkg/logging"
 	"questspace/pkg/storage"
 )
 
@@ -293,6 +295,9 @@ func (c *Client) GetAnswerTries(ctx context.Context, req *storage.GetAnswerTries
 	}
 	query = query.Limit(uint64(options.PageSize))
 
+	q, args, _ := query.ToSql()
+	logging.Warn(ctx, "QUERY", zap.String("QUERY", q), zap.Any("ARGS", args))
+
 	rows, err := query.RunWith(c.runner).QueryContext(ctx)
 	if err != nil {
 		return nil, xerrors.Errorf("query answers: %w", err)
@@ -342,7 +347,7 @@ func (c *Client) GetAnswerTries(ctx context.Context, req *storage.GetAnswerTries
 	var nexToken int64
 	if len(answerLogs) > 0 {
 		last := answerLogs[len(answerLogs)-1]
-		nexToken = last.AnswerTime.UTC().Unix()
+		nexToken = last.AnswerTime.Unix()
 	}
 
 	res := &storage.AnswerLogRecords{
