@@ -6,11 +6,9 @@ import (
 	"errors"
 
 	sq "github.com/Masterminds/squirrel"
-	"go.uber.org/zap"
 	"golang.org/x/xerrors"
 
 	"questspace/internal/qtime"
-	"questspace/pkg/logging"
 	"questspace/pkg/storage"
 )
 
@@ -294,9 +292,6 @@ func (c *Client) GetAnswerTries(ctx context.Context, req *storage.GetAnswerTries
 		query = query.Offset(uint64(options.PageSize * *options.PageNumber))
 	}
 	query = query.Limit(uint64(options.PageSize))
-
-	q, args, _ := query.ToSql()
-	logging.Warn(ctx, "QUERY", zap.String("QUERY", q), zap.Any("ARGS", args))
 
 	rows, err := query.RunWith(c.runner).QueryContext(ctx)
 	if err != nil {
