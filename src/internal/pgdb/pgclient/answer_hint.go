@@ -283,7 +283,7 @@ func (c *Client) GetAnswerTries(ctx context.Context, req *storage.GetAnswerTries
 		"u.username",
 		"at.accepted",
 		"at.answer",
-	).Limit(uint64(options.PageSize))
+	)
 	if options.PageToken != nil && !options.DateDesc {
 		query = query.Where("at.try_time > to_timestamp(?)", *options.PageToken)
 	} else if options.PageToken != nil && options.DateDesc {
@@ -291,6 +291,7 @@ func (c *Client) GetAnswerTries(ctx context.Context, req *storage.GetAnswerTries
 	} else if options.PageNumber != nil {
 		query = query.Offset(uint64(options.PageSize * *options.PageNumber))
 	}
+	query = query.Limit(uint64(options.PageSize))
 
 	rows, err := query.RunWith(c.runner).QueryContext(ctx)
 	if err != nil {
