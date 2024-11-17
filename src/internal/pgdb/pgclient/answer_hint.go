@@ -287,9 +287,9 @@ func (c *Client) GetAnswerTries(ctx context.Context, req *storage.GetAnswerTries
 		"at.answer",
 	)
 	if options.PageToken != nil && !options.DateDesc {
-		query = query.Where("at.try_time > to_timestamp(?)", *options.PageToken)
+		query = query.Where("extract(epoch from at.try_time)*1000 > ?", *options.PageToken)
 	} else if options.PageToken != nil && options.DateDesc {
-		query = query.Where("at.try_time < to_timestamp(?)", *options.PageToken)
+		query = query.Where("extract(epoch from at.try_time)*1000 < ?", *options.PageToken)
 	} else if options.PageNumber != nil {
 		query = query.Offset(uint64(options.PageSize * *options.PageNumber))
 	}
@@ -347,7 +347,7 @@ func (c *Client) GetAnswerTries(ctx context.Context, req *storage.GetAnswerTries
 	var nexToken int64
 	if len(answerLogs) > 0 {
 		last := answerLogs[len(answerLogs)-1]
-		nexToken = last.AnswerTime.Unix()
+		nexToken = last.AnswerTime.UnixMilli()
 	}
 
 	res := &storage.AnswerLogRecords{
