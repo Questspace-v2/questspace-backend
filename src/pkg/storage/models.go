@@ -223,7 +223,7 @@ type User struct {
 type Duration time.Duration
 
 func (d *Duration) MarshalJSON() ([]byte, error) {
-	return json.Marshal(time.Duration(*d).Minutes())
+	return json.Marshal(time.Duration(*d).Seconds())
 }
 
 func (d *Duration) UnmarshalJSON(data []byte) error {
@@ -231,7 +231,7 @@ func (d *Duration) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &v); err != nil {
 		return err
 	}
-	*d = Duration(time.Minute * time.Duration(v))
+	*d = Duration(time.Second * time.Duration(v))
 	return nil
 }
 
