@@ -1975,6 +1975,9 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
+                "feedback_link": {
+                    "type": "string"
+                },
                 "finish_time": {
                     "type": "string",
                     "example": "2024-04-21T14:00:00+05:00"
@@ -2121,6 +2124,9 @@ const docTemplate = `{
                     "$ref": "#/definitions/storage.User"
                 },
                 "description": {
+                    "type": "string"
+                },
+                "feedback_link": {
                     "type": "string"
                 },
                 "finish_time": {
@@ -2381,6 +2387,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "description": {
+                    "type": "string"
+                },
+                "feedback_link": {
                     "type": "string"
                 },
                 "finish_time": {

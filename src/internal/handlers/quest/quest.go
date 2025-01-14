@@ -59,6 +59,11 @@ func (h *Handler) HandleCreate(ctx context.Context, w http.ResponseWriter, r *ht
 	if err := validate.ImageURL(ctx, h.fetcher, req.MediaLink); err != nil {
 		return xerrors.Errorf("%w", err)
 	}
+	if req.FeedbackLink != nil {
+		if err = validate.URL(*req.FeedbackLink); err != nil {
+			return err
+		}
+	}
 
 	s, err := h.clientFactory.NewStorage(ctx, dbnode.Master)
 	if err != nil {
@@ -234,6 +239,11 @@ func (h *Handler) HandleUpdate(ctx context.Context, w http.ResponseWriter, r *ht
 	}
 	if err := validate.ImageURL(ctx, h.fetcher, req.MediaLink); err != nil {
 		return xerrors.Errorf("%w", err)
+	}
+	if req.FeedbackLink != nil {
+		if err = validate.URL(*req.FeedbackLink); err != nil {
+			return err
+		}
 	}
 	uauth, err := jwt.GetUserFromContext(ctx)
 	if err != nil {
