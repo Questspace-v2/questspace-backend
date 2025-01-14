@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -13,6 +14,15 @@ import (
 )
 
 const imgHeadTimeout = time.Second * 5
+
+func URL(urlString string) error {
+	_, err := url.Parse(urlString)
+	if err != nil {
+		return httperrors.Errorf(http.StatusBadRequest, "invalid url: %w", err)
+	}
+
+	return nil
+}
 
 func ImageURL(ctx context.Context, client http.Client, imgUrl string) error {
 	if imgUrl == "" {
