@@ -599,8 +599,8 @@ definitions:
       team_info:
         $ref: '#/definitions/storage.TaskGroupTeamInfo'
       time_limit:
-        example: 45m
-        type: string
+        example: 300
+        type: integer
     type: object
   storage.TaskGroupTeamInfo:
     properties:

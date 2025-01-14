@@ -2315,8 +2315,8 @@ const docTemplate = `{
                     "$ref": "#/definitions/storage.TaskGroupTeamInfo"
                 },
                 "time_limit": {
-                    "type": "string",
-                    "example": "45m"
+                    "type": "integer",
+                    "example": 300
                 }
             }
         },
