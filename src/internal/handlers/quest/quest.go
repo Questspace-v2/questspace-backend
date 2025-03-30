@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/yandex/perforator/library/go/core/xerrors"
 	"go.uber.org/zap"
-	"golang.org/x/xerrors"
 
 	"questspace/internal/pgdb"
 	"questspace/internal/questspace/game"

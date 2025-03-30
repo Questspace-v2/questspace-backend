@@ -5,8 +5,8 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/yandex/perforator/library/go/core/xerrors"
 	"go.uber.org/zap"
-	"golang.org/x/xerrors"
 
 	"questspace/pkg/httperrors"
 	"questspace/pkg/logging"

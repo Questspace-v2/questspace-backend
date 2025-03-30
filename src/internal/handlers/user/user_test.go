@@ -9,8 +9,8 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"github.com/yandex/perforator/library/go/core/xerrors"
 	"go.uber.org/zap/zaptest"
-	"golang.org/x/xerrors"
 
 	"questspace/internal/hasher"
 	"questspace/internal/pgdb"

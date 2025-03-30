@@ -7,7 +7,7 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5/pgconn"
-	"golang.org/x/xerrors"
+	"github.com/yandex/perforator/library/go/core/xerrors"
 
 	"questspace/pkg/storage"
 )

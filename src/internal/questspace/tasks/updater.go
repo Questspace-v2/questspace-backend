@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"slices"
 
-	"golang.org/x/xerrors"
+	"github.com/yandex/perforator/library/go/core/xerrors"
 
 	"questspace/internal/questspace/permutations"
 	"questspace/pkg/httperrors"
