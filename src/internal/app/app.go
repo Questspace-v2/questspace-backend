@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/gofor-little/env"
+	"github.com/yandex/perforator/library/go/core/xerrors"
 	"go.uber.org/zap"
-	"golang.org/x/xerrors"
 
 	"questspace/pkg/environment"
 	"questspace/pkg/middleware"

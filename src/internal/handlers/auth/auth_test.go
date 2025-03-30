@@ -11,7 +11,7 @@ package auth
 // 	"github.com/golang/mock/gomock"
 // 	"github.com/stretchr/testify/require"
 // 	"go.uber.org/zap/zaptest"
-// 	"golang.org/x/xerrors"
+// 	"github.com/yandex/perforator/library/go/core/xerrors"
 
 // 	"questspace/internal/hasher"
 // 	"questspace/internal/pgdb"

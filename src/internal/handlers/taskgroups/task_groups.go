@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	"golang.org/x/xerrors"
+	"github.com/yandex/perforator/library/go/core/xerrors"
 
 	"questspace/internal/pgdb"
 	"questspace/internal/questspace/quests"
@@ -200,7 +200,7 @@ func (h *Handler) HandleGet(ctx context.Context, w http.ResponseWriter, r *http.
 		return xerrors.Errorf("get quest: %w", err)
 	}
 	if quest.Creator.ID != uauth.ID {
-		return httperrors.Errorf(http.StatusForbidden, "only creator can get tasks outside of playmode", questID)
+		return httperrors.Errorf(http.StatusForbidden, "only creator can get tasks outside of playmode")
 	}
 	quests.SetStatus(quest)
 	taskGroups, err := s.GetTaskGroups(ctx, &storage.GetTaskGroupsRequest{QuestID: questID, IncludeTasks: true})

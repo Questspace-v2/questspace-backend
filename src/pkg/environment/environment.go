@@ -3,8 +3,8 @@ package environment
 import (
 	"os"
 
+	"github.com/yandex/perforator/library/go/core/xerrors"
 	"go.uber.org/zap"
-	"golang.org/x/xerrors"
 )
 
 type Environment string

@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/yandex/perforator/library/go/core/xerrors"
 	"go.uber.org/zap"
-	"golang.org/x/xerrors"
 
 	"questspace/internal/qtime"
 	"questspace/pkg/httperrors"

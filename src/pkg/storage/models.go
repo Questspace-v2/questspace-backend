@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	"golang.org/x/xerrors"
+	"github.com/yandex/perforator/library/go/core/xerrors"
 )
 
 type ID string
@@ -24,10 +24,10 @@ func (id ID) String() string {
 type AccessType string
 
 var (
-	ErrExists          = xerrors.New("already exists")
-	ErrNotFound        = xerrors.New("not found")
-	ErrValidation      = xerrors.New("validation error")
-	ErrTeamAlreadyFull = xerrors.New("team already has maximum amount of members")
+	ErrExists          = xerrors.NewSentinel("already exists")
+	ErrNotFound        = xerrors.NewSentinel("not found")
+	ErrValidation      = xerrors.NewSentinel("validation error")
+	ErrTeamAlreadyFull = xerrors.NewSentinel("team already has maximum amount of members")
 )
 
 const (
