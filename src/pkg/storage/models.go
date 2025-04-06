@@ -443,6 +443,7 @@ type AnswerLog struct {
 	Accepted   bool
 	Answer     string
 	AnswerTime time.Time
+	Score      int
 }
 
 type AnswerLogRecords struct {
