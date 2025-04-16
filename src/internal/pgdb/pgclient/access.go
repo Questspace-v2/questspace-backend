@@ -17,7 +17,7 @@ func (c *Client) HasAccess(ctx context.Context, id storage.ID) (bool, error) {
 	WHERE user_id = $1;
 	`
 
-	row := c.runner.QueryRowContext(ctx, getAccessQuery, getAccessQuery)
+	row := c.runner.QueryRowContext(ctx, getAccessQuery, id)
 	var has int
 	if err := row.Scan(&has); err != nil {
 		if xerrors.Is(err, sql.ErrNoRows) {
