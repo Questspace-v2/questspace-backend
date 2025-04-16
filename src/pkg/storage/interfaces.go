@@ -10,6 +10,7 @@ type QuestSpaceStorage interface {
 	TaskStorage
 	TeamStorage
 	AnswerHintStorage
+	AccessStorage
 }
 
 type UserStorage interface {
@@ -89,4 +90,8 @@ type TeamInfoStorage interface {
 	UpsertTeamInfo(context.Context, *UpsertTeamInfoRequest) (*TaskGroupTeamInfo, error)
 	GetTeamInfo(context.Context, *GetTeamInfoRequest) (*TaskGroupTeamInfo, error)
 	GetTeamInfos(context.Context, *GetTeamInfosRequest) (GetTeamInfosResponse, error)
+}
+
+type AccessStorage interface {
+	HasAccess(context.Context, ID) (bool, error)
 }

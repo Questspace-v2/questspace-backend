@@ -9,6 +9,7 @@ import (
 	"github.com/yandex/perforator/library/go/core/xerrors"
 	"go.uber.org/zap"
 
+	"questspace/internal/accesscontrol"
 	"questspace/internal/pgdb"
 	"questspace/internal/questspace/game"
 	"questspace/internal/questspace/quests"
@@ -69,6 +70,11 @@ func (h *Handler) HandleCreate(ctx context.Context, w http.ResponseWriter, r *ht
 	if err != nil {
 		return xerrors.Errorf("get storage client: %w", err)
 	}
+
+	if err = accesscontrol.Check(ctx, s, uauth); err != nil {
+		return err
+	}
+
 	quest, err := s.CreateQuest(ctx, &req)
 	if err != nil {
 		return xerrors.Errorf("create quest: %w", err)

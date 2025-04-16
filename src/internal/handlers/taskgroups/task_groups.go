@@ -7,6 +7,7 @@ import (
 
 	"github.com/yandex/perforator/library/go/core/xerrors"
 
+	"questspace/internal/accesscontrol"
 	"questspace/internal/pgdb"
 	"questspace/internal/questspace/quests"
 	"questspace/internal/questspace/taskgroups"
@@ -65,6 +66,10 @@ func (h *Handler) HandleBulkUpdate(ctx context.Context, w http.ResponseWriter, r
 		return xerrors.Errorf("get storage client: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
+
+	if err = accesscontrol.Check(ctx, s, uauth); err != nil {
+		return err
+	}
 
 	quest, err := s.GetQuest(ctx, &storage.GetQuestRequest{ID: questID})
 	if err != nil {
