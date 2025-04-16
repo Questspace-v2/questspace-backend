@@ -557,6 +557,21 @@ func (mr *MockQuestSpaceStorageMockRecorder) GetUserPasswordHash(arg0, arg1 inte
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserPasswordHash", reflect.TypeOf((*MockQuestSpaceStorage)(nil).GetUserPasswordHash), arg0, arg1)
 }
 
+// HasAccess mocks base method.
+func (m *MockQuestSpaceStorage) HasAccess(arg0 context.Context, arg1 storage.ID) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "HasAccess", arg0, arg1)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// HasAccess indicates an expected call of HasAccess.
+func (mr *MockQuestSpaceStorageMockRecorder) HasAccess(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasAccess", reflect.TypeOf((*MockQuestSpaceStorage)(nil).HasAccess), arg0, arg1)
+}
+
 // JoinTeam mocks base method.
 func (m *MockQuestSpaceStorage) JoinTeam(arg0 context.Context, arg1 *storage.JoinTeamRequest) (*storage.User, error) {
 	m.ctrl.T.Helper()
@@ -1740,4 +1755,42 @@ func (m *MockTeamInfoStorage) UpsertTeamInfo(arg0 context.Context, arg1 *storage
 func (mr *MockTeamInfoStorageMockRecorder) UpsertTeamInfo(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertTeamInfo", reflect.TypeOf((*MockTeamInfoStorage)(nil).UpsertTeamInfo), arg0, arg1)
+}
+
+// MockAccessStorage is a mock of AccessStorage interface.
+type MockAccessStorage struct {
+	ctrl     *gomock.Controller
+	recorder *MockAccessStorageMockRecorder
+}
+
+// MockAccessStorageMockRecorder is the mock recorder for MockAccessStorage.
+type MockAccessStorageMockRecorder struct {
+	mock *MockAccessStorage
+}
+
+// NewMockAccessStorage creates a new mock instance.
+func NewMockAccessStorage(ctrl *gomock.Controller) *MockAccessStorage {
+	mock := &MockAccessStorage{ctrl: ctrl}
+	mock.recorder = &MockAccessStorageMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockAccessStorage) EXPECT() *MockAccessStorageMockRecorder {
+	return m.recorder
+}
+
+// HasAccess mocks base method.
+func (m *MockAccessStorage) HasAccess(arg0 context.Context, arg1 storage.ID) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "HasAccess", arg0, arg1)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// HasAccess indicates an expected call of HasAccess.
+func (mr *MockAccessStorageMockRecorder) HasAccess(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasAccess", reflect.TypeOf((*MockAccessStorage)(nil).HasAccess), arg0, arg1)
 }
