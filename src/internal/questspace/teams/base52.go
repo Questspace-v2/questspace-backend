@@ -4,7 +4,7 @@ import (
 	"math"
 	"strings"
 
-	"golang.org/x/xerrors"
+	"github.com/yandex/perforator/library/go/core/xerrors"
 )
 
 const minLength = 6

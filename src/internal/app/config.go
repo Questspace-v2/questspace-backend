@@ -3,7 +3,7 @@ package app
 import (
 	"os"
 
-	"golang.org/x/xerrors"
+	"github.com/yandex/perforator/library/go/core/xerrors"
 	"gopkg.in/yaml.v3"
 
 	"questspace/internal/handlers/teams"

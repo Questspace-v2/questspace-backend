@@ -10,9 +10,9 @@ import (
 	"time"
 
 	httpswagger "github.com/swaggo/http-swagger"
+	"github.com/yandex/perforator/library/go/core/xerrors"
 	"go.uber.org/zap"
 	"golang.org/x/sys/unix"
-	"golang.org/x/xerrors"
 	"google.golang.org/api/idtoken"
 
 	"questspace/docs"

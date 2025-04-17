@@ -3,13 +3,12 @@ package storage
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/gofrs/uuid"
-	"golang.org/x/xerrors"
+	"github.com/yandex/perforator/library/go/core/xerrors"
 )
 
 type ID string
@@ -25,10 +24,10 @@ func (id ID) String() string {
 type AccessType string
 
 var (
-	ErrExists          = xerrors.New("already exists")
-	ErrNotFound        = xerrors.New("not found")
-	ErrValidation      = xerrors.New("validation error")
-	ErrTeamAlreadyFull = xerrors.New("team already has maximum amount of members")
+	ErrExists          = xerrors.NewSentinel("already exists")
+	ErrNotFound        = xerrors.NewSentinel("not found")
+	ErrValidation      = xerrors.NewSentinel("validation error")
+	ErrTeamAlreadyFull = xerrors.NewSentinel("team already has maximum amount of members")
 )
 
 const (
@@ -140,6 +139,7 @@ type Quest struct {
 	MaxTeamsAmount       *int             `json:"max_teams_amount,omitempty"`
 	RegistrationType     RegistrationType `json:"registration_type,omitempty" enums:"AUTO,VERIFY"`
 	QuestType            QuestType        `json:"quest_type,omitempty" enums:"ASSAULT,LINEAR"`
+	FeedbackLink         *string          `json:"feedback_link,omitempty"`
 }
 
 type GetQuestType int
@@ -223,29 +223,16 @@ type User struct {
 type Duration time.Duration
 
 func (d *Duration) MarshalJSON() ([]byte, error) {
-	return json.Marshal(time.Duration(*d).String())
+	return json.Marshal(time.Duration(*d).Seconds())
 }
 
 func (d *Duration) UnmarshalJSON(data []byte) error {
-	var v interface{}
+	var v int
 	if err := json.Unmarshal(data, &v); err != nil {
 		return err
 	}
-	switch value := v.(type) {
-	case float64:
-		*d = Duration(value)
-		return nil
-	case string:
-		var err error
-		dur, err := time.ParseDuration(value)
-		if err != nil {
-			return err
-		}
-		*d = Duration(dur)
-		return nil
-	default:
-		return errors.New("invalid duration")
-	}
+	*d = Duration(time.Second * time.Duration(v))
+	return nil
 }
 
 type TaskGroup struct {
@@ -258,7 +245,7 @@ type TaskGroup struct {
 	Sticky       bool               `json:"sticky,omitempty"`
 	Tasks        []Task             `json:"tasks"`
 	HasTimeLimit bool               `json:"has_time_limit,omitempty"`
-	TimeLimit    *Duration          `json:"time_limit,omitempty" swaggertype:"string" example:"45m"`
+	TimeLimit    *Duration          `json:"time_limit,omitempty" swaggertype:"integer" example:"300"`
 	TeamInfo     *TaskGroupTeamInfo `json:"team_info,omitempty"`
 }
 
@@ -456,6 +443,7 @@ type AnswerLog struct {
 	Accepted   bool
 	Answer     string
 	AnswerTime time.Time
+	Score      int
 }
 
 type AnswerLogRecords struct {

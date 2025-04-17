@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/yandex/perforator/library/go/core/xerrors"
 	"go.uber.org/zap"
-	"golang.org/x/xerrors"
 
 	"questspace/internal/qtime"
 	"questspace/pkg/httperrors"
@@ -628,6 +628,7 @@ type AnswerLog struct {
 	Accepted    bool       `json:"accepted"`
 	Answer      string     `json:"answer"`
 	AnswerTime  time.Time  `json:"answer_time"`
+	Score       int        `json:"score"`
 }
 
 type AnswerLogResponse struct {
@@ -653,6 +654,7 @@ func (s *Service) GetAnswerLogs(ctx context.Context, user *storage.User, questID
 			Accepted:    log.Accepted,
 			Answer:      log.Answer,
 			AnswerTime:  log.AnswerTime,
+			Score:       log.Score,
 		}
 		if log.User != nil {
 			al.UserID = log.User.ID

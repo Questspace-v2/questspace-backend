@@ -371,6 +371,8 @@ definitions:
         type: string
       description:
         type: string
+      feedback_link:
+        type: string
       finish_time:
         example: "2024-04-21T14:00:00+05:00"
         type: string
@@ -468,6 +470,8 @@ definitions:
       creator:
         $ref: '#/definitions/storage.User'
       description:
+        type: string
+      feedback_link:
         type: string
       finish_time:
         example: "2024-04-21T14:00:00+05:00"
@@ -599,8 +603,8 @@ definitions:
       team_info:
         $ref: '#/definitions/storage.TaskGroupTeamInfo'
       time_limit:
-        example: 45m
-        type: string
+        example: 300
+        type: integer
     type: object
   storage.TaskGroupTeamInfo:
     properties:
@@ -641,6 +645,8 @@ definitions:
       brief:
         type: string
       description:
+        type: string
+      feedback_link:
         type: string
       finish_time:
         type: string

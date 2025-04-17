@@ -47,6 +47,7 @@ type CreateQuestRequest struct {
 	MaxTeamsAmount       *int             `json:"max_teams_amount,omitempty"`
 	RegistrationType     RegistrationType `json:"registration_type,omitempty" enums:"AUTO,VERIFY"`
 	QuestType            QuestType        `json:"quest_type,omitempty" enums:"ASSAULT,LINEAR"`
+	FeedbackLink         *string          `json:"feedback_link,omitempty"`
 }
 
 type GetQuestRequest struct {
@@ -80,6 +81,7 @@ type UpdateQuestRequest struct {
 	MaxTeamsAmount       *int             `json:"max_teams_amount,omitempty"`
 	RegistrationType     RegistrationType `json:"registration_type,omitempty" enums:"AUTO,VERIFY"`
 	QuestType            QuestType        `json:"quest_type,omitempty" enums:"ASSAULT,LINEAR"`
+	FeedbackLink         *string          `json:"feedback_link,omitempty"`
 }
 
 type DeleteQuestRequest struct {
