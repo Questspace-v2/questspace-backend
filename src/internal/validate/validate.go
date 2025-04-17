@@ -4,15 +4,25 @@ import (
 	"context"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
-	"golang.org/x/xerrors"
+	"github.com/yandex/perforator/library/go/core/xerrors"
 
 	"questspace/pkg/httperrors"
 )
 
 const imgHeadTimeout = time.Second * 5
+
+func URL(urlString string) error {
+	_, err := url.Parse(urlString)
+	if err != nil {
+		return httperrors.Errorf(http.StatusBadRequest, "invalid url: %w", err)
+	}
+
+	return nil
+}
 
 func ImageURL(ctx context.Context, client http.Client, imgUrl string) error {
 	if imgUrl == "" {

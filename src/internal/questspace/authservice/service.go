@@ -6,8 +6,8 @@ import (
 	"net/http"
 
 	"github.com/gofrs/uuid"
+	"github.com/yandex/perforator/library/go/core/xerrors"
 	"go.uber.org/zap"
-	"golang.org/x/xerrors"
 
 	"questspace/internal/hasher"
 	"questspace/internal/pgdb"

@@ -6,7 +6,7 @@ import (
 	"errors"
 
 	sq "github.com/Masterminds/squirrel"
-	"golang.org/x/xerrors"
+	"github.com/yandex/perforator/library/go/core/xerrors"
 
 	"questspace/internal/qtime"
 	"questspace/pkg/storage"
@@ -283,6 +283,7 @@ func (c *Client) GetAnswerTries(ctx context.Context, req *storage.GetAnswerTries
 		"u.username",
 		"at.accepted",
 		"at.answer",
+		"at.score",
 	)
 	if options.PageToken != nil && !options.DateDesc {
 		query = query.Where("extract(epoch from at.try_time)*1000 > ?", *options.PageToken)
@@ -319,6 +320,7 @@ func (c *Client) GetAnswerTries(ctx context.Context, req *storage.GetAnswerTries
 			&userName,
 			&al.Accepted,
 			&al.Answer,
+			&al.Score,
 		); err != nil {
 			return nil, xerrors.Errorf("scan row: %w", err)
 		}

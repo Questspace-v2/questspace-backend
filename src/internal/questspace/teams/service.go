@@ -5,8 +5,8 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/yandex/perforator/library/go/core/xerrors"
 	"go.uber.org/zap"
-	"golang.org/x/xerrors"
 
 	"questspace/pkg/httperrors"
 	"questspace/pkg/logging"
@@ -312,7 +312,7 @@ func (s *Service) AcceptTeam(ctx context.Context, user *storage.User, questID, t
 	}
 	if !alreadyAccepted {
 		if quest.MaxTeamsAmount != nil && len(currentAcceptedTeams) == *quest.MaxTeamsAmount {
-			return nil, httperrors.Errorf(http.StatusNotAcceptable, "already have maximum amount of accepted teams: %d")
+			return nil, httperrors.Errorf(http.StatusNotAcceptable, "already have maximum amount of accepted teams: %d", *quest.MaxTeamsAmount)
 		}
 		if err = s.s.AcceptTeam(ctx, &storage.AcceptTeamRequest{ID: teamID}); err != nil {
 			if errors.Is(err, storage.ErrNotFound) {

@@ -9,7 +9,7 @@ import (
 	"questspace/pkg/secret"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
-	"golang.org/x/xerrors"
+	"github.com/yandex/perforator/library/go/core/xerrors"
 	"golang.yandex/hasql"
 	"gopkg.in/yaml.v3"
 )
