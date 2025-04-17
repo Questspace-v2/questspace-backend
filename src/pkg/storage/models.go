@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	"golang.org/x/xerrors"
+	"github.com/yandex/perforator/library/go/core/xerrors"
 )
 
 type ID string
@@ -24,10 +24,10 @@ func (id ID) String() string {
 type AccessType string
 
 var (
-	ErrExists          = xerrors.New("already exists")
-	ErrNotFound        = xerrors.New("not found")
-	ErrValidation      = xerrors.New("validation error")
-	ErrTeamAlreadyFull = xerrors.New("team already has maximum amount of members")
+	ErrExists          = xerrors.NewSentinel("already exists")
+	ErrNotFound        = xerrors.NewSentinel("not found")
+	ErrValidation      = xerrors.NewSentinel("validation error")
+	ErrTeamAlreadyFull = xerrors.NewSentinel("team already has maximum amount of members")
 )
 
 const (
@@ -133,12 +133,13 @@ type Quest struct {
 	FinishTime           *time.Time       `json:"finish_time,omitempty" example:"2024-04-21T14:00:00+05:00"`
 	MediaLink            string           `json:"media_link"`
 	MaxTeamCap           *int             `json:"max_team_cap,omitempty"`
-	Status               QuestStatus      `json:"status"`
+	Status               QuestStatus      `json:"status" swaggertype:"string" enums:"ON_REGISTRATION,REGISTRATION_DONE,RUNNING,WAIT_RESULTS,FINISHED"`
 	HasBrief             bool             `json:"has_brief,omitempty"`
 	Brief                string           `json:"brief,omitempty"`
 	MaxTeamsAmount       *int             `json:"max_teams_amount,omitempty"`
 	RegistrationType     RegistrationType `json:"registration_type,omitempty" enums:"AUTO,VERIFY"`
 	QuestType            QuestType        `json:"quest_type,omitempty" enums:"ASSAULT,LINEAR"`
+	FeedbackLink         *string          `json:"feedback_link,omitempty"`
 }
 
 type GetQuestType int
@@ -219,15 +220,33 @@ type User struct {
 	AvatarURL string `json:"avatar_url,omitempty"`
 }
 
+type Duration time.Duration
+
+func (d *Duration) MarshalJSON() ([]byte, error) {
+	return json.Marshal(time.Duration(*d).Seconds())
+}
+
+func (d *Duration) UnmarshalJSON(data []byte) error {
+	var v int
+	if err := json.Unmarshal(data, &v); err != nil {
+		return err
+	}
+	*d = Duration(time.Second * time.Duration(v))
+	return nil
+}
+
 type TaskGroup struct {
-	ID          ID         `json:"id"`
-	OrderIdx    int        `json:"order_idx"`
-	Quest       *Quest     `json:"-"`
-	Name        string     `json:"name"`
-	Description string     `json:"description,omitempty"`
-	PubTime     *time.Time `json:"pub_time,omitempty"`
-	Sticky      bool       `json:"sticky,omitempty"`
-	Tasks       []Task     `json:"tasks"`
+	ID           ID                 `json:"id"`
+	OrderIdx     int                `json:"order_idx"`
+	Quest        *Quest             `json:"-"`
+	Name         string             `json:"name"`
+	Description  string             `json:"description,omitempty"`
+	PubTime      *time.Time         `json:"pub_time,omitempty"`
+	Sticky       bool               `json:"sticky,omitempty"`
+	Tasks        []Task             `json:"tasks"`
+	HasTimeLimit bool               `json:"has_time_limit,omitempty"`
+	TimeLimit    *Duration          `json:"time_limit,omitempty" swaggertype:"integer" example:"300"`
+	TeamInfo     *TaskGroupTeamInfo `json:"team_info,omitempty"`
 }
 
 type Task struct {
@@ -424,10 +443,16 @@ type AnswerLog struct {
 	Accepted   bool
 	Answer     string
 	AnswerTime time.Time
+	Score      int
 }
 
 type AnswerLogRecords struct {
 	AnswerLogs []AnswerLog
 	NextToken  int64
 	TotalPages int
+}
+
+type TaskGroupTeamInfo struct {
+	OpeningTime time.Time  `json:"opening_time"`
+	ClosingTime *time.Time `json:"closing_time,omitempty"`
 }

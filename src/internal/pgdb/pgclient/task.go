@@ -8,7 +8,7 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5/pgtype"
-	"golang.org/x/xerrors"
+	"github.com/yandex/perforator/library/go/core/xerrors"
 
 	"questspace/pkg/storage"
 )
@@ -214,14 +214,15 @@ SELECT
 	hints,
 	media_url,
 	media_urls,
-	pub_time
+	pub_time,
+	group_id
 FROM questspace.task
 	WHERE id = $1
 `
 
 func (c *Client) GetTask(ctx context.Context, req *storage.GetTaskRequest) (*storage.Task, error) {
 	row := c.runner.QueryRowContext(ctx, getTaskQuery, req.ID)
-	task := storage.Task{ID: req.ID}
+	task := storage.Task{ID: req.ID, Group: &storage.TaskGroup{}}
 	pgMap := pgtype.NewMap()
 	if err := row.Scan(
 		&task.OrderIdx,
@@ -234,6 +235,7 @@ func (c *Client) GetTask(ctx context.Context, req *storage.GetTaskRequest) (*sto
 		&task.MediaLink,
 		pgMap.SQLScanner(&task.MediaLinks),
 		&task.PubTime,
+		&task.Group.ID,
 	); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, storage.ErrNotFound
@@ -259,15 +261,21 @@ func (c *Client) GetTask(ctx context.Context, req *storage.GetTaskRequest) (*sto
 }
 
 func (c *Client) GetAnswerData(ctx context.Context, req *storage.GetTaskRequest) (*storage.Task, error) {
-	query := sq.Select("correct_answers", "reward", "verification", "hints").
+	query := sq.Select("group_id", "correct_answers", "reward", "verification", "hints").
 		From("questspace.task").
 		Where(sq.Eq{"id": req.ID}).
 		PlaceholderFormat(sq.Dollar)
 
 	row := query.RunWith(c.runner).QueryRowContext(ctx)
-	task := storage.Task{ID: req.ID}
+	task := storage.Task{ID: req.ID, Group: &storage.TaskGroup{}}
 	pgMap := pgtype.NewMap()
-	if err := row.Scan(pgMap.SQLScanner(&task.CorrectAnswers), &task.Reward, &task.Verification, pgMap.SQLScanner(&task.Hints)); err != nil {
+	if err := row.Scan(
+		&task.Group.ID,
+		pgMap.SQLScanner(&task.CorrectAnswers),
+		&task.Reward,
+		&task.Verification,
+		pgMap.SQLScanner(&task.Hints),
+	); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, storage.ErrNotFound
 		}

@@ -1,7 +1,7 @@
 package httperrors
 
 import (
-	"golang.org/x/xerrors"
+	"github.com/yandex/perforator/library/go/core/xerrors"
 )
 
 var _ error = &HTTPError{}

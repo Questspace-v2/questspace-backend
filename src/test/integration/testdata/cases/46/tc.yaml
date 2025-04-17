@@ -628,6 +628,10 @@ requests:
         ]
       }
   
+  - method: GET
+    uri: /internal/testing/wait?d=0h1m
+    expected-status: 200
+
   - method: POST
     uri: /quest/$QUEST_ID/answer
     authorization: $PLAYER2_TOKEN
@@ -717,6 +721,10 @@ requests:
         ]
       }
 
+  - method: GET
+    uri: /internal/testing/wait?d=0h1m
+    expected-status: 200
+
   - method: POST
     uri: /quest/$QUEST_ID/answer
     authorization: $PLAYER2_TOKEN
@@ -773,7 +781,7 @@ requests:
             "order_idx": 1,
             "team_info": {
               "opening_time": "2024-04-14T12:00:00Z",
-              "closing_time": "2024-04-14T13:00:00Z"
+              "closing_time": "2024-04-14T13:02:00Z"
             },
             "description": "Tasks in this group will be available only if all the tasks before them are done",
             "tasks": [
@@ -810,7 +818,7 @@ requests:
             "name": "linear_group_1",
             "order_idx": 2,
             "team_info": {
-              "opening_time": "2024-04-14T13:00:00Z"
+              "opening_time": "2024-04-14T13:02:00Z"
             },
             "has_time_limit": true,
             "time_limit": "45m0s",
@@ -841,6 +849,443 @@ requests:
                 "score": 0
               }
             ]
+          }
+        ]
+      }
+
+  - method: GET
+    uri: /internal/testing/wait?d=1h0m
+    expected-status: 200
+  
+  - method: GET
+    uri: /quest/$QUEST_ID/play
+    authorization: $PLAYER1_TOKEN
+
+    expected-status: 200
+    expected-json: >
+      {
+        "quest": {
+          "id": "$QUEST_ID",
+          "access": "public",
+          "name": "name",
+          "description": "description",
+          "media_link": "https://api.dicebear.com/8.x/thumbs/svg",
+          "creator": {
+            "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+            "id": "$USER_ID",
+            "username": "svayp11"
+          },
+          "start_time": "2024-04-14T12:00:00Z",
+          "finish_time": "2024-04-14T18:00:00Z",
+          "max_team_cap": 4,
+          "status": "RUNNING",
+          "registration_type": "AUTO",
+          "quest_type": "LINEAR"
+        },
+        "task_groups": [
+          {
+            "id": "$STICKY_GROUP_ID",
+            "name": "sticky_group",
+            "order_idx": 0,
+            "sticky": true,
+            "description": "Here is a task group, that will persistently active without any answers",
+            "tasks": [
+              {
+                "id": "$STICKY_TASK_ID1",
+                "name": "sticky_task_1",
+                "question": "question",
+                "order_idx": 0,
+                "hints": [],
+                "reward": 100,
+                "verification": "auto",
+                "verification_type": "auto",
+                "accepted": true,
+                "answer": "1",
+                "score": 100
+              },
+              {
+                "id": "$STICKY_TASK_ID2",
+                "name": "sticky_task_2",
+                "question": "question",
+                "order_idx": 1,
+                "hints": [],
+                "reward": 100,
+                "verification": "auto",
+                "verification_type": "auto",
+                "accepted": false,
+                "score": 0
+              }
+            ]
+          },
+          {
+            "id": "$LINEAR_GROUP_ID",
+            "name": "linear_group",
+            "order_idx": 1,
+            "team_info": {
+              "opening_time": "2024-04-14T12:00:00Z",
+              "closing_time": "2024-04-14T13:02:00Z"
+            },
+            "description": "Tasks in this group will be available only if all the tasks before them are done",
+            "tasks": [
+              {
+                "id": "$LINEAR_TASK_ID1",
+                "name": "linear_task_1",
+                "question": "question",
+                "order_idx": 0,
+                "hints": [],
+                "reward": 100,
+                "verification": "auto",
+                "verification_type": "auto",
+                "accepted": true,
+                "answer": "2",
+                "score": 100
+              },
+              {
+                "id": "$LINEAR_TASK_ID2",
+                "name": "linear_task_2",
+                "question": "question",
+                "order_idx": 1,
+                "hints": [],
+                "reward": 100,
+                "verification": "auto",
+                "verification_type": "auto",
+                "accepted": true,
+                "answer": "2",
+                "score": 100
+              }
+            ]
+          },
+          {
+            "id": "$LINEAR_GROUP_ID1",
+            "name": "linear_group_1",
+            "order_idx": 2,
+            "team_info": {
+              "opening_time": "2024-04-14T13:02:00Z",
+              "closing_time": "2024-04-14T13:47:00Z"
+            },
+            "has_time_limit": true,
+            "time_limit": "45m0s",
+            "description": "Tasks in this group will be available only if all the tasks before them are done",
+            "tasks": [
+              {
+                "id": "$LINEAR_TASK_ID3",
+                "name": "linear_task_3",
+                "question": "question",
+                "order_idx": 0,
+                "hints": [],
+                "reward": 100,
+                "verification": "auto",
+                "verification_type": "auto",
+                "accepted": false,
+                "score": 0
+              },
+              {
+                "id": "$LINEAR_TASK_ID4",
+                "name": "linear_task_4",
+                "question": "question",
+                "order_idx": 1,
+                "hints": [],
+                "reward": 100,
+                "verification": "auto",
+                "verification_type": "auto",
+                "accepted": false,
+                "score": 0
+              }
+            ]
+          },
+          {
+            "id": "$LINEAR_GROUP_ID2",
+            "name": "linear_group_2",
+            "order_idx": 3,
+            "team_info": {
+              "opening_time": "2024-04-14T13:47:00Z"
+            },
+            "description": "Tasks in this group will be available only if all the tasks before them are done",
+            "tasks": [
+              {
+                "id": "$LINEAR_TASK_ID5",
+                "name": "linear_task_5",
+                "question": "question",
+                "order_idx": 0,
+                "hints": [],
+                "reward": 100,
+                "verification": "auto",
+                "verification_type": "auto",
+                "accepted": false,
+                "score": 0
+              },
+              {
+                "id": "$LINEAR_TASK_ID6",
+                "name": "linear_task_6",
+                "question": "question",
+                "order_idx": 1,
+                "hints": [],
+                "reward": 100,
+                "verification": "auto",
+                "verification_type": "auto",
+                "accepted": false,
+                "score": 0
+              }
+            ]
+          }
+        ],
+        "team": {
+          "captain": {
+            "avatar_url": "https://api.dicebear.com/7.x/thumbs/svg",
+            "id": "$PLAYER1_ID",
+            "username": "player1"
+          },
+          "id": "$TEAM1_ID",
+          "invite_link": "$INVITE_LINK1",
+          "name": "team1",
+          "score": 0,
+          "registration_status": "ACCEPTED"
+        }
+      }
+  
+  - method: GET
+    uri: /quest/$QUEST_ID/answer_log
+    authorization: $SVAYP11_TOKEN
+
+    expected-status: 200
+    expected-json: >
+      {
+        "total_pages": 1,
+        "next_page_token": 1713099720000,
+        "answer_logs": [
+          {
+            "team_id": "$TEAM1_ID",
+            "team": "team1",
+            "user_id": "$PLAYER1_ID",
+            "user": "player1",
+            "task_group_id": "$STICKY_GROUP_ID",
+            "task_group": "sticky_group",
+            "task_id": "$STICKY_TASK_ID1",
+            "task": "sticky_task_1",
+            "accepted": true,
+            "answer": "1",
+            "answer_time": "2024-04-14T13:00:00Z"
+          },
+          {
+            "team_id": "$TEAM1_ID",
+            "team": "team1",
+            "user_id": "$PLAYER2_ID",
+            "user": "player2",
+            "task_group_id": "$LINEAR_GROUP_ID",
+            "task_group": "linear_group",
+            "task_id": "$LINEAR_TASK_ID1",
+            "task": "linear_task_1",
+            "accepted": true,
+            "answer": "2",
+            "answer_time": "2024-04-14T13:01:00Z"
+          },
+          {
+            "team_id": "$TEAM1_ID",
+            "team": "team1",
+            "user_id": "$PLAYER2_ID",
+            "user": "player2",
+            "task_group_id": "$LINEAR_GROUP_ID",
+            "task_group": "linear_group",
+            "task_id": "$LINEAR_TASK_ID2",
+            "task": "linear_task_2",
+            "accepted": true,
+            "answer": "2",
+            "answer_time": "2024-04-14T13:02:00Z"
+          }
+        ]
+      }
+
+  - method: GET
+    uri: /quest/$QUEST_ID/answer_log?desc=true
+    authorization: $SVAYP11_TOKEN
+
+    expected-status: 200
+    expected-json: >
+      {
+        "total_pages": 1,
+        "next_page_token": 1713099600000,
+        "answer_logs": [
+          {
+            "team_id": "$TEAM1_ID",
+            "team": "team1",
+            "user_id": "$PLAYER2_ID",
+            "user": "player2",
+            "task_group_id": "$LINEAR_GROUP_ID",
+            "task_group": "linear_group",
+            "task_id": "$LINEAR_TASK_ID2",
+            "task": "linear_task_2",
+            "accepted": true,
+            "answer": "2",
+            "answer_time": "2024-04-14T13:02:00Z"
+          },
+          {
+            "team_id": "$TEAM1_ID",
+            "team": "team1",
+            "user_id": "$PLAYER2_ID",
+            "user": "player2",
+            "task_group_id": "$LINEAR_GROUP_ID",
+            "task_group": "linear_group",
+            "task_id": "$LINEAR_TASK_ID1",
+            "task": "linear_task_1",
+            "accepted": true,
+            "answer": "2",
+            "answer_time": "2024-04-14T13:01:00Z"
+          },
+          {
+            "team_id": "$TEAM1_ID",
+            "team": "team1",
+            "user_id": "$PLAYER1_ID",
+            "user": "player1",
+            "task_group_id": "$STICKY_GROUP_ID",
+            "task_group": "sticky_group",
+            "task_id": "$STICKY_TASK_ID1",
+            "task": "sticky_task_1",
+            "accepted": true,
+            "answer": "1",
+            "answer_time": "2024-04-14T13:00:00Z"
+          }
+        ]
+      }
+
+  - method: GET
+    uri: /quest/$QUEST_ID/answer_log?desc=true&page_size=1
+    authorization: $SVAYP11_TOKEN
+
+    expected-status: 200
+    expected-json: >
+      {
+        "total_pages": 3,
+        "next_page_token": 1713099720000,
+        "answer_logs": [
+          {
+            "team_id": "$TEAM1_ID",
+            "team": "team1",
+            "user_id": "$PLAYER2_ID",
+            "user": "player2",
+            "task_group_id": "$LINEAR_GROUP_ID",
+            "task_group": "linear_group",
+            "task_id": "$LINEAR_TASK_ID2",
+            "task": "linear_task_2",
+            "accepted": true,
+            "answer": "2",
+            "answer_time": "2024-04-14T13:02:00Z"
+          }
+        ]
+      }
+
+  - method: GET
+    uri: /quest/$QUEST_ID/answer_log?desc=true&page_size=1&page_id=1713099720000
+    authorization: $SVAYP11_TOKEN
+
+    expected-status: 200
+    expected-json: >
+      {
+        "total_pages": 3,
+        "next_page_token": 1713099660000,
+        "answer_logs": [
+          {
+            "team_id": "$TEAM1_ID",
+            "team": "team1",
+            "user_id": "$PLAYER2_ID",
+            "user": "player2",
+            "task_group_id": "$LINEAR_GROUP_ID",
+            "task_group": "linear_group",
+            "task_id": "$LINEAR_TASK_ID1",
+            "task": "linear_task_1",
+            "accepted": true,
+            "answer": "2",
+            "answer_time": "2024-04-14T13:01:00Z"
+          }
+        ]
+      }
+
+  - method: GET
+    uri: /quest/$QUEST_ID/answer_log?desc=true&page_size=1&page_id=1713099660000
+    authorization: $SVAYP11_TOKEN
+
+    expected-status: 200
+    expected-json: >
+      {
+        "total_pages": 3,
+        "next_page_token": 1713099600000,
+        "answer_logs": [
+          {
+            "team_id": "$TEAM1_ID",
+            "team": "team1",
+            "user_id": "$PLAYER1_ID",
+            "user": "player1",
+            "task_group_id": "$STICKY_GROUP_ID",
+            "task_group": "sticky_group",
+            "task_id": "$STICKY_TASK_ID1",
+            "task": "sticky_task_1",
+            "accepted": true,
+            "answer": "1",
+            "answer_time": "2024-04-14T13:00:00Z"
+          }
+        ]
+      }
+
+  - method: GET
+    uri: /quest/$QUEST_ID/answer_log?desc=true&page_size=2
+    authorization: $SVAYP11_TOKEN
+
+    expected-status: 200
+    expected-json: >
+      {
+        "total_pages": 2,
+        "next_page_token": 1713099660000,
+        "answer_logs": [
+          {
+            "team_id": "$TEAM1_ID",
+            "team": "team1",
+            "user_id": "$PLAYER2_ID",
+            "user": "player2",
+            "task_group_id": "$LINEAR_GROUP_ID",
+            "task_group": "linear_group",
+            "task_id": "$LINEAR_TASK_ID2",
+            "task": "linear_task_2",
+            "accepted": true,
+            "answer": "2",
+            "answer_time": "2024-04-14T13:02:00Z"
+          },
+          {
+            "team_id": "$TEAM1_ID",
+            "team": "team1",
+            "user_id": "$PLAYER2_ID",
+            "user": "player2",
+            "task_group_id": "$LINEAR_GROUP_ID",
+            "task_group": "linear_group",
+            "task_id": "$LINEAR_TASK_ID1",
+            "task": "linear_task_1",
+            "accepted": true,
+            "answer": "2",
+            "answer_time": "2024-04-14T13:01:00Z"
+          }
+        ]
+      }
+
+  - method: GET
+    uri: /quest/$QUEST_ID/answer_log?desc=true&page_size=2&page_id=1713099660000
+    authorization: $SVAYP11_TOKEN
+
+    expected-status: 200
+    expected-json: >
+      {
+        "total_pages": 2,
+        "next_page_token": 1713099600000,
+        "answer_logs": [
+          {
+            "team_id": "$TEAM1_ID",
+            "team": "team1",
+            "user_id": "$PLAYER1_ID",
+            "user": "player1",
+            "task_group_id": "$STICKY_GROUP_ID",
+            "task_group": "sticky_group",
+            "task_id": "$STICKY_TASK_ID1",
+            "task": "sticky_task_1",
+            "accepted": true,
+            "answer": "1",
+            "answer_time": "2024-04-14T13:00:00Z"
           }
         ]
       }

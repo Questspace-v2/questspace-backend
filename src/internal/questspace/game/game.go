@@ -10,9 +10,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/yandex/perforator/library/go/core/xerrors"
 	"go.uber.org/zap"
-	"golang.org/x/xerrors"
 
+	"questspace/internal/qtime"
 	"questspace/pkg/httperrors"
 	"questspace/pkg/logging"
 	"questspace/pkg/storage"
@@ -67,13 +68,16 @@ type AnswerTask struct {
 }
 
 type AnswerTaskGroup struct {
-	ID          storage.ID   `json:"id"`
-	OrderIdx    int          `json:"order_idx"`
-	Name        string       `json:"name"`
-	Description string       `json:"description,omitempty"`
-	PubTime     *time.Time   `json:"pub_time,omitempty"`
-	Sticky      bool         `json:"sticky,omitempty"`
-	Tasks       []AnswerTask `json:"tasks"`
+	ID           storage.ID                 `json:"id"`
+	OrderIdx     int                        `json:"order_idx"`
+	Name         string                     `json:"name"`
+	Description  string                     `json:"description,omitempty"`
+	PubTime      *time.Time                 `json:"pub_time,omitempty"`
+	Sticky       bool                       `json:"sticky,omitempty"`
+	Tasks        []AnswerTask               `json:"tasks"`
+	HasTimeLimit bool                       `json:"has_time_limit,omitempty"`
+	TimeLimit    *storage.Duration          `json:"time_limit,omitempty" swaggertype:"string" example:"45m"`
+	TeamInfo     *storage.TaskGroupTeamInfo `json:"team_info,omitempty"`
 }
 
 type AnswerDataResponse struct {
@@ -94,20 +98,24 @@ func (s *Service) FillAnswerData(ctx context.Context, req *AnswerDataRequest) (*
 	return s.fillAnswerData(ctx, req, takenHints, acceptedTasks), nil
 }
 
-func (s *Service) fillAnswerData(_ context.Context, req *AnswerDataRequest, takenHints storage.HintTakes, acceptedTasks storage.AcceptedTasks) *AnswerDataResponse {
+func (s *Service) fillAnswerData(ctx context.Context, req *AnswerDataRequest, takenHints storage.HintTakes, acceptedTasks storage.AcceptedTasks) *AnswerDataResponse {
 	taskGroups := make([]AnswerTaskGroup, 0, len(req.TaskGroups))
+	var nextStart *time.Time
+	now := qtime.Now()
 	for _, tg := range req.TaskGroups {
 		newTg := AnswerTaskGroup{
-			ID:          tg.ID,
-			OrderIdx:    tg.OrderIdx,
-			Name:        tg.Name,
-			Description: tg.Description,
-			PubTime:     tg.PubTime,
-			Sticky:      tg.Sticky,
-			Tasks:       make([]AnswerTask, 0, len(tg.Tasks)),
+			ID:           tg.ID,
+			OrderIdx:     tg.OrderIdx,
+			Name:         tg.Name,
+			Description:  tg.Description,
+			PubTime:      tg.PubTime,
+			Sticky:       tg.Sticky,
+			Tasks:        make([]AnswerTask, 0, len(tg.Tasks)),
+			HasTimeLimit: tg.HasTimeLimit,
+			TimeLimit:    tg.TimeLimit,
+			TeamInfo:     tg.TeamInfo,
 		}
 
-		var shownFirstUnaccepted bool
 		for _, t := range tg.Tasks {
 			newT := AnswerTask{
 				ID:               t.ID,
@@ -138,19 +146,41 @@ func (s *Service) fillAnswerData(_ context.Context, req *AnswerDataRequest, take
 				}
 			}
 
-			if req.Quest.QuestType != storage.TypeLinear || tg.Sticky {
-				newTg.Tasks = append(newTg.Tasks, newT)
-				continue
-			}
-			if shownFirstUnaccepted {
-				break
-			}
-			if !newT.Accepted {
-				shownFirstUnaccepted = true
-			}
 			newTg.Tasks = append(newTg.Tasks, newT)
 		}
+		if req.Quest.QuestType != storage.TypeLinear || newTg.Sticky {
+			taskGroups = append(taskGroups, newTg)
+			continue
+		}
+		if newTg.TeamInfo == nil && nextStart != nil {
+			newTg.TeamInfo = &storage.TaskGroupTeamInfo{
+				OpeningTime: *nextStart,
+			}
+			nextStart = nil
+		}
+		if newTg.TeamInfo != nil && newTg.TeamInfo.ClosingTime != nil {
+			taskGroups = append(taskGroups, newTg)
+			continue
+		}
+		if newTg.HasTimeLimit && newTg.TimeLimit != nil {
+			deadline := newTg.TeamInfo.OpeningTime.Add(time.Duration(*newTg.TimeLimit))
+			if deadline.Before(now) {
+				newTg.TeamInfo.ClosingTime = &deadline
+				if _, err := s.tgs.UpsertTeamInfo(ctx, &storage.UpsertTeamInfoRequest{
+					TeamID:      req.Team.ID,
+					TaskGroupID: newTg.ID,
+					OpeningTime: newTg.TeamInfo.OpeningTime,
+					ClosingTime: &deadline,
+				}); err != nil {
+					logging.Error(ctx, "error updating closing time", zap.Error(err))
+				}
+				taskGroups = append(taskGroups, newTg)
+				nextStart = &deadline
+				continue
+			}
+		}
 		taskGroups = append(taskGroups, newTg)
+		break
 	}
 
 	resp := &AnswerDataResponse{
@@ -347,6 +377,43 @@ func (s *Service) TakeHint(ctx context.Context, user *storage.User, req *TakeHin
 	if team.RegistrationStatus != storage.RegistrationStatusAccepted {
 		return nil, httperrors.New(http.StatusForbidden, "only accepted teams can take hints")
 	}
+	task, err := s.ts.GetTask(ctx, &storage.GetTaskRequest{
+		ID: req.TaskID,
+	})
+	if err != nil {
+		return nil, xerrors.Errorf("get task: %w", err)
+	}
+	taskGroup, err := s.tgs.GetTaskGroup(ctx, &storage.GetTaskGroupRequest{
+		ID:       task.Group.ID,
+		TeamData: &storage.TeamData{TeamID: &team.ID},
+	})
+	if err != nil {
+		return nil, xerrors.Errorf("get task group: %w", err)
+	}
+	now := qtime.Now()
+	if team.Quest.QuestType == storage.TypeLinear {
+		if taskGroup.TeamInfo == nil {
+			return nil, httperrors.Errorf(http.StatusNotAcceptable, "task %q cannot be accessed because task group is closed", req.TaskID)
+		}
+		if taskGroup.TeamInfo.ClosingTime != nil {
+			return nil, httperrors.Errorf(http.StatusNotAcceptable, "task %q is already closed", req.TaskID)
+		}
+		if taskGroup.HasTimeLimit && taskGroup.TimeLimit != nil {
+			deadline := taskGroup.TeamInfo.OpeningTime.Add(time.Duration(*taskGroup.TimeLimit))
+			if deadline.Before(now) {
+				if _, err = s.tgs.UpsertTeamInfo(ctx, &storage.UpsertTeamInfoRequest{
+					TeamID:      team.ID,
+					TaskGroupID: taskGroup.ID,
+					OpeningTime: taskGroup.TeamInfo.OpeningTime,
+					ClosingTime: &deadline,
+				}); err != nil {
+					logging.Error(ctx, "could not upsert team info", zap.Error(err))
+				}
+				return nil, httperrors.Errorf(http.StatusNotAcceptable, "task %q deadline exceeded", req.TaskID)
+			}
+		}
+	}
+
 	accepted, err := s.ah.GetAcceptedTasks(ctx, &storage.GetAcceptedTasksRequest{TeamID: team.ID, QuestID: req.QuestID})
 	if err != nil {
 		return nil, xerrors.Errorf("get results: %w", err)
@@ -387,7 +454,7 @@ type TryAnswerResponse struct {
 	TaskGroups []AnswerTaskGroup `json:"task_groups,omitempty"`
 }
 
-func (s *Service) TryAnswer(ctx context.Context, user *storage.User, req *TryAnswerRequest) (*TryAnswerResponse, error) {
+func (s *Service) TryAnswer(ctx context.Context, user *storage.User, req *TryAnswerRequest) (resp *TryAnswerResponse, err error) {
 	team, err := s.tms.GetTeam(ctx, &storage.GetTeamRequest{UserRegistration: &storage.UserRegistration{UserID: user.ID, QuestID: req.QuestID}})
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
@@ -413,6 +480,38 @@ func (s *Service) TryAnswer(ctx context.Context, user *storage.User, req *TryAns
 		}
 		return nil, xerrors.Errorf("get answer data: %w", err)
 	}
+	taskGroup, err := s.tgs.GetTaskGroup(ctx, &storage.GetTaskGroupRequest{
+		ID:           answerData.Group.ID,
+		IncludeTasks: true,
+		TeamData:     &storage.TeamData{TeamID: &team.ID},
+	})
+	if err != nil {
+		return nil, xerrors.Errorf("get task group: %w", err)
+	}
+	now := qtime.Now()
+	if team.Quest.QuestType == storage.TypeLinear && !taskGroup.Sticky {
+		if taskGroup.TeamInfo == nil {
+			return nil, httperrors.Errorf(http.StatusNotAcceptable, "task %q cannot be accessed because task group is closed", req.TaskID)
+		}
+		if taskGroup.TeamInfo.ClosingTime != nil {
+			return nil, httperrors.Errorf(http.StatusNotAcceptable, "task %q is already closed", req.TaskID)
+		}
+		if taskGroup.HasTimeLimit && taskGroup.TimeLimit != nil {
+			deadline := taskGroup.TeamInfo.OpeningTime.Add(time.Duration(*taskGroup.TimeLimit))
+			if deadline.Before(now) {
+				if _, err = s.tgs.UpsertTeamInfo(ctx, &storage.UpsertTeamInfoRequest{
+					TeamID:      team.ID,
+					TaskGroupID: taskGroup.ID,
+					OpeningTime: taskGroup.TeamInfo.OpeningTime,
+					ClosingTime: &deadline,
+				}); err != nil {
+					logging.Error(ctx, "could not upsert team info", zap.Error(err))
+				}
+				return nil, httperrors.Errorf(http.StatusNotAcceptable, "task %q deadline exceeded", req.TaskID)
+			}
+		}
+	}
+
 	accepted := false
 	for _, correctAnswer := range answerData.CorrectAnswers {
 		trimmedCorrect := strings.TrimSpace(correctAnswer)
@@ -466,8 +565,32 @@ func (s *Service) TryAnswer(ctx context.Context, user *storage.User, req *TryAns
 	if err = s.ah.CreateAnswerTry(ctx, &tryReq); err != nil {
 		return nil, xerrors.Errorf("create answer try: %w", err)
 	}
+	acceptedTasks[req.TaskID] = storage.AcceptedTask{
+		Score: score,
+		Text:  req.Text,
+	}
+
+	if allSolved(acceptedTasks, taskGroup.Tasks) {
+		if _, err = s.tgs.UpsertTeamInfo(ctx, &storage.UpsertTeamInfoRequest{
+			TeamID:      team.ID,
+			TaskGroupID: taskGroup.ID,
+			OpeningTime: taskGroup.TeamInfo.OpeningTime,
+			ClosingTime: &now,
+		}); err != nil {
+			return nil, xerrors.Errorf("upsert team info: %w", err)
+		}
+	}
 
 	return &TryAnswerResponse{Accepted: true, Text: req.Text, Score: score}, nil
+}
+
+func allSolved(accepted storage.AcceptedTasks, tasks []storage.Task) bool {
+	for _, task := range tasks {
+		if _, ok := accepted[task.ID]; !ok {
+			return false
+		}
+	}
+	return true
 }
 
 type AddPenaltyRequest struct {
@@ -505,6 +628,7 @@ type AnswerLog struct {
 	Accepted    bool       `json:"accepted"`
 	Answer      string     `json:"answer"`
 	AnswerTime  time.Time  `json:"answer_time"`
+	Score       int        `json:"score"`
 }
 
 type AnswerLogResponse struct {
@@ -530,6 +654,7 @@ func (s *Service) GetAnswerLogs(ctx context.Context, user *storage.User, questID
 			Accepted:    log.Accepted,
 			Answer:      log.Answer,
 			AnswerTime:  log.AnswerTime,
+			Score:       log.Score,
 		}
 		if log.User != nil {
 			al.UserID = log.User.ID

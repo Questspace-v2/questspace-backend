@@ -10,6 +10,7 @@ type QuestSpaceStorage interface {
 	TaskStorage
 	TeamStorage
 	AnswerHintStorage
+	AccessStorage
 }
 
 type UserStorage interface {
@@ -31,6 +32,8 @@ type QuestStorage interface {
 }
 
 type TaskGroupStorage interface {
+	TeamInfoStorage
+
 	CreateTaskGroup(context.Context, *CreateTaskGroupRequest) (*TaskGroup, error)
 	GetTaskGroup(context.Context, *GetTaskGroupRequest) (*TaskGroup, error)
 	GetTaskGroups(context.Context, *GetTaskGroupsRequest) ([]TaskGroup, error)
@@ -81,4 +84,14 @@ type AnswerStorage interface {
 type PenaltyStorage interface {
 	GetPenalties(context.Context, *GetPenaltiesRequest) (TeamPenalties, error)
 	CreatePenalty(context.Context, *CreatePenaltyRequest) error
+}
+
+type TeamInfoStorage interface {
+	UpsertTeamInfo(context.Context, *UpsertTeamInfoRequest) (*TaskGroupTeamInfo, error)
+	GetTeamInfo(context.Context, *GetTeamInfoRequest) (*TaskGroupTeamInfo, error)
+	GetTeamInfos(context.Context, *GetTeamInfosRequest) (GetTeamInfosResponse, error)
+}
+
+type AccessStorage interface {
+	HasAccess(context.Context, ID) (bool, error)
 }

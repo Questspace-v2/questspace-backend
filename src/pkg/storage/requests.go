@@ -47,6 +47,7 @@ type CreateQuestRequest struct {
 	MaxTeamsAmount       *int             `json:"max_teams_amount,omitempty"`
 	RegistrationType     RegistrationType `json:"registration_type,omitempty" enums:"AUTO,VERIFY"`
 	QuestType            QuestType        `json:"quest_type,omitempty" enums:"ASSAULT,LINEAR"`
+	FeedbackLink         *string          `json:"feedback_link,omitempty"`
 }
 
 type GetQuestRequest struct {
@@ -80,6 +81,7 @@ type UpdateQuestRequest struct {
 	MaxTeamsAmount       *int             `json:"max_teams_amount,omitempty"`
 	RegistrationType     RegistrationType `json:"registration_type,omitempty" enums:"AUTO,VERIFY"`
 	QuestType            QuestType        `json:"quest_type,omitempty" enums:"ASSAULT,LINEAR"`
+	FeedbackLink         *string          `json:"feedback_link,omitempty"`
 }
 
 type DeleteQuestRequest struct {
@@ -150,34 +152,46 @@ type RemoveUserRequest struct {
 }
 
 type CreateTaskGroupRequest struct {
-	QuestID     ID                  `json:"-"`
-	OrderIdx    int                 `json:"order_idx"`
-	Name        string              `json:"name"`
-	Description string              `json:"description,omitempty"`
-	PubTime     *time.Time          `json:"pub_time,omitempty"`
-	Tasks       []CreateTaskRequest `json:"tasks"`
-	Sticky      bool                `json:"sticky,omitempty"`
+	QuestID      ID                  `json:"-"`
+	OrderIdx     int                 `json:"order_idx"`
+	Name         string              `json:"name"`
+	Description  string              `json:"description,omitempty"`
+	PubTime      *time.Time          `json:"pub_time,omitempty"`
+	Tasks        []CreateTaskRequest `json:"tasks"`
+	Sticky       bool                `json:"sticky,omitempty"`
+	HasTimeLimit bool                `json:"has_time_limit,omitempty"`
+	TimeLimit    *Duration           `json:"time_limit,omitempty"`
+}
+
+type TeamData struct {
+	UserID *ID
+	TeamID *ID
 }
 
 type GetTaskGroupRequest struct {
 	ID           ID
 	IncludeTasks bool
+	TeamData     *TeamData
 }
 
 type GetTaskGroupsRequest struct {
 	QuestID      ID
+	GroupIDs     []ID
 	IncludeTasks bool
+	TeamData     *TeamData
 }
 
 type UpdateTaskGroupRequest struct {
-	QuestID     ID `json:"-"`
-	ID          ID
-	OrderIdx    int                     `json:"order_idx"`
-	Name        string                  `json:"name"`
-	Description *string                 `json:"description,omitempty"`
-	PubTime     *time.Time              `json:"pub_time"`
-	Tasks       *TasksBulkUpdateRequest `json:"tasks"`
-	Sticky      *bool                   `json:"sticky,omitempty"`
+	QuestID      ID                      `json:"-"`
+	ID           ID                      `json:"id"`
+	OrderIdx     int                     `json:"order_idx"`
+	Name         string                  `json:"name"`
+	Description  *string                 `json:"description,omitempty"`
+	PubTime      *time.Time              `json:"pub_time"`
+	Tasks        *TasksBulkUpdateRequest `json:"tasks"`
+	Sticky       *bool                   `json:"sticky,omitempty"`
+	HasTimeLimit *bool                   `json:"has_time_limit,omitempty"`
+	TimeLimit    *Duration               `json:"time_limit,omitempty"`
 }
 
 type DeleteTaskGroupRequest struct {
@@ -373,3 +387,24 @@ func WithPageToken(pageToken int64) FilteringOption {
 type GetAnswerTriesRequest struct {
 	QuestID ID
 }
+
+type UpsertTeamInfoRequest struct {
+	TeamID      ID
+	TaskGroupID ID
+	OpeningTime time.Time
+	ClosingTime *time.Time
+}
+
+type GetTeamInfoRequest struct {
+	TaskGroupID ID
+	TeamData    TeamData
+}
+
+type GetTeamInfosRequest struct {
+	QuestID      ID
+	TaskGroupIDs []ID
+	TeamData     TeamData
+}
+
+// GetTeamInfosResponse TaskGroup.ID -> *TaskGroupTeamInfo
+type GetTeamInfosResponse map[ID]*TaskGroupTeamInfo

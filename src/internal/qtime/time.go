@@ -44,7 +44,5 @@ func Wait(d time.Duration) {
 		panic("waiting in production environment")
 	}
 	newTime := testStartTime.Add(d)
-	nowFunc = func() time.Time {
-		return newTime
-	}
+	testStartTime = newTime
 }

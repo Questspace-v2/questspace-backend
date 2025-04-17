@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	"golang.org/x/xerrors"
+	"github.com/yandex/perforator/library/go/core/xerrors"
 
 	"questspace/internal/questspace/taskgroups/requests"
 	"questspace/internal/questspace/tasks"
@@ -26,8 +26,6 @@ func NewService(tg storage.TaskGroupStorage, ts storage.TaskStorage, v requests.
 	}
 }
 
-// Create godoc
-// TODO: unit-tests
 func (s *Service) Create(ctx context.Context, req *requests.CreateFullRequest) (requests.CreateFullResponse, error) {
 	old, err := s.tg.GetTaskGroups(ctx, &storage.GetTaskGroupsRequest{QuestID: req.QuestID})
 	if err != nil {
@@ -48,12 +46,14 @@ func (s *Service) Create(ctx context.Context, req *requests.CreateFullRequest) (
 	bulkRequest := storage.TaskGroupsBulkUpdateRequest{QuestID: req.QuestID}
 	for i, tg := range req.TaskGroups {
 		createReq := storage.CreateTaskGroupRequest{
-			QuestID:     req.QuestID,
-			Name:        tg.Name,
-			Description: tg.Description,
-			OrderIdx:    i,
-			Sticky:      tg.Sticky,
-			PubTime:     tg.PubTime,
+			QuestID:      req.QuestID,
+			Name:         tg.Name,
+			Description:  tg.Description,
+			OrderIdx:     i,
+			Sticky:       tg.Sticky,
+			PubTime:      tg.PubTime,
+			HasTimeLimit: tg.HasTimeLimit,
+			TimeLimit:    tg.TimeLimit,
 		}
 
 		for j, t := range tg.Tasks {

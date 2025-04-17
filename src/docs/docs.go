@@ -1613,6 +1613,9 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
+                "has_time_limit": {
+                    "type": "boolean"
+                },
                 "id": {
                     "type": "string"
                 },
@@ -1633,6 +1636,13 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/game.AnswerTask"
                     }
+                },
+                "team_info": {
+                    "$ref": "#/definitions/storage.TaskGroupTeamInfo"
+                },
+                "time_limit": {
+                    "type": "string",
+                    "example": "45m"
                 }
             }
         },
@@ -1847,6 +1857,9 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
+                "has_time_limit": {
+                    "type": "boolean"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -1861,6 +1874,9 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/requests.CreateTaskRequest"
                     }
+                },
+                "time_limit": {
+                    "$ref": "#/definitions/storage.Duration"
                 }
             }
         },
@@ -1959,6 +1975,9 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
+                "feedback_link": {
+                    "type": "string"
+                },
                 "finish_time": {
                     "type": "string",
                     "example": "2024-04-21T14:00:00+05:00"
@@ -2003,32 +2022,6 @@ const docTemplate = `{
                 "start_time": {
                     "type": "string",
                     "example": "2024-04-14T14:00:00+05:00"
-                }
-            }
-        },
-        "storage.CreateTaskGroupRequest": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "order_idx": {
-                    "type": "integer"
-                },
-                "pub_time": {
-                    "type": "string"
-                },
-                "sticky": {
-                    "type": "boolean"
-                },
-                "tasks": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/storage.CreateTaskRequest"
-                    }
                 }
             }
         },
@@ -2087,21 +2080,8 @@ const docTemplate = `{
                 }
             }
         },
-        "storage.DeleteTaskGroupRequest": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                }
-            }
-        },
-        "storage.DeleteTaskRequest": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                }
-            }
+        "storage.Duration": {
+            "type": "object"
         },
         "storage.Hint": {
             "type": "object",
@@ -2144,6 +2124,9 @@ const docTemplate = `{
                     "$ref": "#/definitions/storage.User"
                 },
                 "description": {
+                    "type": "string"
+                },
+                "feedback_link": {
                     "type": "string"
                 },
                 "finish_time": {
@@ -2195,28 +2178,16 @@ const docTemplate = `{
                     "example": "2024-04-14T14:00:00+05:00"
                 },
                 "status": {
-                    "$ref": "#/definitions/storage.QuestStatus"
+                    "type": "string",
+                    "enum": [
+                        "ON_REGISTRATION",
+                        "REGISTRATION_DONE",
+                        "RUNNING",
+                        "WAIT_RESULTS",
+                        "FINISHED"
+                    ]
                 }
             }
-        },
-        "storage.QuestStatus": {
-            "type": "integer",
-            "enum": [
-                0,
-                1,
-                2,
-                3,
-                4,
-                5
-            ],
-            "x-enum-varnames": [
-                "StatusUnspecified",
-                "StatusOnRegistration",
-                "StatusRegistrationDone",
-                "StatusRunning",
-                "StatusWaitResults",
-                "StatusFinished"
-            ]
         },
         "storage.RegistrationStatus": {
             "type": "string",
@@ -2322,6 +2293,9 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
+                "has_time_limit": {
+                    "type": "boolean"
+                },
                 "id": {
                     "type": "string"
                 },
@@ -2342,54 +2316,29 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/storage.Task"
                     }
+                },
+                "team_info": {
+                    "$ref": "#/definitions/storage.TaskGroupTeamInfo"
+                },
+                "time_limit": {
+                    "type": "integer",
+                    "example": 300
+                }
+            }
+        },
+        "storage.TaskGroupTeamInfo": {
+            "type": "object",
+            "properties": {
+                "closing_time": {
+                    "type": "string"
+                },
+                "opening_time": {
+                    "type": "string"
                 }
             }
         },
         "storage.TaskGroupsBulkUpdateRequest": {
-            "type": "object",
-            "properties": {
-                "create": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/storage.CreateTaskGroupRequest"
-                    }
-                },
-                "delete": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/storage.DeleteTaskGroupRequest"
-                    }
-                },
-                "update": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/storage.UpdateTaskGroupRequest"
-                    }
-                }
-            }
-        },
-        "storage.TasksBulkUpdateRequest": {
-            "type": "object",
-            "properties": {
-                "create": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/storage.CreateTaskRequest"
-                    }
-                },
-                "delete": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/storage.DeleteTaskRequest"
-                    }
-                },
-                "update": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/storage.UpdateTaskRequest"
-                    }
-                }
-            }
+            "type": "object"
         },
         "storage.Team": {
             "type": "object",
@@ -2440,6 +2389,9 @@ const docTemplate = `{
                 "description": {
                     "type": "string"
                 },
+                "feedback_link": {
+                    "type": "string"
+                },
                 "finish_time": {
                     "type": "string"
                 },
@@ -2481,90 +2433,6 @@ const docTemplate = `{
                 },
                 "start_time": {
                     "type": "string"
-                }
-            }
-        },
-        "storage.UpdateTaskGroupRequest": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "order_idx": {
-                    "type": "integer"
-                },
-                "pub_time": {
-                    "type": "string"
-                },
-                "sticky": {
-                    "type": "boolean"
-                },
-                "tasks": {
-                    "$ref": "#/definitions/storage.TasksBulkUpdateRequest"
-                }
-            }
-        },
-        "storage.UpdateTaskRequest": {
-            "type": "object",
-            "properties": {
-                "correct_answers": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "group_id": {
-                    "type": "string"
-                },
-                "hints": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "hints_full": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/storage.CreateHintRequest"
-                    }
-                },
-                "id": {
-                    "type": "string"
-                },
-                "media_link": {
-                    "description": "Deprecated",
-                    "type": "string",
-                    "example": "deprecated"
-                },
-                "media_links": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "name": {
-                    "type": "string"
-                },
-                "order_idx": {
-                    "type": "integer"
-                },
-                "pub_time": {
-                    "type": "string"
-                },
-                "question": {
-                    "type": "string"
-                },
-                "reward": {
-                    "type": "integer"
-                },
-                "verification": {
-                    "$ref": "#/definitions/storage.VerificationType"
                 }
             }
         },

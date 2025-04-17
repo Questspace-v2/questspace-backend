@@ -3,19 +3,21 @@ package pgclient
 import (
 	"context"
 	"database/sql"
+	"net/http"
 
 	sq "github.com/Masterminds/squirrel"
-	"golang.org/x/xerrors"
+	"github.com/yandex/perforator/library/go/core/xerrors"
 
+	"questspace/pkg/httperrors"
 	"questspace/pkg/storage"
 )
 
 var _ storage.TaskGroupStorage = &Client{}
 
 func (c *Client) CreateTaskGroup(ctx context.Context, req *storage.CreateTaskGroupRequest) (*storage.TaskGroup, error) {
-	values := []interface{}{req.Name, req.OrderIdx, req.Sticky, req.QuestID}
+	values := []interface{}{req.Name, req.OrderIdx, req.Sticky, req.QuestID, req.HasTimeLimit}
 	query := sq.Insert("questspace.task_group").
-		Columns("name", "order_idx", "sticky", "quest_id").
+		Columns("name", "order_idx", "sticky", "quest_id", "has_time_limit").
 		Suffix("RETURNING id").
 		PlaceholderFormat(sq.Dollar)
 	if req.PubTime != nil {
@@ -26,16 +28,24 @@ func (c *Client) CreateTaskGroup(ctx context.Context, req *storage.CreateTaskGro
 		values = append(values, req.Description)
 		query = query.Columns("description")
 	}
+	if req.TimeLimit != nil {
+		values = append(values, *req.TimeLimit)
+		query = query.Columns("time_limit")
+	} else if req.HasTimeLimit {
+		return nil, httperrors.New(http.StatusBadRequest, "task group has `has_time_limit` without actual time limit")
+	}
 	query = query.Values(values...)
 
 	row := query.RunWith(c.runner).QueryRowContext(ctx)
 	taskGroup := storage.TaskGroup{
-		Name:        req.Name,
-		Description: req.Description,
-		OrderIdx:    req.OrderIdx,
-		Sticky:      req.Sticky,
-		Quest:       &storage.Quest{ID: req.QuestID},
-		PubTime:     req.PubTime,
+		Name:         req.Name,
+		Description:  req.Description,
+		OrderIdx:     req.OrderIdx,
+		Sticky:       req.Sticky,
+		Quest:        &storage.Quest{ID: req.QuestID},
+		PubTime:      req.PubTime,
+		HasTimeLimit: req.HasTimeLimit,
+		TimeLimit:    req.TimeLimit,
 	}
 	if err := row.Scan(&taskGroup.ID); err != nil {
 		return nil, xerrors.Errorf("scan row: %w", err)
@@ -46,7 +56,7 @@ func (c *Client) CreateTaskGroup(ctx context.Context, req *storage.CreateTaskGro
 
 func (c *Client) GetTaskGroup(ctx context.Context, req *storage.GetTaskGroupRequest) (*storage.TaskGroup, error) {
 	query := `
-	SELECT id, name, description, order_idx, sticky, pub_time, quest_id
+	SELECT id, name, description, order_idx, sticky, pub_time, quest_id, has_time_limit, time_limit
 	FROM questspace.task_group
 	WHERE id = $1
 `
@@ -62,6 +72,8 @@ func (c *Client) GetTaskGroup(ctx context.Context, req *storage.GetTaskGroupRequ
 		&taskGroup.Sticky,
 		&taskGroup.PubTime,
 		&taskGroup.Quest.ID,
+		&taskGroup.HasTimeLimit,
+		&taskGroup.TimeLimit,
 	); err != nil {
 		return nil, xerrors.Errorf("scan row: %w", err)
 	}
@@ -78,16 +90,29 @@ func (c *Client) GetTaskGroup(ctx context.Context, req *storage.GetTaskGroupRequ
 			taskGroup.Tasks[i].Group = &taskGroup
 		}
 	}
+	if req.TeamData != nil {
+		teamInfos, err := c.fillTeamInfos(ctx, []storage.TaskGroup{taskGroup}, *req.TeamData)
+		if err != nil {
+			return nil, xerrors.Errorf("get team info: %w", err)
+		}
+		taskGroup.TeamInfo = teamInfos[taskGroup.ID]
+	}
 
 	return &taskGroup, nil
 }
 
 func (c *Client) GetTaskGroups(ctx context.Context, req *storage.GetTaskGroupsRequest) ([]storage.TaskGroup, error) {
-	query := sq.Select("id", "name", "description", "order_idx", "sticky", "pub_time").
+	query := sq.Select("id", "name", "description", "order_idx", "sticky", "pub_time", "has_time_limit", "time_limit").
 		From("questspace.task_group").
-		Where(sq.Eq{"quest_id": req.QuestID}).
 		OrderBy("order_idx").
 		PlaceholderFormat(sq.Dollar)
+	if len(req.QuestID) > 0 {
+		query = query.Where(sq.Eq{"quest_id": req.QuestID})
+	}
+	if len(req.GroupIDs) > 0 {
+		query = query.Where(sq.Eq{"id": req.GroupIDs})
+	}
+
 	rows, err := query.RunWith(c.runner).QueryContext(ctx)
 	if err != nil {
 		return nil, xerrors.Errorf("query rows: %w", err)
@@ -109,6 +134,8 @@ func (c *Client) GetTaskGroups(ctx context.Context, req *storage.GetTaskGroupsRe
 			&taskGroup.OrderIdx,
 			&taskGroup.Sticky,
 			&taskGroup.PubTime,
+			&taskGroup.HasTimeLimit,
+			&taskGroup.TimeLimit,
 		); err != nil {
 			return nil, xerrors.Errorf("scan row: %w", err)
 		}
@@ -136,6 +163,16 @@ func (c *Client) GetTaskGroups(ctx context.Context, req *storage.GetTaskGroupsRe
 			}
 		}
 	}
+	if req.TeamData != nil {
+		teamInfos, err := c.fillTeamInfos(ctx, taskGroups, *req.TeamData)
+		if err != nil {
+			return nil, xerrors.Errorf("get team infos: %w", err)
+		}
+		for i := range len(taskGroups) {
+			tg := taskGroups[i]
+			taskGroups[i].TeamInfo = teamInfos[tg.ID]
+		}
+	}
 
 	return taskGroups, nil
 }
@@ -144,7 +181,7 @@ func (c *Client) UpdateTaskGroup(ctx context.Context, req *storage.UpdateTaskGro
 	query := sq.Update("questspace.task_group").
 		Where(sq.Eq{"id": req.ID}).
 		Set("order_idx", req.OrderIdx).
-		Suffix("RETURNING id, name, order_idx, pub_time, quest_id").
+		Suffix("RETURNING id, name, order_idx, pub_time, quest_id, has_time_limit, time_limit").
 		PlaceholderFormat(sq.Dollar)
 	if len(req.Name) > 0 {
 		query = query.Set("name", req.Name)
@@ -158,10 +195,24 @@ func (c *Client) UpdateTaskGroup(ctx context.Context, req *storage.UpdateTaskGro
 	if req.Sticky != nil {
 		query = query.Set("sticky", *req.Sticky)
 	}
+	if req.HasTimeLimit != nil {
+		query = query.Set("has_time_limit", *req.HasTimeLimit)
+	}
+	if req.TimeLimit != nil {
+		query = query.Set("time_limit", *req.TimeLimit)
+	}
 
 	row := query.RunWith(c.runner).QueryRowContext(ctx)
 	taskGroup := storage.TaskGroup{Quest: &storage.Quest{}}
-	if err := row.Scan(&taskGroup.ID, &taskGroup.Name, &taskGroup.OrderIdx, &taskGroup.PubTime, &taskGroup.Quest.ID); err != nil {
+	if err := row.Scan(
+		&taskGroup.ID,
+		&taskGroup.Name,
+		&taskGroup.OrderIdx,
+		&taskGroup.PubTime,
+		&taskGroup.Quest.ID,
+		&taskGroup.HasTimeLimit,
+		&taskGroup.TimeLimit,
+	); err != nil {
 		return nil, xerrors.Errorf("scan row: %w", err)
 	}
 

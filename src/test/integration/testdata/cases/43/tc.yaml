@@ -130,6 +130,7 @@ requests:
                 "order_idx": 0,
                 "correct_answers": ["1", "2", "3"],
                 "hints_full": [],
+                "hints": [],
                 "reward": 100,
                 "verification": "auto",
                 "verification_type": "auto"
@@ -149,6 +150,7 @@ requests:
                 "order_idx": 0,
                 "correct_answers": ["1", "2", "3"],
                 "hints_full": [],
+                "hints": [],
                 "reward": 100,
                 "verification": "auto",
                 "verification_type": "auto"
@@ -160,6 +162,7 @@ requests:
                 "order_idx": 1,
                 "correct_answers": ["1", "2", "3"],
                 "hints_full": [],
+                "hints": [],
                 "reward": 100,
                 "verification": "auto",
                 "verification_type": "auto"

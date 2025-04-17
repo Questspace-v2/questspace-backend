@@ -6,7 +6,7 @@ import (
 	"errors"
 
 	sq "github.com/Masterminds/squirrel"
-	"golang.org/x/xerrors"
+	"github.com/yandex/perforator/library/go/core/xerrors"
 
 	"questspace/pkg/storage"
 )
@@ -53,6 +53,10 @@ func (c *Client) CreateQuest(ctx context.Context, req *storage.CreateQuestReques
 		values = append(values, req.RegistrationType)
 		query = query.Columns("registration_type")
 	}
+	if req.FeedbackLink != nil {
+		values = append(values, *req.FeedbackLink)
+		query = query.Columns("feedback_link")
+	}
 
 	row := query.Values(values...).RunWith(c.runner).QueryRowContext(ctx)
 	quest := storage.Quest{
@@ -74,6 +78,7 @@ func (c *Client) CreateQuest(ctx context.Context, req *storage.CreateQuestReques
 		MaxTeamsAmount:       req.MaxTeamsAmount,
 		RegistrationType:     req.RegistrationType,
 		QuestType:            req.QuestType,
+		FeedbackLink:         req.FeedbackLink,
 	}
 	if err := row.Scan(&quest.ID); err != nil {
 		return nil, xerrors.Errorf("scan row: %w", err)
@@ -101,6 +106,7 @@ SELECT
 	q.max_teams_amount,
 	q.registration_type,
 	q.quest_type,
+	q.feedback_link,
 	u.id,
 	u.username,
 	u.avatar_url
@@ -132,6 +138,7 @@ func (c *Client) GetQuest(ctx context.Context, req *storage.GetQuestRequest) (*s
 		&q.MaxTeamsAmount,
 		&q.RegistrationType,
 		&q.QuestType,
+		&q.FeedbackLink,
 		&userId,
 		&creatorName,
 		&userAvatarURL,
@@ -194,6 +201,7 @@ func (c *Client) GetQuests(ctx context.Context, req *storage.GetQuestsRequest) (
 		"q.max_team_cap",
 		"q.finished",
 		"q.quest_type",
+		"q.feedback_link",
 		"q.creator_id",
 		"u.username",
 		"u.avatar_url",
@@ -246,6 +254,7 @@ func (c *Client) GetQuests(ctx context.Context, req *storage.GetQuestsRequest) (
 			&q.MaxTeamCap,
 			&finished,
 			&q.QuestType,
+			&q.FeedbackLink,
 			&userId, &username, &userAvatarURL,
 		); err != nil {
 			return nil, xerrors.Errorf("scan row: %w", err)
@@ -301,7 +310,8 @@ func (c *Client) UpdateQuest(ctx context.Context, req *storage.UpdateQuestReques
 		brief,
 		max_teams_amount,
 		registration_type,
-		quest_type`).
+		quest_type,
+		feedback_link`).
 		PlaceholderFormat(sq.Dollar)
 	if len(req.Name) > 0 {
 		query = query.Set("name", req.Name)
@@ -344,6 +354,9 @@ func (c *Client) UpdateQuest(ctx context.Context, req *storage.UpdateQuestReques
 	if len(req.QuestType) > 0 {
 		query = query.Set("quest_type", req.QuestType)
 	}
+	if req.FeedbackLink != nil {
+		query = query.Set("feedback_link", req.FeedbackLink)
+	}
 
 	row := query.RunWith(c.runner).QueryRowContext(ctx)
 	var (
@@ -368,6 +381,7 @@ func (c *Client) UpdateQuest(ctx context.Context, req *storage.UpdateQuestReques
 		&q.MaxTeamsAmount,
 		&q.RegistrationType,
 		&q.QuestType,
+		&q.FeedbackLink,
 	); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, storage.ErrNotFound

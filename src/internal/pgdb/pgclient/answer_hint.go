@@ -6,7 +6,7 @@ import (
 	"errors"
 
 	sq "github.com/Masterminds/squirrel"
-	"golang.org/x/xerrors"
+	"github.com/yandex/perforator/library/go/core/xerrors"
 
 	"questspace/internal/qtime"
 	"questspace/pkg/storage"
@@ -225,7 +225,7 @@ func buildLogQuery(req *storage.GetAnswerTriesRequest, opts *storage.TaskRequest
 		whereEq["tm.id"] = opts.TeamID
 	}
 	if len(opts.UserID) > 0 {
-		whereEq["u.id"] = opts.TeamID
+		whereEq["u.id"] = opts.UserID
 	}
 	if opts.OnlyAccepted {
 		whereEq["at.accepted"] = true
@@ -283,14 +283,16 @@ func (c *Client) GetAnswerTries(ctx context.Context, req *storage.GetAnswerTries
 		"u.username",
 		"at.accepted",
 		"at.answer",
-	).Limit(uint64(options.PageSize))
+		"at.score",
+	)
 	if options.PageToken != nil && !options.DateDesc {
-		query = query.Where("at.try_time > to_timestamp(?)", *options.PageToken)
+		query = query.Where("extract(epoch from at.try_time)*1000 > ?", *options.PageToken)
 	} else if options.PageToken != nil && options.DateDesc {
-		query = query.Where("at.try_time < to_timestamp(?)", *options.PageToken)
+		query = query.Where("extract(epoch from at.try_time)*1000 < ?", *options.PageToken)
 	} else if options.PageNumber != nil {
 		query = query.Offset(uint64(options.PageSize * *options.PageNumber))
 	}
+	query = query.Limit(uint64(options.PageSize))
 
 	rows, err := query.RunWith(c.runner).QueryContext(ctx)
 	if err != nil {
@@ -318,6 +320,7 @@ func (c *Client) GetAnswerTries(ctx context.Context, req *storage.GetAnswerTries
 			&userName,
 			&al.Accepted,
 			&al.Answer,
+			&al.Score,
 		); err != nil {
 			return nil, xerrors.Errorf("scan row: %w", err)
 		}
@@ -341,7 +344,7 @@ func (c *Client) GetAnswerTries(ctx context.Context, req *storage.GetAnswerTries
 	var nexToken int64
 	if len(answerLogs) > 0 {
 		last := answerLogs[len(answerLogs)-1]
-		nexToken = last.AnswerTime.UTC().Unix()
+		nexToken = last.AnswerTime.UnixMilli()
 	}
 
 	res := &storage.AnswerLogRecords{
