@@ -16,7 +16,7 @@ require (
 	github.com/spkg/ptr v0.0.0-20160615052844-700e5e4e65ad
 	github.com/stretchr/testify v1.10.0
 	github.com/swaggo/http-swagger v1.3.4
-	github.com/swaggo/swag v1.16.3
+	github.com/swaggo/swag v1.16.4
 	github.com/yandex/perforator v0.0.5
 	go.uber.org/zap v1.27.0
 	golang.org/x/crypto v0.31.0
