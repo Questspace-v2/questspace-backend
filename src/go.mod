@@ -5,7 +5,7 @@ go 1.22
 require (
 	github.com/Masterminds/squirrel v1.5.4
 	github.com/cenkalti/backoff/v4 v4.3.0
-	github.com/fergusstrange/embedded-postgres v1.26.0
+	github.com/fergusstrange/embedded-postgres v1.30.0
 	github.com/gofor-little/env v1.0.17
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/golang-jwt/jwt/v5 v5.2.1
@@ -14,7 +14,7 @@ require (
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/ory/dockertest/v3 v3.11.0
 	github.com/spkg/ptr v0.0.0-20160615052844-700e5e4e65ad
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	github.com/swaggo/http-swagger v1.3.4
 	github.com/swaggo/swag v1.16.3
 	github.com/yandex/perforator v0.0.5
