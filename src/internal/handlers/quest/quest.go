@@ -6,9 +6,10 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/yandex/perforator/library/go/core/xerrors"
 	"go.uber.org/zap"
-	"golang.org/x/xerrors"
 
+	"questspace/internal/accesscontrol"
 	"questspace/internal/pgdb"
 	"questspace/internal/questspace/game"
 	"questspace/internal/questspace/quests"
@@ -59,11 +60,21 @@ func (h *Handler) HandleCreate(ctx context.Context, w http.ResponseWriter, r *ht
 	if err := validate.ImageURL(ctx, h.fetcher, req.MediaLink); err != nil {
 		return xerrors.Errorf("%w", err)
 	}
+	if req.FeedbackLink != nil {
+		if err = validate.URL(*req.FeedbackLink); err != nil {
+			return err
+		}
+	}
 
 	s, err := h.clientFactory.NewStorage(ctx, dbnode.Master)
 	if err != nil {
 		return xerrors.Errorf("get storage client: %w", err)
 	}
+
+	if err = accesscontrol.Check(ctx, s, uauth); err != nil {
+		return err
+	}
+
 	quest, err := s.CreateQuest(ctx, &req)
 	if err != nil {
 		return xerrors.Errorf("create quest: %w", err)
@@ -234,6 +245,11 @@ func (h *Handler) HandleUpdate(ctx context.Context, w http.ResponseWriter, r *ht
 	}
 	if err := validate.ImageURL(ctx, h.fetcher, req.MediaLink); err != nil {
 		return xerrors.Errorf("%w", err)
+	}
+	if req.FeedbackLink != nil {
+		if err = validate.URL(*req.FeedbackLink); err != nil {
+			return err
+		}
 	}
 	uauth, err := jwt.GetUserFromContext(ctx)
 	if err != nil {

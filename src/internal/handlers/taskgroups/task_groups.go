@@ -5,8 +5,9 @@ import (
 	"errors"
 	"net/http"
 
-	"golang.org/x/xerrors"
+	"github.com/yandex/perforator/library/go/core/xerrors"
 
+	"questspace/internal/accesscontrol"
 	"questspace/internal/pgdb"
 	"questspace/internal/questspace/quests"
 	"questspace/internal/questspace/taskgroups"
@@ -65,6 +66,10 @@ func (h *Handler) HandleBulkUpdate(ctx context.Context, w http.ResponseWriter, r
 		return xerrors.Errorf("get storage client: %w", err)
 	}
 	defer func() { _ = tx.Rollback() }()
+
+	if err = accesscontrol.Check(ctx, s, uauth); err != nil {
+		return err
+	}
 
 	quest, err := s.GetQuest(ctx, &storage.GetQuestRequest{ID: questID})
 	if err != nil {
@@ -200,7 +205,7 @@ func (h *Handler) HandleGet(ctx context.Context, w http.ResponseWriter, r *http.
 		return xerrors.Errorf("get quest: %w", err)
 	}
 	if quest.Creator.ID != uauth.ID {
-		return httperrors.Errorf(http.StatusForbidden, "only creator can get tasks outside of playmode", questID)
+		return httperrors.Errorf(http.StatusForbidden, "only creator can get tasks outside of playmode")
 	}
 	quests.SetStatus(quest)
 	taskGroups, err := s.GetTaskGroups(ctx, &storage.GetTaskGroupsRequest{QuestID: questID, IncludeTasks: true})

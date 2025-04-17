@@ -3,8 +3,8 @@ package hasher
 import (
 	"hash"
 
+	"github.com/yandex/perforator/library/go/core/xerrors"
 	"golang.org/x/crypto/bcrypt"
-	"golang.org/x/xerrors"
 )
 
 type Hasher interface {

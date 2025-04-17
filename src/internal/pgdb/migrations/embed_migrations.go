@@ -4,7 +4,7 @@ import (
 	"embed"
 	"strings"
 
-	"golang.org/x/xerrors"
+	"github.com/yandex/perforator/library/go/core/xerrors"
 )
 
 //go:embed *.sql

@@ -8,7 +8,7 @@ import (
 	"questspace/pkg/storage"
 
 	sq "github.com/Masterminds/squirrel"
-	"golang.org/x/xerrors"
+	"github.com/yandex/perforator/library/go/core/xerrors"
 )
 
 func (c *Client) UpsertTeamInfo(ctx context.Context, req *storage.UpsertTeamInfoRequest) (*storage.TaskGroupTeamInfo, error) {

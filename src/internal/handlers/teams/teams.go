@@ -6,7 +6,7 @@ import (
 	"errors"
 	"net/http"
 
-	"golang.org/x/xerrors"
+	"github.com/yandex/perforator/library/go/core/xerrors"
 
 	"questspace/internal/handlers/quest"
 	"questspace/internal/pgdb"
