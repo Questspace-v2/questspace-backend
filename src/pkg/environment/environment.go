@@ -34,7 +34,7 @@ func GetAddrFromEnvironment(env Environment) string {
 	case Development:
 		return "localhost:8080"
 	default:
-		return ":80"
+		return ":8080"
 	}
 }
 

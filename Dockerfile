@@ -31,6 +31,6 @@ COPY conf /conf
 
 USER questspace
 
-EXPOSE 80
+EXPOSE 8080
 
 ENTRYPOINT ["./questspace", "--config=/conf/"]
